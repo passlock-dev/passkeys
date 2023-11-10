@@ -223,7 +223,7 @@ async function verifyToken(passlockToken: string) { ... }
 
 #### Verify the passkey on your backend
 
-Just exchange the token for a Passlock user, then lookup your own user entity using the Passlock userId:
+Just exchange the token for a Passlock user, then lookup your own user entity using the Passlock user id
 
 ```typescript
 // Express.js
