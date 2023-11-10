@@ -123,8 +123,6 @@ An alternative flow uses JWTs with public key encryption to avoid the need for t
 
 ### Passkey registration
 
-#### Create a passkey on the frontend
-
 You just need to call `passlock.register()`. This will do three things:
 
 1. Generate a passkey and store it on the device
@@ -133,9 +131,9 @@ You just need to call `passlock.register()`. This will do three things:
 
 This token should then be sent to your backend. Your backend should call the Passlock REST API to verify the token, before linking the passlock userId with your own user entity.
 
-```typescript
-import { ErrorCodes } from "@passlock/passkeys-frontend";
+#### Create a passkey on the frontend
 
+```typescript
 if (passlock.isSupported()) {
   const token = await registerPasskey()
 } else {
@@ -154,13 +152,13 @@ async function registerPasskey() {
 /**
  * Post the token to your backend, remember about CORS!
  */
-async function linkAccount(passlockToken: string) {
+async function linkAccount(token: string) {
   await fetch("https://example.com/register/passlock", {
     method: "POST",
     headers: {
       `Content-Type`: "application/json"
     },
-    body: JSON.stringify({ passlockToken })
+    body: JSON.stringify({ token })
   })
 }
 ```
@@ -200,13 +198,11 @@ async function verifyPasslockToken(token: string) {
 
 ### Passkey authentication
 
-#### Authenticate a passkey
-
 Just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
 
-```typescript
-import { ErrorCodes } from "@passlock/passkeys-frontend";
+#### Authenticate on the frontend
 
+```typescript
 if (passlock.isSupported()) {
   await authenticatePasskey()
 } else { ... }
@@ -219,15 +215,10 @@ async function authenticatePasskey() {
   } else if (result.error) { ... }
 }
 
-async function verifyToken(passlockToken: string) {
-  await fetch("https://example.com/authenticate/passlock", {
-    method: "POST",
-    headers: {
-      `Content-Type`: "application/json"
-    },
-    body: JSON.stringify({ passlockToken })
-  })
-}
+/**
+ * Post the token to the backend
+ */
+async function verifyToken(passlockToken: string) { ... }
 ```
 
 #### Verify the passkey on your backend
