@@ -25,7 +25,7 @@
 
 https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4ca3-a996-fe54c94a8e87
 
-# Framework agnostic passkey library
+# JS/TS Passkeys library (framework agnostic)
 
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
 
@@ -88,13 +88,10 @@ Create a free account on [passlock.dev][passlock-signup] and obtain your `Tenanc
 
 This will depend on your package manager:
 
-**NPM:**  
 `npm add @passlock/passkeys-frontend`
 
-**PNPM:**  
 `pnpm add @passlock/passkeys-frontend`
 
-**Yarn:**  
 `yarn add @passlock/passkeys-frontend`
 
 ### 3. Create a Passlock instance in the frontend
