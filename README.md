@@ -1,5 +1,3 @@
-<a name="readme-top"></a>
-
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="https://github.com/passlock-dev/passkeys-frontend">
@@ -7,6 +5,7 @@
   </a>
 </div>
 
+<a name="readme-top"></a>
 <h3 align="center">Passkeys by Passlock</h3>
 
   <p align="center">
@@ -29,6 +28,9 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 
 # A Passkey library that works with any backend
 
+> [!IMPORTANT]
+> Passlock is currently under development. We will launch before the end of 2023. Please subscribe to our [newsletter][newsletter] for updates.
+
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -39,6 +41,7 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
   * [Basic usage](#basic-usage)
     * [Passkey registration](#passkey-registration)
     * [Passkey authentication](#passkey-authentication)
+  * [Contact details](#contact)
 </details>
 
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
@@ -71,13 +74,17 @@ Passkeys are an emerging technology based on the browser Web Authentication API 
 
 After implementing Passkey authentication on several projects I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing Passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
 
-**Why serverless?**
+<details>
+  <summary>Why serverless?</summary>
+  
+  <br />
 
-My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.
+  <p>My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.</p>
+  
+  <p>The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...</p>
 
-The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...
-
-Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
+  <p>Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.</p>
+</details>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -135,8 +142,7 @@ if (passlock.isSupported()) {
 }
 
 async function registerPasskey() {
-  // Note: passlock doesn't throw. You should instead examine the
-  // result and interrogate any errors
+  // Note: passlock doesn't throw. You should examine the result and interrogate any errors
   const result = await passlock.register()
 
   if (result.ok && result.token) {
@@ -252,7 +258,7 @@ Our [contact details][contact] can be found on our website
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-[product-screenshot]: images/screenshot.png
+[newsletter]: https://passlock.dev/#newsletter
 [demo]: https://passlock.dev/#demo
 [webauthn]: https://www.w3.org/TR/webauthn-2/
 [password-issues]: https://passlock.dev/blog/authentication/password-policies
