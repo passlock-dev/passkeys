@@ -1,4 +1,35 @@
-# Serverless Passkeys
+<a name="readme-top"></a>
+
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/github_username/repo_name">
+    <img src="images/passlock-logo.svg" alt="Passlock logo" width="80" height="80">
+  </a>
+
+<h3 align="center">Passkeys by Passlock</h3>
+
+  <p align="center">
+    Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
+    <br />
+    <a href="https://docs.passlock.dev"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://passlock.dev/#demo">View Demo</a>
+    ·
+    <a href="https://github.com/passlock-dev/passkeys-frontend/issues">Report Bug</a>
+    ·
+    <a href="https://passlock.dev/contact">Request Feature</a>
+  </p>
+</div>
+
+<div align="center">
+  <video src="videos/passlock-demo.mp4" width="600" />
+</div>
+
+<br />
+
+# Framework agnostic passkey library
 
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
 
@@ -8,9 +39,16 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 
 **Note:** If you're comfortable with JWTs, you can verify our JWT in step 3 instead of calling the REST API, thereby saving a network trip.
 
-[1. Motivation](#motivation)  
-[2. Features](#features)  
-[3. Getting started](#getting-started)
+<h2>Table of contents</h2>
+
+[1. Demo](#demo)  
+[2. Motivation](#motivation)  
+[3. Features](#features)  
+[4. Getting started](#getting-started)
+
+## Demo
+
+Please checkout the [demo][demo] on [passlock.dev](https://passlock.dev). 
 
 ## Motivation
 
@@ -20,9 +58,13 @@ Passkeys are an emerging technology based on the browser Web Authentication API 
 
 After implementing Passkey authentication on several projects I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing Passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
 
-I initially thought about publishing open source client and server libraries. The problem is that whilst JS is ubiquitous on the frontend, there are many backend languages and frameworks. Today the backend could be a Node.js lambda function or a Django controller running on K8s. Developing, testing and maintaining low level libraries for so many frameworks would be a challenge for even the largest teams.
+### Why Serverless?
 
-By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
+My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.
+
+The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...
+
+Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
 
 ## Features
 
@@ -199,6 +241,8 @@ app.post('/authenticate/passlock', async function(req, res) {
 }
 ```
 
+[product-screenshot]: images/screenshot.png
+[demo]: https://passlock.dev/#demo
 [webauthn]: https://www.w3.org/TR/webauthn-2/
 [password-issues]: https://passlock.dev/blog/authentication/password-policies
 [passkey-browser-support]: https://passlock.dev/blog/passkeys/passkey-browser-support-2023
