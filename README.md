@@ -29,8 +29,12 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 
 # A Passkey library that works with any backend
 
+<br />
+
 > [!IMPORTANT]
-> Passlock is currently under development. We will launch before the end of 2023. Please subscribe to our [newsletter][newsletter] for updates.
+> Passlock is expected to launch in December '23. Please subscribe to our [newsletter][newsletter] for updates.
+
+<br />
 
 <!-- TABLE OF CONTENTS -->
 <details>
