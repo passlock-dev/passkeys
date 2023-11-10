@@ -29,6 +29,18 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 
 # A Passkey library that works with any backend
 
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+
+  * [Features](#features)
+  * [Motivation](#motivation)
+  * [Getting started](#getting-started)
+  * [Basic usage](#basic-usage)
+    * [Passkey registration](#passkey-registration)
+    * [Passkey authentication](#passkey-authentication)
+</details>
+
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
 
 1. Call this library in your frontend to obtain a token
@@ -36,12 +48,6 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 3. Call our REST API to exchange the token for the authentication result
 
 **Note:** If you're comfortable with JWTs, you can verify our JWT in step 3 instead of calling the REST API, thereby saving a network trip.
-
-<h2>Table of contents</h2>
-
-[1. Features](#features)  
-[2. Motivation](#motivation)  
-[3. Getting started](#getting-started)
 
 ## Features
 
@@ -54,6 +60,8 @@ As already mentioned Passkeys and the WebAuthn API are quite complex. We've take
 3. **📱 Platform authenticators** - WebAuthn supports external authenticators like YubiKeys and NFC devices. That's not our target audience, at least not for now. Our focus is _platform authenticators_ i.e. passkeys managed by the smartphone, tablet or computer itself.
 
 4. **☁️ Cloud sync** - Similar to a cloud password manager, passkeys can be synced with to a cloud account e.g. iCloud. It also allows the user the recover their account if they loose (or accidentally wipe) a device.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Motivation
 
@@ -71,17 +79,15 @@ The problem is that whilst JS/TS is ubiquitous on the frontend, there are many b
 
 Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 ## Getting started
 
-This quickstart guide illustrates the simplest scenario, using token based verification i.e. the client library returns a token which you send to your backend. Your backend code then calls a REST API to exchange the token for an object representing the authenticated user.
-
-An alternative flow uses JWTs with public key encryption to avoid the need for the REST call on the backend. Please see the [documentation][docs] for more details.
-
-### 1. Create a free Passlock account
+### Prerequisites
 
 Create a free account on [passlock.dev][passlock-signup] and obtain your `Tenancy Id` and an `API Key`
 
-### 2. Install the Passlock frontend client
+### Install the Passlock frontend library
 
 This will depend on your package manager:
 
@@ -91,7 +97,7 @@ This will depend on your package manager:
 
 `yarn add @passlock/passkeys-frontend`
 
-### 3. Create a Passlock instance in the frontend
+### Create a Passlock instance
 
 Passlock can be configured by passing various options to the constructor. Please see the [documentation][docs] for more details. The only required field is `tenancyId`.
 
@@ -101,7 +107,15 @@ import { Passlock } from "@passlock/passkeys-frontend";
 const passlock = new Passlock({ tenancyId: 'my-tenancy-id' });
 ```
 
-### 4a. Create and register a passkey in your frontend
+## Basic usage
+
+This quickstart guide illustrates the simplest scenario, using token based verification i.e. the client library returns a token which you send to your backend. Your backend code then calls a REST API to exchange the token for an object representing the authenticated user.
+
+An alternative flow uses JWTs with public key encryption to avoid the need for the REST call on the backend. Please see the [documentation][docs] for more details.
+
+### Passkey registration
+
+#### Create a passkey on the frontend
 
 You just need to call `passlock.register()`. This will do three things:
 
@@ -144,7 +158,7 @@ async function linkAccount(passlockToken: string) {
 }
 ```
 
-### 4b. Link the Passlock user id in your backend
+#### Link the passkey on your backend
 
 Assuming the passkey was successfully created, you now need to exchange the Passlock token for a Passlock
 user object and link it with your own user entity. Remember you can't trust anything coming from the client, so simply sending the passlock user id and blindly linking it isn't a good idea.
@@ -177,9 +191,11 @@ async function verifyPasslockToken(token: string) {
 }
 ```
 
-### 5a. Authenticate a user in your frontend
+### Passkey authentication
 
-Similar to 4a, just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
+#### Authenticate a passkey
+
+Just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
 
 ```typescript
 import { ErrorCodes } from "@passlock/passkeys-frontend";
@@ -197,7 +213,6 @@ async function authenticatePasskey() {
 }
 
 async function verifyToken(passlockToken: string) {
-  // post the token to your backend, remember about CORS!
   await fetch("https://example.com/authenticate/passlock", {
     method: "POST",
     headers: {
@@ -208,9 +223,9 @@ async function verifyToken(passlockToken: string) {
 }
 ```
 
-### 5b. Authenticate a user in your backend
+#### Verify the passkey on your backend
 
-Almost identical to 4b, just exchange the token for a Passlock user, then lookup your own user entity using the Passlock userId:
+Just exchange the token for a Passlock user, then lookup your own user entity using the Passlock userId:
 
 ```typescript
 // Express.js
@@ -230,6 +245,12 @@ app.post('/authenticate/passlock', async function(req, res) {
   res.json({ user })
 }
 ```
+
+## Contact
+
+Our [contact details][contact] can be found on our website
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 [product-screenshot]: images/screenshot.png
 [demo]: https://passlock.dev/#demo
