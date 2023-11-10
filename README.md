@@ -11,7 +11,8 @@
   <p align="center">
     Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
     <br />
-    <a href="https://docs.passlock.dev"><strong>Explore the docs »</strong></a>
+    <br />
+    <a href="https://passlock.dev"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://passlock.dev/#demo">View Demo</a>
