@@ -23,7 +23,7 @@
   </p>
 </div>
 
-<br />
+https://github.com/passlock-dev/passkeys-frontend/assets/208345/e176d799-d977-4c18-a56f-520a9af7882c
 
 # Framework agnostic passkey library
 
