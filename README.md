@@ -23,10 +23,6 @@
   </p>
 </div>
 
-<div align="center">
-  <video src="videos/passlock-demo.mp4" width="600" />
-</div>
-
 <br />
 
 # Framework agnostic passkey library
