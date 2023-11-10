@@ -23,9 +23,11 @@
   </p>
 </div>
 
+<br />
+
 https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4ca3-a996-fe54c94a8e87
 
-# JS/TS Passkeys library (framework agnostic)
+# A Passkey library that works with any backend
 
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
 
@@ -37,30 +39,9 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 
 <h2>Table of contents</h2>
 
-[1. Demo](#demo)  
+[1. Features](#features)  
 [2. Motivation](#motivation)  
-[3. Features](#features)  
-[4. Getting started](#getting-started)
-
-## Demo
-
-Please checkout the [demo][demo] on [passlock.dev](https://passlock.dev). 
-
-## Motivation
-
-Password authentication is widely understood by both developers and users, but is fast [becoming obsolete][password-issues]. The need for complex password policies and secondary authentication e.g. Google Authenticator, SMS or email codes adds both complexity and friction. 
-
-Passkeys are an emerging technology based on the browser Web Authentication API (WebAuthn) that solve many of the security and usability issues associated with passwords. Passkeys are [supported by all major browsers][passkey-browser-support] (desktop and mobile). Unfortunately the underlying WebAuthn API and protocols are complex.
-
-After implementing Passkey authentication on several projects I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing Passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
-
-### Why Serverless?
-
-My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.
-
-The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...
-
-Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
+[3. Getting started](#getting-started)
 
 ## Features
 
@@ -70,9 +51,25 @@ As already mentioned Passkeys and the WebAuthn API are quite complex. We've take
 
 2. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
 
-3. **📱 Platform authenticators** - WebAuthn supports external authenticators like YubiKeys and NFC devices. That's not our target audience, at least not for now. Our focus is _resident authenticators_ i.e. passkeys managed by the smartphone, tablet or computer itself.
+3. **📱 Platform authenticators** - WebAuthn supports external authenticators like YubiKeys and NFC devices. That's not our target audience, at least not for now. Our focus is _platform authenticators_ i.e. passkeys managed by the smartphone, tablet or computer itself.
 
 4. **☁️ Cloud sync** - Similar to a cloud password manager, passkeys can be synced with to a cloud account e.g. iCloud. It also allows the user the recover their account if they loose (or accidentally wipe) a device.
+
+## Motivation
+
+Password authentication is widely understood by both developers and users, but is fast [becoming obsolete][password-issues]. The need for complex password policies and secondary authentication e.g. Google Authenticator, SMS or email codes adds both complexity and friction. 
+
+Passkeys are an emerging technology based on the browser Web Authentication API (WebAuthn) that solve many of the security and usability issues associated with passwords. Passkeys are [supported by all major browsers][passkey-browser-support] (desktop and mobile). Unfortunately the underlying WebAuthn API and protocols are complex.
+
+After implementing Passkey authentication on several projects I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing Passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
+
+**Why serverless?**
+
+My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.
+
+The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...
+
+Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.
 
 ## Getting started
 
