@@ -12,7 +12,7 @@
     Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
     <br />
     <br />
-    <a href="https://passlock.dev"><strong>Explore the docs »</strong></a>
+    <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
     <br />
     <a href="https://passlock.dev/#demo">View Demo</a>
@@ -55,7 +55,8 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 2. Pass the token to your backend
 3. Call our REST API to exchange the token for the authentication result
 
-**Note:** If you're comfortable with JWTs, you can verify our JWT in step 3 instead of calling the REST API, thereby saving a network trip.
+> [!NOTE]
+> In step 3, you can instead verify and examine our JWT, thereby saving the network trip.
 
 ## Features
 
