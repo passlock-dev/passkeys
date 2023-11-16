@@ -11,7 +11,6 @@
   <p align="center">
     Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
     <br />
-    <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
     <br />
@@ -49,18 +48,18 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
   * [Contact details](#contact)
 </details>
 
-Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you by our serverless platform. It's a really simple 3 step process:
+Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled by a serverless platform. It's a really simple 3 step process:
 
-1. Call this library in your frontend to obtain a token
+1. Use this library to obtain a token on your frontend
 2. Pass the token to your backend
 3. Call our REST API to exchange the token for the authentication result
 
 > [!NOTE]
-> In step 3, you can instead verify and examine our JWT, thereby saving the network trip.
+> In step 3, you can instead verify and examine a JWT, thereby saving the network trip.
 
 ## Features
 
-As already mentioned Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
+Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
 1. **☝🏻Biometrics** - Passkeys allows you to enforce facial or fingerprint recognition in your websites and web apps. We've made it really easy.
 
@@ -78,16 +77,16 @@ Password authentication is widely understood by both developers and users, but i
 
 Passkeys are an emerging technology based on the browser Web Authentication API (WebAuthn) that solve many of the security and usability issues associated with passwords. Passkeys are [supported by all major browsers][passkey-browser-support] (desktop and mobile). Unfortunately the underlying WebAuthn API and protocols are complex.
 
-After implementing Passkey authentication on several projects I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing Passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
+After implementing Passkey authentication on several projects, I realised there was a lot of repetition, mostly around the registration and authentication ceremonies. As a web developer implementing passkeys, I don't care about cryptographic ciphers, binary encoding etc. I just want to "authenticate this user".
 
 <details>
   <summary>Why serverless?</summary>
   
   <br />
 
-  <p>My original plan was to publish an open source implementation for both the frontend **_and backend_** so developers could self host their own stuff.</p>
+  <p>My original plan was to publish an open source implementation for both the frontend and backend so developers could self host their own stuff.</p>
   
-  <p>The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...</p>
+  <p>The problem is that whilst JS/TS is ubiquitous on the frontend, there are many backend languages, frameworks and deployment scenarios. You may be running an AWS lambda function with an old version of Node.js, or a Django controller with the latest version of Python, or .NET, Java, Ruby, Go ...</p>
 
   <p>Cryptography is pretty unforgiving, so maintaining many low level libraries is a challenge for even the largest organisations. By offering a serverless platform we can offer a secure, scalable passkey solution to **all** developers, irrespective of the tech stack.</p>
 </details>
@@ -98,16 +97,14 @@ After implementing Passkey authentication on several projects I realised there w
 
 ### Prerequisites
 
-Create a free account on [passlock.dev][passlock-signup] and obtain your `Tenancy Id` and an `API Key`
+Create a free account on [passlock.dev][passlock-signup] and obtain your `tenancyId` and `apiKey`
 
 ### Install the Passlock frontend library
 
 This will depend on your package manager:
 
-`npm add @passlock/passkeys-frontend`
-
-`pnpm add @passlock/passkeys-frontend`
-
+`npm add @passlock/passkeys-frontend`  
+`pnpm add @passlock/passkeys-frontend`  
 `yarn add @passlock/passkeys-frontend`
 
 ### Create a Passlock instance
@@ -136,10 +133,11 @@ You just need to call `passlock.register()`. This will do three things:
 
 This token should then be sent to your backend. Your backend should call the Passlock REST API to verify the token, before linking the passlock userId with your own user entity.
 
-#### Create a passkey on the frontend
+#### Create a passkey (frontend)
 
 ```typescript
 if (passlock.isSupported()) {
+  // Simplest example, excluding options or profile info (email etc) 
   const token = await registerPasskey()
 } else {
   // Fallback to username/password, email or social login.
@@ -168,10 +166,10 @@ async function linkAccount(token: string) {
 }
 ```
 
-#### Link the passkey on your backend
+#### Link the passkey (backend)
 
 Assuming the passkey was successfully created, you now need to exchange the Passlock token for a Passlock
-user object and link it with your own user entity. Remember you can't trust anything coming from the client, so simply sending the passlock user id and blindly linking it isn't a good idea.
+user object and link it with your own user entity. 
 
 ```typescript
 // Express.js
@@ -205,7 +203,7 @@ async function verifyPasslockToken(token: string) {
 
 Just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
 
-#### Authenticate on the frontend
+#### Authenticate (frontend)
 
 ```typescript
 if (passlock.isSupported()) {
@@ -226,7 +224,7 @@ async function authenticatePasskey() {
 async function verifyToken(passlockToken: string) { ... }
 ```
 
-#### Verify the passkey on your backend
+#### Verify the passkey (backend)
 
 Just exchange the token for a Passlock user, then lookup your own user entity using the Passlock user id
 
@@ -236,10 +234,10 @@ Just exchange the token for a Passlock user, then lookup your own user entity us
 app.post('/authenticate/passlock', async function(req, res) {
   const token = req.body.token
   
-  // see 4b (Link the Passlock userId in your backend)
+  // see the function in "Link the passkey (backend)" above
   const passlockUserId = await verifyPasslockToken(token)
 
-  // pseudocode - use the Passlock userId to find a user in your db
+  // pseudocode - use the Passlock userId to lookup a user in your db
   const user = await lookupUser({ passlockUserId })
 
   // revert to your own session storage e.g. using express-session middleware
