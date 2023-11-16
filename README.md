@@ -169,18 +169,19 @@ async function linkAccount(token: string) {
 #### Link the passkey (backend)
 
 Assuming the passkey was successfully created, you now need to exchange the Passlock token for a Passlock
-user object and link it with your own user entity. 
+user object and link it with your own user entity. Note that you don't need to use the Passlock library
+on the backend, you just need to make a REST call to our API.
 
 ```typescript
 // Express.js
 
 app.post('/register/passlock', async function(req, res) {
-  const passlockUserId = await verifyPasslockToken(req.body.token)
+  const passlockUser = await verifyPasslockToken(req.body.token)
 
-  // pseudocode - link the Passlock userId with an existing user
-  // or create a new user in your backend
-  const user = await linkAccount({ passlockUserId })
+  // pseudocode - link the Passlock userId with an existing user or create a new user in your backend
+  const user = await createAccount(passlockUser)
 
+  // log the user in
   req.session.user = user
 
   res.json({ user })
@@ -194,8 +195,8 @@ async function verifyPasslockToken(token: string) {
   const response = await axios.post(url, { token })
   if (!response.data.verified) { /* verification failed */ }
 
-  // the passlock userId
-  return response.data.userId
+  // the pPasslock user object containing at a minimum a userId field
+  return response.data
 }
 ```
 
@@ -235,10 +236,10 @@ app.post('/authenticate/passlock', async function(req, res) {
   const token = req.body.token
   
   // see the function in "Link the passkey (backend)" above
-  const passlockUserId = await verifyPasslockToken(token)
+  const passlockUser = await verifyPasslockToken(token)
 
   // pseudocode - use the Passlock userId to lookup a user in your db
-  const user = await lookupUser({ passlockUserId })
+  const user = await lookupUser(passlockUser.userId)
 
   // revert to your own session storage e.g. using express-session middleware
   req.session.user = user
