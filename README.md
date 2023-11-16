@@ -26,7 +26,7 @@
 
 https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4ca3-a996-fe54c94a8e87
 
-# A Passkey library that works with any backend
+# Introduction
 
 <br />
 
@@ -57,7 +57,7 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 > [!NOTE]
 > In step 3, you can instead verify and examine a JWT, thereby saving the network trip.
 
-## Features
+# Features
 
 Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
@@ -71,7 +71,7 @@ Passkeys and the WebAuthn API are quite complex. We've taken an opinionated appr
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Motivation
+# Motivation
 
 Password authentication is widely understood by both developers and users, but is fast [becoming obsolete][password-issues]. The need for complex password policies and secondary authentication e.g. Google Authenticator, SMS or email codes adds both complexity and friction. 
 
@@ -93,13 +93,13 @@ After implementing Passkey authentication on several projects, I realised there 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Getting started
+# Getting started
 
-### Prerequisites
+## Prerequisites
 
 Create a free account on [passlock.dev][passlock-signup] and obtain your `tenancyId` and `apiKey`
 
-### Install the Passlock frontend library
+## Install the Passlock frontend library
 
 This will depend on your package manager:
 
@@ -107,7 +107,7 @@ This will depend on your package manager:
 `pnpm add @passlock/passkeys-frontend`  
 `yarn add @passlock/passkeys-frontend`
 
-### Create a Passlock instance
+## Create a Passlock instance
 
 Passlock can be configured by passing various options to the constructor. Please see the [documentation][docs] for more details. The only required field is `tenancyId`.
 
@@ -117,13 +117,13 @@ import { Passlock } from "@passlock/passkeys-frontend";
 const passlock = new Passlock({ tenancyId: 'my-tenancy-id' });
 ```
 
-## Basic usage
+# Basic usage
 
 This quickstart guide illustrates the simplest scenario, using token based verification i.e. the client library returns a token which you send to your backend. Your backend code then calls a REST API to exchange the token for an object representing the authenticated user.
 
 An alternative flow uses JWTs with public key encryption to avoid the need for the REST call on the backend. Please see the [documentation][docs] for more details.
 
-### Passkey registration
+## Passkey registration
 
 You just need to call `passlock.register()`. This will do three things:
 
@@ -133,7 +133,7 @@ You just need to call `passlock.register()`. This will do three things:
 
 This token should then be sent to your backend. Your backend should call the Passlock REST API to verify the token, before linking the passlock userId with your own user entity.
 
-#### Create a passkey (frontend)
+### Create a passkey (frontend)
 
 ```typescript
 if (passlock.isSupported()) {
@@ -166,7 +166,7 @@ async function linkAccount(token: string) {
 }
 ```
 
-#### Link the passkey (backend)
+### Link the passkey (backend)
 
 Assuming the passkey was successfully created, you now need to exchange the Passlock token for a Passlock
 user object and link it with your own user entity. Note that you don't need to use the Passlock library
@@ -200,11 +200,11 @@ async function verifyPasslockToken(token: string) {
 }
 ```
 
-### Passkey authentication
+## Passkey authentication
 
 Just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
 
-#### Authenticate (frontend)
+### Authenticate (frontend)
 
 ```typescript
 if (passlock.isSupported()) {
@@ -225,7 +225,7 @@ async function authenticatePasskey() {
 async function verifyToken(passlockToken: string) { ... }
 ```
 
-#### Verify the passkey (backend)
+### Verify the passkey (backend)
 
 Just exchange the token for a Passlock user, then lookup your own user entity using the Passlock user id
 
