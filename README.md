@@ -31,7 +31,7 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 <br />
 
 > [!IMPORTANT]
-> Passlock is expected to launch in December '23. Please subscribe to our [newsletter][newsletter] for updates.
+> Passlock is expected to launch in Jan/Feb '24. Please subscribe to our [newsletter][newsletter] for updates.
 
 <br />
 
