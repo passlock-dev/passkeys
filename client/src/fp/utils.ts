@@ -64,6 +64,7 @@ const hasConditionalUi = pipe(
 )
 
 export const passkeysSupported = pipe(hasWebAuthn, E.andThen(hasPlatformAuth))
+
 export const arePasskeysSupported = pipe(
   passkeysSupported,
   E.orElseSucceed(() => false),

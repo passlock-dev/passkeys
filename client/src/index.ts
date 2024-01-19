@@ -7,8 +7,8 @@ import { registerLive } from './fp/registration/register'
 import { isExistingUserLive } from './fp/user/status'
 import * as Utils from './fp/utils'
 
-const arePasskeysSupported = Effect.runPromise(Utils.arePasskeysSupported)
-const isAutofillSupported = Effect.runPromise(Utils.isAutofillSupported)
+const arePasskeysSupported = () => Effect.runPromise(Utils.arePasskeysSupported)
+const isAutofillSupported = () => Effect.runPromise(Utils.isAutofillSupported)
 
 const isRegistered = makeUnionFn(isExistingUserLive)
 const isRegisteredUnsafe = makeUnsafeFn(isExistingUserLive)
