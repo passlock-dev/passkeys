@@ -1,0 +1,11 @@
+{
+  "authenticationOptions": {
+    "session": "session",
+    "publicKey": {
+      "rpId": "passlock.dev",
+      "challenge": "FKZSl_saKu5OXjLLwoq8eK3wlD8XgpGiS10SszW5RiE",
+      "timeout": 60000,
+      "userVerification": "preferred"
+    }
+  }
+}

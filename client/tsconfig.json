@@ -1,0 +1,21 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "lib": ["es2023", "DOM", "DOM.Iterable"],
+    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"],
+    },
+    "outDir": "./dist",
+  },
+  "include": ["./sst-env.d.ts", "./src/**/*.ts"],
+  "exclude": ["./node_modules/**"],
+}

@@ -1,0 +1,42 @@
+{
+  "registrationOptions": {
+    "session": "session",
+    "publicKey": {
+      "challenge": "aN5bY9eL8IU5d1D5ir8MnFdXNVof_fOjpaDZKJKWf2Y",
+      "rp": {
+        "name": "passlock.dev",
+        "id": "passlock.dev"
+      },
+      "user": {
+        "id": "dG9ieUBwYXNzbG9jay5kZXY",
+        "name": "john.doe@gmail.com",
+        "displayName": "John Doe"
+      },
+      "pubKeyCredParams": [
+        {
+          "alg": -8,
+          "type": "public-key"
+        },
+        {
+          "alg": -7,
+          "type": "public-key"
+        },
+        {
+          "alg": -257,
+          "type": "public-key"
+        }
+      ],
+      "timeout": 60000,
+      "attestation": "none",
+      "excludeCredentials": [],
+      "authenticatorSelection": {
+        "residentKey": "preferred",
+        "userVerification": "preferred",
+        "requireResidentKey": false
+      },
+      "extensions": {
+        "credProps": true
+      }
+    }
+  }
+}

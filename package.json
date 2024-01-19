@@ -1,0 +1,37 @@
+{
+  "name": "@passlock/root",
+  "private": true,
+  "version": "0.0.0",
+  "description": "",
+  "keywords": [],
+  "author": {
+    "name": "Toby Hobson",
+    "email": "toby@passlock.dev"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/passlock-dev/passkeys",
+  "type": "module",
+  "scripts": {
+    "typecheck": "pnpm -r run typecheck",
+    "lint": "pnpm -r run lint",
+    "lint:fix": "pnpm -r run lint:fix",
+    "format": "pnpm -r run format",
+    "build": "pnpm -r run build"
+  },
+  "pnpm": {
+    "overrides": {
+      "@effect/schema": "^0.60.4",
+      "@tsconfig/node20": "^20.1.2",
+      "@types/node": "^20.11.5",
+      "@typescript-eslint/eslint-plugin": "^6.19.0",
+      "@typescript-eslint/parser": "^6.19.0",
+      "effect": "2.1.2",
+      "eslint": "^8.56.0",
+      "eslint-config-prettier": "^9.1.0",
+      "eslint-import-resolver-typescript": "^3.6.1",
+      "eslint-plugin-import": "^2.29.1",
+      "eslint-plugin-prettier": "^5.1.3",
+      "prettier": "^3.2.4"
+    }
+  }
+}
