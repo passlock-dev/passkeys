@@ -1,70 +1,75 @@
 import './style.css'
-import { isPasslockError, register, authenticate } from "../src/index"
+import { isPasslockError, register, authenticate } from '../src/index'
 
 /* Helpers */
 
 const getElement = <T>(id: string) => document.getElementById(id) as T
 
-const showMessage = (message: string) => (<HTMLDivElement>getElement("console")).innerHTML = message
+const showMessage = (message: string) =>
+  ((<HTMLDivElement>getElement('console')).innerHTML = message)
 
 const showSpinner = (text: HTMLSpanElement, spinner: SVGElement) => {
-  text.classList.replace("block", "hidden")
-  spinner.classList.replace("hidden", "block")
+  text.classList.replace('block', 'hidden')
+  spinner.classList.replace('hidden', 'block')
 }
 
 const hideSpinner = (text: HTMLSpanElement, spinner: SVGElement) => {
-  text.classList.replace("hidden", "block")
-  spinner.classList.replace("block", "hidden")
+  text.classList.replace('hidden', 'block')
+  spinner.classList.replace('block', 'hidden')
 }
 
 const saveIds = () => {
-  const tenancyId = (<HTMLInputElement>getElement("tenancyId")).value
-  const clientId = (<HTMLInputElement>getElement("clientId")).value
-  const endpoint = (<HTMLInputElement>getElement("endpoint")).value
+  const tenancyId = (<HTMLInputElement>getElement('tenancyId')).value
+  const clientId = (<HTMLInputElement>getElement('clientId')).value
+  const endpoint = (<HTMLInputElement>getElement('endpoint')).value
 
-  window.localStorage.setItem("passlock.demo.tenancyId", tenancyId)
-  window.localStorage.setItem("passlock.demo.clientId", clientId)
-  window.localStorage.setItem("passlock.demo.endpoint", endpoint)
+  window.localStorage.setItem('passlock.demo.tenancyId', tenancyId)
+  window.localStorage.setItem('passlock.demo.clientId', clientId)
+  window.localStorage.setItem('passlock.demo.endpoint', endpoint)
 }
 
 const restoreIds = () => {
-  const tenancyId = window.localStorage.getItem("passlock.demo.tenancyId")
-  if (tenancyId) (<HTMLInputElement>getElement("tenancyId")).value = tenancyId
+  const tenancyId = window.localStorage.getItem('passlock.demo.tenancyId')
+  if (tenancyId) (<HTMLInputElement>getElement('tenancyId')).value = tenancyId
 
-  const clientId  = window.localStorage.getItem("passlock.demo.clientId")
-  if (clientId) (<HTMLInputElement>getElement("clientId")).value = clientId
+  const clientId = window.localStorage.getItem('passlock.demo.clientId')
+  if (clientId) (<HTMLInputElement>getElement('clientId')).value = clientId
 
-  const endpoint  = window.localStorage.getItem("passlock.demo.endpoint")
-  if (endpoint) (<HTMLInputElement>getElement("endpoint")).value = endpoint
+  const endpoint = window.localStorage.getItem('passlock.demo.endpoint')
+  if (endpoint) (<HTMLInputElement>getElement('endpoint')).value = endpoint
 }
 
 /* Handlers */
 
 const registerHandler = async () => {
-  const btnText = getElement<HTMLSpanElement>("registerBtnText")
-  const btnSpinner = getElement<SVGElement>("registerBtnSpinner")
+  const btnText = getElement<HTMLSpanElement>('registerBtnText')
+  const btnSpinner = getElement<SVGElement>('registerBtnSpinner')
 
-  const tenancyId = (<HTMLInputElement>getElement("tenancyId")).value
-  const clientId = (<HTMLInputElement>getElement("clientId")).value
-  const endpoint = (<HTMLInputElement>getElement("endpoint")).value
+  const tenancyId = (<HTMLInputElement>getElement('tenancyId')).value
+  const clientId = (<HTMLInputElement>getElement('clientId')).value
+  const endpoint = (<HTMLInputElement>getElement('endpoint')).value
 
-  const firstName = (<HTMLInputElement>getElement("firstName")).value
-  const lastName = (<HTMLInputElement>getElement("lastName")).value
-  const email = (<HTMLInputElement>getElement("email")).value
+  const firstName = (<HTMLInputElement>getElement('firstName')).value
+  const lastName = (<HTMLInputElement>getElement('lastName')).value
+  const email = (<HTMLInputElement>getElement('email')).value
 
   // add real validation
   if (!tenancyId || !clientId || !firstName || !lastName || !email) {
-    showMessage("Please complete all fields")
+    showMessage('Please complete all fields')
     return
   }
 
   try {
     showSpinner(btnText, btnSpinner)
-    showMessage("")
+    showMessage('')
 
-    const result = await register({ 
-      tenancyId, clientId, endpoint,
-      firstName, lastName, email
+    const result = await register({
+      tenancyId,
+      clientId,
+      endpoint,
+      firstName,
+      lastName,
+      email,
     })
 
     if (isPasslockError(result)) {
@@ -81,26 +86,28 @@ const registerHandler = async () => {
 }
 
 const loginHandler = async () => {
-  const btnText = getElement<HTMLSpanElement>("loginBtnText")
-  const btnSpinner = getElement<SVGElement>("loginBtnSpinner")
+  const btnText = getElement<HTMLSpanElement>('loginBtnText')
+  const btnSpinner = getElement<SVGElement>('loginBtnSpinner')
 
-  const tenancyId = (<HTMLInputElement>getElement("tenancyId")).value
-  const clientId = (<HTMLInputElement>getElement("clientId")).value
-  const endpoint = (<HTMLInputElement>getElement("endpoint")).value
+  const tenancyId = (<HTMLInputElement>getElement('tenancyId')).value
+  const clientId = (<HTMLInputElement>getElement('clientId')).value
+  const endpoint = (<HTMLInputElement>getElement('endpoint')).value
 
   // add real validation
   if (!tenancyId || !clientId) {
-    showMessage("Please complete all fields")
+    showMessage('Please complete all fields')
     return
   }
 
   try {
     showSpinner(btnText, btnSpinner)
-    showMessage("")
+    showMessage('')
 
-    const result = await authenticate({ 
-      tenancyId, clientId, endpoint,
-      userVerification: false
+    const result = await authenticate({
+      tenancyId,
+      clientId,
+      endpoint,
+      userVerification: false,
     })
 
     if (isPasslockError(result)) {
@@ -116,6 +123,8 @@ const loginHandler = async () => {
   }
 }
 
-document.getElementById("registerBtn")?.addEventListener('click', registerHandler)
-document.getElementById("loginBtn")?.addEventListener('click', loginHandler)
+document
+  .getElementById('registerBtn')
+  ?.addEventListener('click', registerHandler)
+document.getElementById('loginBtn')?.addEventListener('click', loginHandler)
 restoreIds()

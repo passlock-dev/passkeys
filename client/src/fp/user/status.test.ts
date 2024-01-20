@@ -1,11 +1,11 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import type { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { type Email, isExistingUser, isNewUser } from './status'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
-import type { PasslockLogger } from '../logging/logging'
 import { NetworkService } from '../network/network'
 import { type GetData, NetworkServiceTest, noopLogger } from '../testUtils'
 

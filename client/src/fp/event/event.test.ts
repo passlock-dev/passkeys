@@ -16,6 +16,7 @@ describe('fireEvent', () => {
     const expectedEvent = new CustomEvent(DebugMessage, {
       detail: 'hello world',
     })
+
     expect(eventSpy).toHaveBeenCalledWith(expectedEvent)
   })
 })
@@ -25,6 +26,7 @@ describe('isPasslockEvent', () => {
     const passlockEvent = new CustomEvent(DebugMessage, {
       detail: 'hello world',
     })
+
     expect(isPasslockEvent(passlockEvent)).toBe(true)
   })
 

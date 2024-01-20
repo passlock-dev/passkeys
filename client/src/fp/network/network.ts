@@ -1,10 +1,11 @@
 import * as S from '@effect/schema/Schema'
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
-import { createParser } from '@passlock/shared/src/schema'
-import { Context, Effect as E, Layer, Schedule } from 'effect'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { PasslockLogger } from '@passlock/shared/logging'
+import { createParser } from '@passlock/shared/schema'
+import { Context, Effect as E, identity, Layer, pipe, Schedule } from 'effect'
 
 import { Abort } from '../config'
-import { loggerLive, PasslockLogger } from '../logging/logging'
+import { eventLoggerLive } from '../logging/eventLogger'
 
 /* Services */
 
@@ -72,32 +73,30 @@ const performFetch = (opts: FetchOptions) => {
 
 export const PasslockErrorSchema = S.struct({
   message: S.string,
-  code: S.union(...Object.keys(ErrorCode).map(key => S.literal(key))),
+  code: S.enums(ErrorCode),
 })
 
 const parsePasslockError = createParser(PasslockErrorSchema)
 
-const handleError = (res: Response) => {
-  return toJson(res)
-    .pipe(E.flatMap(toObject))
-    .pipe(E.flatMap(parsePasslockError))
-    .pipe(
-      E.flatMap(({ message, code }) => {
-        if (Object.values(ErrorCode).includes(code as ErrorCode)) {
-          return E.fail(
-            new PasslockError({
-              message,
-              code: ErrorCode[code as keyof typeof ErrorCode],
-            }),
-          )
-        } else {
-          return E.fail(
-            new PasslockError({ message, code: ErrorCode.OtherError }),
-          )
-        }
-      }),
-    )
-}
+/**
+ * A little counter intuitive but we want to parse the
+ * server response (which is assumed to be PasslockError data)
+ * into a PasslockError instance. This parsing could in iself
+ * fail so we end up with Either<PasslockError, PasslockError>
+ * which we fold and then flip.
+ *
+ * @param res
+ * @returns
+ */
+const handleError = (res: Response) =>
+  pipe(
+    toJson(res),
+    E.flatMap(toObject),
+    E.flatMap(parsePasslockError),
+    E.map(errorData => new PasslockError(errorData)),
+    E.match({ onFailure: identity, onSuccess: identity }),
+    E.flip,
+  )
 
 const isOk = (res: Response) =>
   E.suspend(() => (res.ok ? E.succeed(res) : handleError(res)))
@@ -116,7 +115,13 @@ const toObject = (json: unknown) => {
 
 /* Effects */
 
-export const postData = <T>(url: string, clientId: string, data: T) => {
+type Dependencies = Abort | PasslockLogger | Fetch
+
+export const postData = <T>(
+  url: string,
+  clientId: string,
+  data: T,
+): E.Effect<Dependencies, PasslockError, object> => {
   return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -152,7 +157,11 @@ export const postData = <T>(url: string, clientId: string, data: T) => {
   })
 }
 
-export const getData = (url: string, clientId: string, params?: Params) => {
+export const getData = (
+  url: string,
+  clientId: string,
+  params?: Params,
+): E.Effect<Dependencies, PasslockError, object> => {
   const buildUrl = E.sync(() => {
     if (!params) return url
     const queryParams = new URLSearchParams(params)
@@ -197,10 +206,11 @@ export const getData = (url: string, clientId: string, params?: Params) => {
 
 /* v8 ignore start */
 export const fetchLive = Layer.succeed(Fetch, Fetch.of(fetch))
-const liveLayers = Layer.merge(fetchLive, loggerLive)
+const liveLayers = Layer.mergeAll(fetchLive, eventLoggerLive)
 
 const getDataWithFetch = (url: string, clientId: string, params?: Params) =>
   E.provide(getData(url, clientId, params), liveLayers)
+
 const postDataWithFetch = <T>(url: string, clientId: string, data: T) =>
   E.provide(postData(url, clientId, data), liveLayers)
 

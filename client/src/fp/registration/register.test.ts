@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { register } from './register'

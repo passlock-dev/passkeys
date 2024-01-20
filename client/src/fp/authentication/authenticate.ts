@@ -3,12 +3,13 @@ import {
   get,
   parseRequestOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { PasslockLogger } from '@passlock/shared/logging'
 import {
   AuthenticationOptions,
   createParser,
   Principal,
-} from '@passlock/shared/src/schema'
+} from '@passlock/shared/schema'
 import {
   Context,
   Effect as E,
@@ -25,9 +26,9 @@ import {
   Endpoint,
   Tenancy,
 } from '../config'
-import { loggerLive, PasslockLogger } from '../logging/logging'
+import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
-import { Capabilities, capabilitiesLive } from '../utils'
+import { Capabilities, capabilitiesLive, CommonDependencies } from '../utils'
 
 /* Requests */
 
@@ -130,7 +131,11 @@ const verify = (
   })
 }
 
-export const authenticate = (data: AuthenticationRequest) =>
+type Dependencies = CommonDependencies | Capabilities | Get
+
+export const authenticate = (
+  data: AuthenticationRequest,
+): E.Effect<Dependencies, PasslockError, Principal> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -168,7 +173,7 @@ export const authenticateLive = (request: AuthenticationRequest & Config) => {
     getLive,
     networkServiceLive,
     capabilitiesLive,
-    loggerLive,
+    eventLoggerLive,
   )
 
   const withLayers = E.provide(authenticate(request), layers)

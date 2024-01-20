@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { Effect as E, Exit, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 

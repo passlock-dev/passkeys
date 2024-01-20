@@ -1,4 +1,4 @@
-import { ErrorCode, isPasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, isPasslockError } from '@passlock/shared/error'
 import { Effect } from 'effect'
 
 import { authenticateLive } from './fp/authentication/authenticate'
@@ -7,6 +7,10 @@ import { registerLive } from './fp/registration/register'
 import { isExistingUserLive } from './fp/user/status'
 import * as Utils from './fp/utils'
 
+/**
+ * Test comment
+ * @returns Promise
+ */
 const arePasskeysSupported = () => Effect.runPromise(Utils.arePasskeysSupported)
 const isAutofillSupported = () => Effect.runPromise(Utils.isAutofillSupported)
 

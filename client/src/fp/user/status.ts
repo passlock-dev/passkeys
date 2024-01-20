@@ -1,4 +1,5 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
 import type { Effect } from 'effect/Effect'
 import { identity } from 'effect/Function'
@@ -11,8 +12,9 @@ import {
   Endpoint,
   Tenancy,
 } from '../config'
-import { loggerLive, PasslockLogger } from '../logging/logging'
+import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
+import { CommonDependencies } from '../utils'
 
 /* Request */
 
@@ -46,7 +48,11 @@ const buildUrl = (email: string) =>
     return `${statusURL}/${encodedEmail}`
   })
 
-export const isExistingUser = (request: Email) =>
+type Dependencies = CommonDependencies
+
+export const isExistingUser = (
+  request: Email,
+): E.Effect<Dependencies, PasslockError, boolean> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -81,7 +87,11 @@ export const isExistingUserLive = (
   request: Email & Config,
 ): Effect<never, PasslockError, boolean> => {
   const configLayers = buildConfigLayers(request)
-  const layers = Layer.mergeAll(networkServiceLive, loggerLive, configLayers)
+  const layers = Layer.mergeAll(
+    networkServiceLive,
+    eventLoggerLive,
+    configLayers,
+  )
 
   const effect = isExistingUser(request)
   const withLayers = E.provide(effect, layers)

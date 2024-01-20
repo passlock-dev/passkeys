@@ -1,9 +1,11 @@
-import type { ParseOptions } from '@effect/schema/AST'
+import { ParseOptions } from '@effect/schema/AST'
+import { ParseError } from '@effect/schema/ParseResult'
 import * as S from '@effect/schema/Schema'
 import { formatError } from '@effect/schema/TreeFormatter'
 import { Effect as E, pipe } from 'effect'
 
-import { ErrorCode, PasslockError } from './error'
+import { ErrorCode, PasslockError } from '../error/error'
+import { PasslockLogger } from '../logging/logging'
 
 /* Components */
 
@@ -192,24 +194,36 @@ export type CheckRegistration = S.Schema.To<typeof CheckRegistration>
 
 /* Utils */
 
-export const createParser = <From, To>(schema: S.Schema<From, To>) =>
-  pipe(
-    S.parse(schema),
-    parse => (data: object, options?: ParseOptions) =>
-      pipe(
-        parse(data, options),
-        E.tapError(parseError =>
-          E.sync(() => {
-            const formatted = formatError(parseError)
-            console.error(formatted)
-          }),
-        ),
-        E.mapError(
-          () =>
-            new PasslockError({
-              message: 'Unable to parse object',
-              code: ErrorCode.InternalServerError,
-            }),
-        ),
+export const createParser = <From, To>(schema: S.Schema<From, To>) => {
+  const parse = S.parse(schema)
+
+  /**
+   * The parser generates some nicely formatted errors but they don't
+   * play well with Effects logger so we log them inline using a raw
+   * (i.e. console) logger
+   *
+   * @param parseError
+   * @returns
+   */
+  const logError = (parseError: ParseError) => {
+    return PasslockLogger.pipe(
+      E.flatMap(logger =>
+        E.sync(() => {
+          const formatted = formatError(parseError)
+          logger.logRaw(formatted)
+        }),
       ),
-  )
+    )
+  }
+
+  const transformError = (error: ParseError) => {
+    return new PasslockError({
+      message: 'Unable to parse object',
+      code: ErrorCode.InternalServerError,
+      detail: formatError(error),
+    })
+  }
+
+  return (data: object, options?: ParseOptions) =>
+    pipe(parse(data, options), E.tapError(logError), E.mapError(transformError))
+}

@@ -3,12 +3,13 @@ import {
   parseCreationOptionsFromJSON,
   type RegistrationPublicKeyCredential,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError } from '@passlock/shared/src/error'
+import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { PasslockLogger } from '@passlock/shared/logging'
 import {
   createParser,
   Principal,
   RegistrationOptions,
-} from '@passlock/shared/src/schema'
+} from '@passlock/shared/schema'
 import {
   Context,
   Effect as E,
@@ -24,10 +25,10 @@ import {
   Endpoint,
   Tenancy,
 } from '../config'
-import { loggerLive, PasslockLogger } from '../logging/logging'
+import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
 import { isNewUser } from '../user/status'
-import { Capabilities, capabilitiesLive } from '../utils'
+import { Capabilities, capabilitiesLive, CommonDependencies } from '../utils'
 
 /* Request */
 
@@ -140,7 +141,11 @@ const verify = (
   })
 }
 
-export const register = (data: RegistrationRequest) =>
+type Dependencies = CommonDependencies | Capabilities | Create
+
+export const register = (
+  data: RegistrationRequest,
+): E.Effect<Dependencies, PasslockError, Principal> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -174,8 +179,8 @@ export const registerLive = (request: RegistrationRequest & Config) => {
     createLive,
     networkServiceLive,
     configLayers,
-    loggerLive,
     capabilitiesLive,
+    eventLoggerLive,
   )
 
   const withLayers = E.provide(register(request), layers)

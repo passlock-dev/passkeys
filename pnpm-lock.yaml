@@ -149,6 +149,9 @@ importers:
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
+      vitest:
+        specifier: ^1.2.1
+        version: 1.2.1(@types/node@20.11.5)(@vitest/ui@1.2.1)(jsdom@23.2.0)
 
 packages:
 
