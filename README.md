@@ -52,7 +52,7 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 
 1. Use this library to obtain a token on your frontend
 2. Pass the token to your backend
-3. Call our REST API to exchange the token for the authentication result
+3. Call the REST API to exchange the token for the authentication result
 
 > [!NOTE]
 > In step 3, you can instead verify and examine a JWT, thereby saving the network trip.
@@ -97,25 +97,15 @@ After implementing Passkey authentication on several projects, I realised there 
 
 ## Prerequisites
 
-Create a free account on [passlock.dev][passlock-signup] and obtain your `tenancyId` and `apiKey`
+Create an account on [passlock.dev][passlock-signup] and obtain your `clientId` (for the frontend), `apiKey` (for the backend), and `tenancyId` (frontend & backend).
 
 ## Install the Passlock frontend library
 
 This will depend on your package manager:
 
-`npm add @passlock/passkeys-frontend`  
-`pnpm add @passlock/passkeys-frontend`  
-`yarn add @passlock/passkeys-frontend`
-
-## Create a Passlock instance
-
-Passlock can be configured by passing various options to the constructor. Please see the [documentation][docs] for more details. The only required field is `tenancyId`.
-
-```typescript
-import { Passlock } from "@passlock/passkeys-frontend";
-
-const passlock = new Passlock({ tenancyId: 'my-tenancy-id' });
-```
+`npm add @passlock/client`  
+`pnpm add @passlock/client`  
+`yarn add @passlock/client`
 
 # Basic usage
 
@@ -123,46 +113,47 @@ This quickstart guide illustrates the simplest scenario, using token based verif
 
 An alternative flow uses JWTs with public key encryption to avoid the need for the REST call on the backend. Please see the [documentation][docs] for more details.
 
+**Note:** The flow is conceptually similar to OAuth2/OIDC but without the redirects.
+
 ## Passkey registration
 
-You just need to call `passlock.register()`. This will do three things:
+You just need to call `register()`, passing in a few options. This will do three things:
 
 1. Generate a passkey and store it on the device
 2. Register the passkey in the Passlock backend
 3. Generate a token representing the newly created credential
 
-This token should then be sent to your backend. Your backend should call the Passlock REST API to verify the token, before linking the passlock userId with your own user entity.
+This token should then be sent to your backend. Your backend should call the Passlock REST API to verify the token, before linking the userId with your own user entity.
 
 ### Create a passkey (frontend)
 
 ```typescript
-if (passlock.isSupported()) {
-  // Simplest example, excluding options or profile info (email etc) 
-  const token = await registerPasskey()
+import { arePasskeysSupported, register, isPasslockError } from '@passlock/client'
+
+const tenancyId = process.env.PASSLOCK_TENANCY_ID
+const clientId = process.env.PASSLOCK_CLIENT_ID
+
+const passkeysSupported = await arePasskeysSupported()
+if (!passkeysSupported) {
+  // browser doesn't support passkeys, fallback to 
+  // username/password, one time login codes etc
+  return
+}
+
+// pseudocode - get these details from your registration form, 
+const { email, firstName, lastName } = getUserDetails()
+
+// Note: passlock doesn't throw. You should examine the result and interrogate any errors
+const result = await register({ tenancyId, clientId, email, firstName, lastName })
+
+if (isPasslockError(result)) {
+  console.err(result) // PasslockError object
 } else {
-  // Fallback to username/password, email or social login.
-}
-
-async function registerPasskey() {
-  // Note: passlock doesn't throw. You should examine the result and interrogate any errors
-  const result = await passlock.register()
-
-  if (result.ok && result.token) {
-    await linkAccount(result.token)
-  } else if (result.error) { ... }
-}
-
-/**
- * Post the token to your backend, remember about CORS!
- */
-async function linkAccount(token: string) {
-  await fetch("https://example.com/register/passlock", {
-    method: "POST",
-    headers: {
-      `Content-Type`: "application/json"
-    },
-    body: JSON.stringify({ token })
-  })
+  console.log(result) // See what passlock sent back
+  
+  // pseudocode - send the token to your backend, potentially
+  // with any other information you captured on your registration page
+  await linkAccount(result.token)
 }
 ```
 
@@ -175,54 +166,52 @@ on the backend, you just need to make a REST call to our API.
 ```typescript
 // Express.js
 
-app.post('/register/passlock', async function(req, res) {
-  const passlockUser = await verifyPasslockToken(req.body.token)
+const tenancyId = process.env.PASSLOCK_TENANCY_ID
+const apiKey = process.env.PASSLOCK_API_KEY
 
-  // pseudocode - link the Passlock userId with an existing user or create a new user in your backend
-  const user = await createAccount(passlockUser)
+app.post('/register/passlock', async function(req, res) {
+  const token = req.body.token
+  const url = `https://api.passlock.dev/${tenancyId}/token/${token}`
+
+  // TODO check for 403, 404, 500 etc
+  const response = await axios.get(url, { 
+    headers: { `X-API-KEY`: apiKey }
+  })
+
+  // pseudocode - link the Passlock userId with an existing user 
+  // or create a new user in your backend
+  const user = await createAccount(response.data.subject)
 
   // log the user in
   req.session.user = user
 
   res.json({ user })
-}
-
-async function verifyPasslockToken(token: string) {
-  const tenancyId = process.env.PASSLOCK_TENANCY_ID;
-  const apiKey = process.env.PASSLOCK_API_KEY;
-  const url = `https://api.passlock.dev/${tenancyId}/verify`
-
-  const response = await axios.post(url, { token })
-  if (!response.data.verified) { /* verification failed */ }
-
-  // the pPasslock user object containing at a minimum a userId field
-  return response.data
-}
+})
 ```
 
 ## Passkey authentication
 
-Just call `passlock.authenticate()` to obtain a token, which you then pass to your backend.
+Similar to registration, call `authenticate()` to obtain a token, which you then pass to your backend.
 
 ### Authenticate (frontend)
 
 ```typescript
-if (passlock.isSupported()) {
-  await authenticatePasskey()
-} else { ... }
- 
-async function authenticatePasskey() {
-  const result = await passlock.authenticate()
+import { arePasskeysSupported, authenticate, isPasslockError } from '@passlock/client';
 
-  if (result.ok && result.token) {
-    await verifyToken(result.token)
-  } else if (result.error) { ... }
+const tenancyId = process.env.PASSLOCK_TENANCY_ID
+const clientId = process.env.PASSLOCK_CLIENT_ID
+
+const passkeysSupported = await arePasskeysSupported()
+if (!passkeysSupported) return
+
+const result = await authenticate({ tenancyId, clientId })
+
+if (isPasslockError(result)) {
+  console.err(result)
+} else {
+  // pseudocode - send the token to your backend
+  await login(result.token)
 }
-
-/**
- * Post the token to the backend
- */
-async function verifyToken(passlockToken: string) { ... }
 ```
 
 ### Verify the passkey (backend)
@@ -234,18 +223,21 @@ Just exchange the token for a Passlock user, then lookup your own user entity us
 
 app.post('/authenticate/passlock', async function(req, res) {
   const token = req.body.token
-  
-  // see the function in "Link the passkey (backend)" above
-  const passlockUser = await verifyPasslockToken(token)
+  const url = `https://api.passlock.dev/${tenancyId}/token/${token}`
+
+  // TODO check for 403, 404, 500 etc
+  const response = await axios.get(url, { 
+    headers: { `X-API-KEY`: apiKey }
+  })
 
   // pseudocode - use the Passlock userId to lookup a user in your db
-  const user = await lookupUser(passlockUser.userId)
+  const user = await lookupUser(response.data.subject.id)
 
   // revert to your own session storage e.g. using express-session middleware
   req.session.user = user
 
   res.json({ user })
-}
+})
 ```
 
 ## Contact
