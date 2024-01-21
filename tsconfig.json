@@ -15,13 +15,12 @@
     "outDir": "./dist",
     "paths": {
       "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
+      "$lib/*": ["./src/lib/*"]
     },
     "rootDir": "./src",
     "sourceMap": true
   },
   "include": [
-    "./sst-env.d.ts",
     "src/**/*.ts", 
     "src/**/*.json"
   ],

@@ -36,7 +36,7 @@
   "dependencies": {
     "@effect/schema": "^0.60.4",
     "@github/webauthn-json": "^2.1.1",
-    "@passlock/shared": "file:../shared",
+    "@passlock/shared": "link:../shared",
     "effect": "2.1.2",
     "lodash-es": "^4.17.21"
   },

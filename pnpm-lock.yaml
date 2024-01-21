@@ -12,8 +12,8 @@ dependencies:
     specifier: ^2.1.1
     version: 2.1.1
   '@passlock/shared':
-    specifier: file:../shared
-    version: file:../shared(fast-check@3.15.0)
+    specifier: link:../shared
+    version: link:../shared
   effect:
     specifier: 2.1.2
     version: 2.1.2
@@ -3474,14 +3474,3 @@ packages:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
     dev: true
-
-  file:../shared(fast-check@3.15.0):
-    resolution: {directory: ../shared, type: directory}
-    id: file:../shared
-    name: '@passlock/shared'
-    dependencies:
-      '@effect/schema': 0.60.6(effect@2.1.2)(fast-check@3.15.0)
-      effect: 2.1.2
-    transitivePeerDependencies:
-      - fast-check
-    dev: false
