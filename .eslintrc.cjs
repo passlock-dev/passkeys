@@ -1,88 +1,84 @@
-// See https://gist.github.com/phatnguyenuit/149094cb3a28e30f5f4c891d264bf7e6
-
 module.exports = {
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/strict-type-checked",
-        "plugin:@typescript-eslint/stylistic-type-checked",
-        'plugin:import/recommended',
-        'plugin:import/typescript',
-        'prettier'
+  env: {
+    browser: true,
+    es2021: true,
+    node: true
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:import/recommended', 
+    'plugin:import/typescript',
+    'plugin:@typescript-eslint/strict-type-checked',
+    'prettier'
+  ],
+  overrides: [],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: './tsconfig.json'
+  },
+  plugins: [
+    "@typescript-eslint", 
+    "import"
+  ],
+  root: true,
+  rules: {
+    "@typescript-eslint/no-unused-vars": [
+      "error", 
+      { 
+        "ignoreRestSiblings": true,
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
     ],
-    "overrides": [
+    "@typescript-eslint/consistent-type-definitions": [
+      "warn",
+      "type"
     ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "project": true,
-        "sourceType": "module",
-        "tsconfigRootDir": __dirname,
-    },
-    "plugins": [
-        "@typescript-eslint",
-        "import"
+    "sort-imports": [
+      "warn",
+      {
+        ignoreCase: false,
+        ignoreDeclarationSort: true, // don"t want to sort import lines, use eslint-plugin-import instead
+        ignoreMemberSort: false,
+        memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+        allowSeparatedGroups: true,
+      },
     ],
-    "root": true,
-    "rules": {
-        // turn off errors for missing imports (typescript does it anyway)
-        'import/no-unresolved': 'off',
-        // 'import/no-named-as-default-member': 'off',
-        'import/order': [
-            'warn',
-            {
-                groups: [
-                    'builtin', // Built-in imports (come from NodeJS native) go first
-                    'external', // <- External imports
-                    'internal', // <- Absolute imports
-                    ['sibling', 'parent'], // <- Relative imports, the sibling and parent types they can be mingled together
-                    'index', // <- index imports
-                    'unknown', // <- unknown
-                ],
-                'newlines-between': 'always',
-                alphabetize: {
-                    /* sort in ascending order. Options: ["ignore", "asc", "desc"] */
-                    order: 'asc',
-                    /* ignore case. Options: [true, false] */
-                    caseInsensitive: true,
-                },
-            },
+    "import/no-unresolved": "error",
+    "import/newline-after-import": [
+      "warn", 
+      { 
+        "count": 1
+      }
+    ],
+    'import/order': [
+      'warn',
+      {
+        groups: [
+          'builtin', // Built-in imports (come from NodeJS native) go first
+          'external', // <- External imports
+          'internal', // <- Absolute imports
+          ['sibling', 'parent'], // <- Relative imports, the sibling and parent types they can be mingled together
+          'index', // <- index imports
+          'unknown', // <- unknown
         ],
-        'sort-imports': [
-            'warn',
-            {
-                ignoreCase: true,
-                ignoreDeclarationSort: true, // don"t want to sort import lines, use eslint-plugin-import instead
-                ignoreMemberSort: false,
-                memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-                allowSeparatedGroups: true,
-            },
-        ],
-        // note you must disable the base rule as it can report incorrect errors
-        "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": [
-            "warn", // or "error"
-            {
-                "argsIgnorePattern": "^_",
-                "varsIgnorePattern": "^_",
-                "caughtErrorsIgnorePattern": "^_",
-                "ignoreRestSiblings": true
-            }
-        ],
-        "@typescript-eslint/consistent-type-definitions": [
-            "warn",
-            "type"
-        ]
-    },
-    settings: {
-        'import/resolver': {
-            typescript: {
-                project: './tsconfig.json',
-            },
+        'newlines-between': 'always',
+        alphabetize: {
+          /* sort in ascending order. Options: ["ignore", "asc", "desc"] */
+          order: 'asc',
+          /* ignore case. Options: [true, false] */
+          caseInsensitive: true,
         },
+      },
+    ]
+  },
+  settings: {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
     },
+    "import/resolver": {
+      "typescript": true
+    }
+  }
 }
