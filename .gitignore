@@ -16,6 +16,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# typescript
+tsconfig.tsbuildinfo
+
 # editor directories and files
 .vscode/*
 !.vscode/extensions.json
