@@ -31,10 +31,12 @@
     "typecheck": "tsc -noEmit",
     "lint": "eslint --ext .ts src",
     "lint:fix": "pnpm run lint --fix",
-    "format": "prettier --write \"src/**/*.+(js|ts|json)\""
+    "format": "prettier --write \"src/**/*.+(js|ts|json)\"",
+    "ncu": "ncu -x @passlock/shared",
+    "ncu:save": "ncu -u -x @passlock/shared"
   },
   "dependencies": {
-    "@effect/schema": "^0.60.4",
+    "@effect/schema": "^0.60.6",
     "@github/webauthn-json": "^2.1.1",
     "@passlock/shared": "0.0.0",
     "effect": "2.1.2",
@@ -53,13 +55,13 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "jsdom": "^23.2.0",
+    "jsdom": "^24.0.0",
     "prettier": "^3.2.4",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
-    "vite": "^5.0.11",
+    "vite": "^5.0.12",
     "vitest": "^1.2.1"
   }
 }
