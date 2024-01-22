@@ -103,9 +103,9 @@ Create an account on [passlock.dev][passlock-signup] and obtain your `clientId` 
 
 This will depend on your package manager:
 
-`npm add @passlock/client`  
-`pnpm add @passlock/client`  
-`yarn add @passlock/client`
+`npm add @passlock/passkeys`  
+`pnpm add @passlock/passkeys`  
+`yarn add @passlock/passkeys`
 
 # Basic usage
 
@@ -128,7 +128,7 @@ This token should then be sent to your backend. Your backend should call the Pas
 ### Create a passkey (frontend)
 
 ```typescript
-import { arePasskeysSupported, register, isPasslockError } from '@passlock/client'
+import { arePasskeysSupported, register, isPasslockError } from '@passlock/passkeys'
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
@@ -196,7 +196,7 @@ Similar to registration, call `authenticate()` to obtain a token, which you then
 ### Authenticate (frontend)
 
 ```typescript
-import { arePasskeysSupported, authenticate, isPasslockError } from '@passlock/client';
+import { arePasskeysSupported, authenticate, isPasslockError } from '@passlock/passkeys';
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
