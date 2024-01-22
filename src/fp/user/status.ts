@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error as passlockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
 import type { Effect } from 'effect/Effect'
@@ -22,10 +22,10 @@ const isRegisteredResponse = (value: object) => {
   const guard = (o: object): o is RegisteredResponse => 'registered' in o
 
   const error = () =>
-    new PasslockError({
-      message: "Invalid server response, expected 'registered' field",
-      code: ErrorCode.InternalServerError,
-    })
+    passlockError(
+      "Invalid server response, expected 'registered' field",
+      ErrorCode.InternalServerError,
+    )
 
   return E.succeed(value).pipe(E.filterOrFail(guard, error))
 }
@@ -60,11 +60,9 @@ export const isExistingUser = (request: Email): E.Effect<Dependencies, PasslockE
 
 export const isNewUser = (request: Email) => {
   const predicate = not(identity<boolean>)
-  const error = () =>
-    new PasslockError({
-      message: 'Email already registered',
-      code: ErrorCode.DuplicateEmail,
-    })
+
+  const error = () => passlockError('Email already registered', ErrorCode.DuplicateEmail)
+
   const guard = E.filterOrFail(predicate, error)
 
   return isExistingUser(request).pipe(guard).pipe(E.asUnit)

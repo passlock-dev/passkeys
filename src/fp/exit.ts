@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError, isPasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error, isPasslockError } from '@passlock/shared/error'
 import { Cause, Exit as EX, Effect, flow } from 'effect'
 
 type InFn<I, O> = (input: I) => Effect.Effect<never, PasslockError, O>
@@ -17,10 +17,7 @@ export const transformExit = <T>(exit: EX.Exit<PasslockError, T>): PasslockError
     if (Cause.isFailType(cause)) {
       return cause.error
     } else {
-      return new PasslockError({
-        message: 'Unexpected error',
-        code: ErrorCode.OtherError,
-      })
+      return error('Unexpected error', ErrorCode.OtherError)
     }
   })
 }

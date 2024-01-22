@@ -3,7 +3,7 @@ import {
   create,
   parseCreationOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Principal, RegistrationOptions, createParser } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
@@ -33,10 +33,7 @@ const toCreationOptions = (options: RegistrationOptions) =>
   E.try({
     try: () => parseCreationOptionsFromJSON(options),
     catch: () =>
-      new PasslockError({
-        message: 'Unable to create credential creation options',
-        code: ErrorCode.InternalServerError,
-      }),
+      error('Unable to create credential creation options', ErrorCode.InternalServerError),
   })
 
 const createCredential = (options: CredentialCreationOptions, signal?: AbortSignal) => {
@@ -45,15 +42,12 @@ const createCredential = (options: CredentialCreationOptions, signal?: AbortSign
       try: () => create({ ...options, signal }),
       catch: e => {
         if (e instanceof Error && e.message.includes('excludeCredentials')) {
-          return new PasslockError({
-            message: 'Passkey already registered on this device or cloud account',
-            code: ErrorCode.DuplicatePasskey,
-          })
+          return error(
+            'Passkey already registered on this device or cloud account',
+            ErrorCode.DuplicatePasskey,
+          )
         } else {
-          return new PasslockError({
-            message: 'Unable to create credentials',
-            code: ErrorCode.InternalBrowserError,
-          })
+          return error('Unable to create credentials', ErrorCode.InternalBrowserError)
         }
       },
     })

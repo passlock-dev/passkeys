@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error } from '@passlock/shared/error'
 import { Effect } from 'effect'
 import { describe, expect, test } from 'vitest'
 
@@ -15,10 +15,7 @@ describe('isPasslockEvent', () => {
     }
 
     expect(sideEffect).toThrowError(
-      new PasslockError({
-        message: 'Unable to fire custom event',
-        code: ErrorCode.InternalBrowserError,
-      }),
+      error('Unable to fire custom event', ErrorCode.InternalBrowserError),
     )
   })
 })

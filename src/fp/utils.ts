@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error, fail } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Context, Effect as E, Layer, identity, pipe } from 'effect'
 
@@ -20,30 +20,16 @@ export type CommonDependencies = NetworkService | Abort | Endpoint | Tenancy | P
 const hasWebAuthn = E.suspend(() =>
   typeof window.PublicKeyCredential === 'function'
     ? E.unit
-    : E.fail(
-        new PasslockError({
-          message: 'WebAuthn API is not supported on this device',
-          code: ErrorCode.PasskeysNotSupported,
-        }),
-      ),
+    : fail('WebAuthn API is not supported on this device', ErrorCode.PasskeysNotSupported),
 )
 
 const hasPlatformAuth = pipe(
   E.tryPromise({
     try: () => window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
-    catch: () =>
-      new PasslockError({
-        message: 'Sorry something went wrong',
-        code: ErrorCode.InternalBrowserError,
-      }),
+    catch: () => error('Sorry something went wrong', ErrorCode.InternalBrowserError),
   }),
-  E.filterOrFail(
-    identity,
-    () =>
-      new PasslockError({
-        message: 'No platform authenticator available on this device',
-        code: ErrorCode.PasskeysNotSupported,
-      }),
+  E.filterOrFail(identity, () =>
+    error('No platform authenticator available on this device', ErrorCode.PasskeysNotSupported),
   ),
   E.asUnit,
 )
@@ -51,19 +37,10 @@ const hasPlatformAuth = pipe(
 const hasConditionalUi = pipe(
   E.tryPromise({
     try: () => window.PublicKeyCredential.isConditionalMediationAvailable(),
-    catch: () =>
-      new PasslockError({
-        message: 'Sorry something went wrong',
-        code: ErrorCode.InternalBrowserError,
-      }),
+    catch: () => error('Sorry something went wrong', ErrorCode.InternalBrowserError),
   }),
-  E.filterOrFail(
-    identity,
-    () =>
-      new PasslockError({
-        message: 'Conditional mediation not available on this device',
-        code: ErrorCode.PasskeysNotSupported,
-      }),
+  E.filterOrFail(identity, () =>
+    error('Conditional mediation not available on this device', ErrorCode.PasskeysNotSupported),
   ),
   E.asUnit,
 )

@@ -3,7 +3,7 @@ import {
   get,
   parseRequestOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { AuthenticationOptions, Principal, createParser } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger, pipe } from 'effect'
@@ -28,10 +28,7 @@ const toRequestOptions = (options: AuthenticationOptions) =>
   E.try({
     try: () => parseRequestOptionsFromJSON(options),
     catch: () =>
-      new PasslockError({
-        message: 'Unable to create credential request options',
-        code: ErrorCode.InternalServerError,
-      }),
+      error('Unable to create credential request options', ErrorCode.InternalServerError),
   })
 
 const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) => {
@@ -39,10 +36,7 @@ const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) 
     E.tryPromise({
       try: () => get({ ...options, signal }),
       catch: () => {
-        return new PasslockError({
-          message: 'Unable to get credentials',
-          code: ErrorCode.InternalBrowserError,
-        })
+        return error('Unable to get credentials', ErrorCode.InternalBrowserError)
       },
     })
 

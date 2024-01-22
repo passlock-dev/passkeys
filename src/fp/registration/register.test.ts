@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error } from '@passlock/shared/error'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { register } from './register'
@@ -52,11 +52,6 @@ describe('register should', () => {
     const effect = register(request)
     const { result } = await runEffect(effect, true)
 
-    expect(result).toEqual(
-      new PasslockError({
-        message: 'Email already registered',
-        code: ErrorCode.DuplicateEmail,
-      }),
-    )
+    expect(result).toEqual(error('Email already registered', ErrorCode.DuplicateEmail))
   })
 })

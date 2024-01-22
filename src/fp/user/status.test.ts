@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
@@ -78,10 +78,7 @@ describe('isRegistered should', () => {
     const res = await runEffect(effect, getData)
 
     expect(res).toEqual(
-      new PasslockError({
-        message: "Invalid server response, expected 'registered' field",
-        code: ErrorCode.InternalServerError,
-      }),
+      error("Invalid server response, expected 'registered' field", ErrorCode.InternalServerError),
     )
   })
 })
@@ -101,11 +98,6 @@ describe('isUnRegistered should', () => {
     const effect = isNewUser(request)
     const alreadyRegistered = await runEffect(effect, true)
 
-    expect(alreadyRegistered).toEqual(
-      new PasslockError({
-        message: 'Email already registered',
-        code: ErrorCode.DuplicateEmail,
-      }),
-    )
+    expect(alreadyRegistered).toEqual(error('Email already registered', ErrorCode.DuplicateEmail))
   })
 })

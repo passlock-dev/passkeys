@@ -1,4 +1,4 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error } from '@passlock/shared/error'
 import { Effect } from 'effect'
 
 export const DebugMessage = 'PasslogDebugMessage'
@@ -10,10 +10,7 @@ export const fireEvent = (message: string) =>
       globalThis.dispatchEvent(evt)
     },
     catch: () => {
-      return new PasslockError({
-        message: 'Unable to fire custom event',
-        code: ErrorCode.InternalBrowserError,
-      })
+      return error('Unable to fire custom event', ErrorCode.InternalBrowserError)
     },
   })
 
