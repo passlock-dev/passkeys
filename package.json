@@ -10,11 +10,15 @@
   "license": "MIT",
   "homepage": "https://github.com/passlock-dev/passkeys",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./src/": "./src/"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./fp": {
+      "import": "./dist/fp/index.js",
+      "types": "./dist/fp/index.d.ts"
+    }
   },
   "files": [
     "dist",
@@ -32,6 +36,7 @@
     "lint": "eslint --ext .ts src",
     "lint:fix": "pnpm run lint --fix",
     "format": "prettier --write \"src/**/*.+(js|ts|json)\"",
+    "publish": "pnpm publish --no-git-checks --access public",
     "ncu": "ncu -x @passlock/shared",
     "ncu:save": "ncu -u -x @passlock/shared"
   },

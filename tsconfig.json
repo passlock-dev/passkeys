@@ -15,7 +15,8 @@
     "outDir": "./dist",
     "paths": {
       "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"]
+      "$lib/*": ["./src/lib/*"],
+      "@passlock/shared": ["../shared"]
     },
     "rootDir": "./src",
     "sourceMap": true
@@ -24,5 +25,8 @@
     "src/**/*.ts", 
     "src/**/*.json"
   ],
-  "exclude": ["./node_modules/**"]
+  "exclude": ["./node_modules/**"],
+  "references": [{
+    "path": "../shared"
+  }]
 }
