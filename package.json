@@ -14,15 +14,11 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./fp": {
-      "import": "./dist/fp/index.js",
-      "types": "./dist/fp/index.d.ts"
     }
   },
   "files": [
-    "dist",
-    "src"
+    "src",
+    "dist"
   ],
   "scripts": {
     "clean": "rimraf dist",
