@@ -25,6 +25,7 @@ export const request: RegistrationRequest = {
   email: 'john.doe@gmail.com',
   firstName: 'john',
   lastName: 'doe',
+  userVerification: "preferred"
 }
 
 export const encodedEmail = encodeURIComponent(request.email)

@@ -5,7 +5,7 @@ import {
 } from '@github/webauthn-json/browser-ponyfill'
 import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import { Principal, RegistrationOptions, createParser } from '@passlock/shared/schema'
+import { Principal, RegistrationOptions, createParser, UserVerification } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
 
 import { Config, DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
@@ -14,12 +14,14 @@ import { NetworkService, networkServiceLive } from '../network/network'
 import { isNewUser } from '../user/status'
 import { Capabilities, type CommonDependencies, capabilitiesLive } from '../utils'
 
+
 /* Request */
 
 export type RegistrationRequest = {
   email: string
   firstName: string
-  lastName: string
+  lastName: string,
+  userVerification?: UserVerification
 }
 
 /* Services */

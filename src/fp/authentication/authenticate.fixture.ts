@@ -23,7 +23,7 @@ export const tenancyId = 'testTenancy'
 export const clientId = 'clientId'
 export const endpoint = 'https://example.com'
 
-export const request: AuthenticationRequest = { userVerification: true }
+export const request: AuthenticationRequest = { userVerification: "preferred" }
 
 export const credential: AuthenticationPublicKeyCredential = {
   toJSON: () => {
