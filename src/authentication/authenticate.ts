@@ -5,7 +5,12 @@ import {
 } from '@github/webauthn-json/browser-ponyfill'
 import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import { AuthenticationOptions, Principal, UserVerification, createParser } from '@passlock/shared/schema'
+import {
+  AuthenticationOptions,
+  Principal,
+  UserVerification,
+  createParser,
+} from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger, pipe } from 'effect'
 
 import { Config, DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'

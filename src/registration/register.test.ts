@@ -1,8 +1,10 @@
-import { ErrorCode, error } from '@passlock/shared/error'
+import { ErrorCode } from '@passlock/shared/error'
+import { Effect as E, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { register } from './register'
+import { Create, register } from './register'
 import {
+  buildTestLayers,
   clientId,
   encodedEmail,
   endpoint,
@@ -11,6 +13,8 @@ import {
   runEffect,
   tenancyId,
 } from './register.fixture'
+import { runUnion } from '../exit'
+import { expectPasslockError } from '../test/testUtils'
 
 describe('register should', () => {
   afterEach(() => {
@@ -52,6 +56,38 @@ describe('register should', () => {
     const effect = register(request)
     const { result } = await runEffect(effect, true)
 
-    expect(result).toEqual(error('Email already registered', ErrorCode.DuplicateEmail))
+    expectPasslockError(result).toMatch('Email already registered', ErrorCode.DuplicateEmail)
+  })
+
+  test('generate an error if we try to reregister an existing passkey', async () => {
+    const effect = register(request)
+    const { layers } = buildTestLayers(false)
+
+    const create: Create = () =>
+      Promise.reject(new Error('credentialID matched by excludeCredentials'))
+    const createTest = Layer.succeed(Create, Create.of(create))
+    const withFailingCreate = Layer.merge(layers, createTest)
+
+    const noRequirements = E.provide(effect, withFailingCreate)
+    const result = await runUnion(noRequirements)
+
+    expectPasslockError(result).toMatch(/Passkey already registered/, ErrorCode.DuplicatePasskey)
+  })
+
+  test("return an error if the browser can't create a credential", async () => {
+    const effect = register(request)
+    const { layers } = buildTestLayers(false)
+
+    const create: Create = () => Promise.reject(new Error('BOOM!'))
+    const createTest = Layer.succeed(Create, Create.of(create))
+    const withFailingCreate = Layer.merge(layers, createTest)
+
+    const noRequirements = E.provide(effect, withFailingCreate)
+    const result = await runUnion(noRequirements)
+
+    expectPasslockError(result).toMatch(
+      /Unable to create credential/,
+      ErrorCode.InternalBrowserError,
+    )
   })
 })

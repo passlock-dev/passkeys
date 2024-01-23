@@ -11,7 +11,7 @@ import { registrationOptions } from './register.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
-import { type GetData, type PostData, noopLogger } from '../testUtils'
+import { type GetData, type PostData, noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
 const encoder = new TextEncoder()
@@ -25,7 +25,7 @@ export const request: RegistrationRequest = {
   email: 'john.doe@gmail.com',
   firstName: 'john',
   lastName: 'doe',
-  userVerification: "preferred"
+  userVerification: 'preferred',
 }
 
 export const encodedEmail = encodeURIComponent(request.email)
@@ -74,7 +74,7 @@ const principal: S.Schema.From<typeof Principal> = {
   expiresAt: expectedPrincipal.expiresAt.toISOString(),
 }
 
-const buildMocks = (registered: boolean) => {
+export const buildMocks = (registered: boolean) => {
   const getData: GetData = vi.fn().mockImplementationOnce(() => E.succeed({ registered }))
 
   const postData: PostData = vi
@@ -96,7 +96,7 @@ export type Out<O> = Promise<{
   postData: PostData
 }>
 
-export async function runEffect<O>(effect: In<O>, registered: boolean): Out<O> {
+export const buildTestLayers = (registered: boolean) => {
   const { getData, postData } = buildMocks(registered)
   const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
   const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
@@ -122,6 +122,12 @@ export async function runEffect<O>(effect: In<O>, registered: boolean): Out<O> {
     createTest,
     noopLogger,
   )
+
+  return { layers, getData, postData }
+}
+
+export async function runEffect<O>(effect: In<O>, registered: boolean): Out<O> {
+  const { layers, getData, postData } = buildTestLayers(registered)
   const noRequirements = E.provide(effect, layers)
   const result = await runUnion(noRequirements)
 

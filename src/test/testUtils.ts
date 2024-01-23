@@ -1,7 +1,11 @@
+import { fail } from 'assert'
+
+import { ErrorCode, PasslockError, isPasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
+import { expect } from 'vitest'
 
-import type { NetworkService } from './network/network'
+import type { NetworkService } from '../network/network'
 
 const noop = () => E.succeed(undefined)
 
@@ -56,3 +60,14 @@ export const NetworkServiceTest = {
    */
   withPostData: (postData: PostData): NetworkService => ({ getData, postData }),
 }
+
+export const expectPasslockError = <T>(actual: PasslockError | T) => ({
+  toMatch: (message: RegExp | string, code: ErrorCode) => {
+    if (isPasslockError(actual)) {
+      expect(actual.message).toMatch(message)
+      expect(actual.code).toEqual(code)
+    } else {
+      fail('Expected PasslockError')
+    }
+  },
+})

@@ -9,13 +9,14 @@ export default defineConfig({
     environment: 'jsdom',
     coverage: {
       provider: 'v8',
-      include: ['src/fp/**'],
+      include: ['src/**'],
       reporter: ['text', ['html', { subdir: 'html' }]],
       exclude: [
-        'src/fp/index.ts', // no real logic here
-        'src/fp/schema.ts', // no real logic here
-        'src/fp/config.ts', // no real logic here
-        'src/fp/**/*.fixture.ts', // test fixtures
+        'src/index.ts', // no real logic here
+        'src/schema.ts', // no real logic here
+        'src/config.ts', // no real logic here
+        'src/**/*.fixture.ts', // test fixtures
+        'src/test/testUtils.ts', // test fixtures
       ],
     },
   },

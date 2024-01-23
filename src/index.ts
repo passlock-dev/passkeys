@@ -1,11 +1,11 @@
 import { ErrorCode, isPasslockError } from '@passlock/shared/error'
 import { Effect } from 'effect'
 
-import { authenticateLive } from './fp/authentication/authenticate'
-import { makeUnionFn, makeUnsafeFn } from './fp/exit'
-import { registerLive } from './fp/registration/register'
-import { isExistingUserLive } from './fp/user/status'
-import * as Utils from './fp/utils'
+import { authenticateLive } from './authentication/authenticate'
+import { makeUnionFn, makeUnsafeFn } from './exit'
+import { registerLive } from './registration/register'
+import { isExistingUserLive } from './user/status'
+import * as Utils from './utils'
 
 /**
  * Test comment

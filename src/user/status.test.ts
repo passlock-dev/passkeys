@@ -7,7 +7,7 @@ import { type Email, isExistingUser, isNewUser } from './status'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
-import { type GetData, NetworkServiceTest, noopLogger } from '../testUtils'
+import { type GetData, NetworkServiceTest, noopLogger } from '../test/testUtils'
 
 const tenancyId = 'testTenancy'
 const clientId = 'clientId'

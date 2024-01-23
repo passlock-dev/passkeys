@@ -1,11 +1,11 @@
-import { ErrorCode, PasslockError } from '@passlock/shared/error'
-import { Effect as E, Exit, Layer } from 'effect'
+import { ErrorCode } from '@passlock/shared/error'
+import { Effect as E, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { Fetch, getData, postData } from './network'
 import { Abort } from '../config'
 import { runUnion } from '../exit'
-import { noopLogger } from '../testUtils'
+import { expectPasslockError, noopLogger } from '../test/testUtils'
 
 function createFetchResponse(data: unknown, status: number) {
   return {
@@ -55,9 +55,9 @@ describe('getData', () => {
     const layers = createTestLayers(response, 500)
 
     const noRequirements = E.provide(effect, layers)
-    const res = await E.runPromiseExit(noRequirements)
+    const res = await runUnion(noRequirements)
 
-    expect(Exit.isFailure(res)).toEqual(true)
+    expectPasslockError(res).toMatch('Unable to parse object', ErrorCode.InternalServerError)
   })
 
   test("error when the server doesn't return an object", async () => {
@@ -67,9 +67,12 @@ describe('getData', () => {
     const layers = createTestLayers(response)
 
     const noRequirements = E.provide(effect, layers)
-    const res = await E.runPromiseExit(noRequirements)
+    const res = await runUnion(noRequirements)
 
-    expect(Exit.isFailure(res)).toEqual(true)
+    expectPasslockError(res).toMatch(
+      'Invalid response, expected object',
+      ErrorCode.InternalServerError,
+    )
   })
 
   test('error when a request fails', async () => {
@@ -79,9 +82,9 @@ describe('getData', () => {
     const layers = createLayers(fetch)
 
     const noRequirements = E.provide(effect, layers)
-    const res = await E.runPromiseExit(noRequirements)
+    const res = await runUnion(noRequirements)
 
-    expect(Exit.isFailure(res)).toEqual(true)
+    expectPasslockError(res).toMatch(/Unable to fetch/, ErrorCode.InternalServerError)
   })
 
   test('propagate a server side Passlock error', async () => {
@@ -96,7 +99,7 @@ describe('getData', () => {
     const noRequirements = E.provide(effect, layers)
     const res = await runUnion(noRequirements)
 
-    expect(res).toEqual(new PasslockError(backendError))
+    expectPasslockError(res).toMatch(backendError.message, backendError.code)
   })
 
   test('retry a failed request', async () => {
@@ -172,13 +175,13 @@ describe('postData', () => {
   test('error when a request fails', async () => {
     const effect = postData('https://example.com', 'testClientId', { a: 'b' })
 
-    const response = { error: 'boom' }
-    const layers = createTestLayers(response, 500)
+    const fetch = vi.fn().mockRejectedValue(new Error('boom!'))
+    const layers = createLayers(fetch)
 
     const noRequirements = E.provide(effect, layers)
-    const res = await E.runPromiseExit(noRequirements)
+    const res = await runUnion(noRequirements)
 
-    expect(Exit.isFailure(res)).toEqual(true)
+    expectPasslockError(res).toMatch(/Unable to fetch/, ErrorCode.InternalServerError)
   })
 
   test('propagate a server side Passlock error', async () => {
@@ -193,8 +196,7 @@ describe('postData', () => {
     const noRequirements = E.provide(effect, layers)
     const res = await runUnion(noRequirements)
 
-    const expectedError = new PasslockError(backendError)
-    expect(res).toEqual(expectedError)
+    expectPasslockError(res).toMatch(backendError.message, backendError.code)
   })
 
   test('retry a failed request', async () => {

@@ -11,7 +11,7 @@ import { authenticationOptions } from './authenticate.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
-import { NetworkServiceTest, type PostData, noopLogger } from '../testUtils'
+import { NetworkServiceTest, type PostData, noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
 export { authenticationOptions } from './authenticate.fixture.json'
@@ -23,7 +23,7 @@ export const tenancyId = 'testTenancy'
 export const clientId = 'clientId'
 export const endpoint = 'https://example.com'
 
-export const request: AuthenticationRequest = { userVerification: "preferred" }
+export const request: AuthenticationRequest = { userVerification: 'preferred' }
 
 export const credential: AuthenticationPublicKeyCredential = {
   toJSON: () => {
@@ -85,7 +85,7 @@ export type In<O> = E.Effect<
 >
 export type Out<O> = Promise<{ result: PasslockError | O; postData: PostData }>
 
-export async function runEffect<O>(effect: In<O>): Out<O> {
+export const buildTestLayers = () => {
   const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
   const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
   const abortTest = Layer.succeed(Abort, Abort.of({}))
@@ -111,6 +111,12 @@ export async function runEffect<O>(effect: In<O>): Out<O> {
     getTest,
     noopLogger,
   )
+
+  return { layers, postData }
+}
+
+export async function runEffect<O>(effect: In<O>): Out<O> {
+  const { layers, postData } = buildTestLayers()
   const noRequirements = E.provide(effect, layers)
   const result = await runUnion(noRequirements)
 
