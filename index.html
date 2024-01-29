@@ -32,18 +32,18 @@
       </div>
       
       <div class="two-col-grid">
-        <div class='box'>
+        <form id="registerForm" class='box'>
           <div>
             <label for="firstName">First name</label>
-            <input id="firstName" type="text" autocomplete="given-name" required />
+            <input id="firstName" name="firstName" type="text" autocomplete="given-name" required />
           </div>
           <div class="col-start-2">
             <label for="lastName">Last name</label>
-            <input id="lastName" type="text" autocomplete="family-name" required/>
+            <input id="lastName" name="lastName" type="text" autocomplete="family-name" required/>
           </div>
           <div class="col-span-2">
             <label for="email">Email</label>
-            <input id="email" type="email" autocomplete="email" required />
+            <input id="email" name="email" type="email" autocomplete="email" required />
           </div>
           <div class="col-span-2">
             <button id="registerBtn">
@@ -56,7 +56,7 @@
               </svg>
             </button>
           </div>
-        </div>
+        </form>
     
         <div class="col-start-2">
           <div class="box">

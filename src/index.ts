@@ -7,10 +7,6 @@ import { registerLive } from './registration/register'
 import { isExistingUserLive } from './user/status'
 import * as Utils from './utils'
 
-/**
- * Test comment
- * @returns Promise
- */
 const arePasskeysSupported = () => Effect.runPromise(Utils.arePasskeysSupported)
 const isAutofillSupported = () => Effect.runPromise(Utils.isAutofillSupported)
 

@@ -22,10 +22,11 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
+    "dev": "vite dev",
     "test": "vitest",
     "test:ui": "vitest --coverage.enabled=true --ui",
     "coverage": "vitest run --coverage",
-    "build": "tsc --build",
+    "build": "pnpm run clean && tsc --build",
     "watch": "tsc --build --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts src",
@@ -36,21 +37,21 @@
     "ncu:save": "ncu -u -x @passlock/shared"
   },
   "dependencies": {
-    "@effect/schema": "^0.60.6",
+    "@effect/schema": "^0.61.3",
     "@github/webauthn-json": "^2.1.1",
-    "@passlock/shared": "0.0.0",
-    "effect": "2.1.2",
+    "@passlock/shared": "workspace:*",
+    "effect": "2.2.2",
     "lodash-es": "^4.17.21"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^20.11.5",
+    "@types/node": "^20.11.7",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
-    "@vitest/coverage-v8": "^1.2.1",
-    "@vitest/ui": "^1.2.1",
-    "dts-bundle-generator": "^9.2.4",
+    "@vitest/coverage-v8": "^1.2.2",
+    "@vitest/ui": "^1.2.2",
+    "dts-bundle-generator": "^9.2.5",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -62,6 +63,6 @@
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
-    "vitest": "^1.2.1"
+    "vitest": "^1.2.2"
   }
 }

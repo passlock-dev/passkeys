@@ -60,12 +60,11 @@ export const isExistingUser = (request: Email): E.Effect<Dependencies, PasslockE
 
 export const isNewUser = (request: Email) => {
   const predicate = not(identity<boolean>)
-
   const error = () => passlockError('Email already registered', ErrorCode.DuplicateEmail)
 
-  const guard = E.filterOrFail(predicate, error)
-
-  return isExistingUser(request).pipe(guard).pipe(E.asUnit)
+  return isExistingUser(request).pipe(
+    E.filterOrFail(predicate, error)
+  ).pipe(E.asUnit)
 }
 
 /* Live */

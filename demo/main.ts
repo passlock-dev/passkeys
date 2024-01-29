@@ -3,6 +3,8 @@ import { isPasslockError, register, authenticate } from '../src/index'
 
 /* Helpers */
 
+const getFormElement = <T>(form: HTMLFormElement, name: string) => form.elements.namedItem(name) as T
+
 const getElement = <T>(id: string) => document.getElementById(id) as T
 
 const showMessage = (message: string) =>
@@ -41,7 +43,10 @@ const restoreIds = () => {
 
 /* Handlers */
 
-const registerHandler = async () => {
+const registerHandler = async (e: SubmitEvent) => {
+  e.preventDefault()
+  const form = e.target as HTMLFormElement
+  
   const btnText = getElement<HTMLSpanElement>('registerBtnText')
   const btnSpinner = getElement<SVGElement>('registerBtnSpinner')
 
@@ -49,9 +54,9 @@ const registerHandler = async () => {
   const clientId = (<HTMLInputElement>getElement('clientId')).value
   const endpoint = (<HTMLInputElement>getElement('endpoint')).value
 
-  const firstName = (<HTMLInputElement>getElement('firstName')).value
-  const lastName = (<HTMLInputElement>getElement('lastName')).value
-  const email = (<HTMLInputElement>getElement('email')).value
+  const firstName = (<HTMLInputElement>getFormElement(form, "firstName")).value
+  const lastName = (<HTMLInputElement>getFormElement(form, "lastName")).value
+  const email = (<HTMLInputElement>getFormElement(form, "email")).value
 
   // add real validation
   if (!tenancyId || !clientId || !firstName || !lastName || !email) {
@@ -106,8 +111,7 @@ const loginHandler = async () => {
     const result = await authenticate({
       tenancyId,
       clientId,
-      endpoint,
-      userVerification: false,
+      endpoint
     })
 
     if (isPasslockError(result)) {
@@ -124,7 +128,7 @@ const loginHandler = async () => {
 }
 
 document
-  .getElementById('registerBtn')
-  ?.addEventListener('click', registerHandler)
+  .getElementById('registerForm')
+  ?.addEventListener('submit', registerHandler)
 document.getElementById('loginBtn')?.addEventListener('click', loginHandler)
 restoreIds()

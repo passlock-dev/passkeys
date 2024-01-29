@@ -49,13 +49,19 @@ export const passkeysSupported = pipe(hasWebAuthn, E.andThen(hasPlatformAuth))
 
 export const arePasskeysSupported = pipe(
   passkeysSupported,
-  E.orElseSucceed(() => false),
+  E.match({
+    onFailure: () => false,
+    onSuccess: () => true
+  })
 )
 
 export const autofillSupported = pipe(passkeysSupported, E.andThen(hasConditionalUi))
 export const isAutofillSupported = pipe(
   autofillSupported,
-  E.orElseSucceed(() => false),
+  E.match({
+    onFailure: () => false,
+    onSuccess: () => true
+  })
 )
 
 /* Live */

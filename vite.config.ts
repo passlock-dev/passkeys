@@ -15,5 +15,8 @@ export default defineConfig({
         'src/test/testUtils.ts', // test fixtures
       ],
     },
+  },
+  server: {
+    port: 5174
   }
 })
