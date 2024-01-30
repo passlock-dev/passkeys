@@ -16,7 +16,7 @@
     <br />
     <a href="https://passlock.dev/#demo">View Demo</a>
     ·
-    <a href="https://github.com/passlock-dev/passkeys-frontend/issues">Report Bug</a>
+    <a href="https://docs.passlock.dev">Documentation</a>
     ·
     <a href="https://passlock.dev/contact">Request Feature</a>
   </p>
