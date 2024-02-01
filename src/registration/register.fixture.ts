@@ -2,8 +2,8 @@ import type { RegistrationPublicKeyCredential } from '@github/webauthn-json/brow
 import type { PasslockError } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer } from 'effect'
-import { Input } from 'valibot'
+import { Effect as E, Layer, Option as O } from 'effect'
+import type { Input } from 'valibot'
 import { vi } from 'vitest'
 
 import { Create, type RegistrationRequest } from './register'
@@ -11,6 +11,7 @@ import { registrationOptions } from './register.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
+import { StorageService } from '../storage/storage'
 import { type GetData, type PostData, noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
@@ -86,7 +87,14 @@ export const buildMocks = (registered: boolean) => {
 }
 
 export type In<O> = E.Effect<
-  Tenancy | Endpoint | Abort | Capabilities | NetworkService | Create | PasslockLogger,
+  | Tenancy
+  | Endpoint
+  | Abort
+  | Capabilities
+  | NetworkService
+  | Create
+  | PasslockLogger
+  | StorageService,
   PasslockError,
   O
 >
@@ -113,6 +121,20 @@ export const buildTestLayers = (registered: boolean) => {
     NetworkService.of({ getData, postData }),
   )
 
+  const storageServiceTest = Layer.succeed(
+    StorageService,
+    StorageService.of({
+      storeToken: () => E.unit,
+      getToken: () =>
+        O.some({
+          token: 'token',
+          authType: 'passkey',
+          expiresAt: Date.now(),
+        }),
+      clearToken: () => E.unit,
+    }),
+  )
+
   const layers = Layer.mergeAll(
     tenancyTest,
     endpointTest,
@@ -120,6 +142,7 @@ export const buildTestLayers = (registered: boolean) => {
     capabilitiesTest,
     networkServiceLayer,
     createTest,
+    storageServiceTest,
     noopLogger,
   )
 

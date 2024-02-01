@@ -1,6 +1,7 @@
 import { fail } from 'assert'
 
-import { ErrorCode, PasslockError, isPasslockError } from '@passlock/shared/error'
+import type { ErrorCode, PasslockError } from '@passlock/shared/error'
+import { isPasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 import { expect } from 'vitest'

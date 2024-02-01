@@ -1,7 +1,7 @@
 import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, Schedule, identity, pipe } from 'effect'
+import { Context, Effect as E, Layer, Schedule, flow, identity, pipe } from 'effect'
 import * as v from 'valibot'
 
 import { Abort } from '../config'
@@ -10,9 +10,6 @@ import { eventLoggerLive } from '../logging/eventLogger'
 /* Services */
 
 export type Params = Record<string, string>
-
-export type Fetch = typeof fetch
-export const Fetch = Context.Tag<Fetch>()
 
 export type NetworkService = {
   getData: (
@@ -25,7 +22,10 @@ export type NetworkService = {
 
 export const NetworkService = Context.Tag<NetworkService>()
 
-/* Helpers */
+/* Components */
+
+export type Fetch = typeof fetch
+export const Fetch = Context.Tag<Fetch>()
 
 const error = (message: string) =>
   new PasslockError({ message, code: ErrorCode.InternalServerError })
@@ -203,11 +203,8 @@ export const getData = (
 export const fetchLive = Layer.succeed(Fetch, Fetch.of(fetch))
 const liveLayers = Layer.mergeAll(fetchLive, eventLoggerLive)
 
-const getDataWithFetch = (url: string, clientId: string, params?: Params) =>
-  E.provide(getData(url, clientId, params), liveLayers)
-
-const postDataWithFetch = <T>(url: string, clientId: string, data: T) =>
-  E.provide(postData(url, clientId, data), liveLayers)
+const getDataWithFetch = flow(getData, E.provide(liveLayers))
+const postDataWithFetch = flow(postData, E.provide(liveLayers))
 
 export const networkServiceLive = Layer.succeed(
   NetworkService,

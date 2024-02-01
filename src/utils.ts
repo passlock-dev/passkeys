@@ -1,9 +1,10 @@
-import { ErrorCode, PasslockError, error, fail } from '@passlock/shared/error'
-import { PasslockLogger } from '@passlock/shared/logging'
+import type { PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error, fail } from '@passlock/shared/error'
+import type { PasslockLogger } from '@passlock/shared/logging'
 import { Context, Effect as E, Layer, identity, pipe } from 'effect'
 
-import { Abort, Endpoint, Tenancy } from './config'
-import { NetworkService } from './network/network'
+import type { Abort, Endpoint, Tenancy } from './config'
+import type { NetworkService } from './network/network'
 
 /* Services */
 

@@ -17,7 +17,8 @@
       "$lib/*": ["./src/lib/*"]
     },
     "rootDir": "./src",
-    "sourceMap": true
+    "sourceMap": true,
+    "verbatimModuleSyntax": true
   },
   "include": [
     "src/**/*.ts", 

@@ -3,20 +3,18 @@ import {
   create,
   parseCreationOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
+import type { PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import {
-  Principal,
-  RegistrationOptions,
-  UserVerification,
-  VerifyEmail,
-  createParser,
-} from '@passlock/shared/schema'
+import type { UserVerification, VerifyEmail } from '@passlock/shared/schema'
+import { Principal, RegistrationOptions, createParser } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
 
-import { Config, DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
+import type { Config } from '../config'
+import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
 import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
+import { StorageService, storageServiceLive } from '../storage/storage'
 import { isNewUser } from '../user/status'
 import { Capabilities, type CommonDependencies, capabilitiesLive } from '../utils'
 
@@ -36,7 +34,7 @@ export type RegistrationRequest = {
 export type Create = typeof create
 export const Create = Context.Tag<Create>()
 
-/* Helpers */
+/* Components */
 
 const toCreationOptions = (options: RegistrationOptions) =>
   E.try({
@@ -119,7 +117,7 @@ const verify = (data: VerificationData) => {
   })
 }
 
-type Dependencies = CommonDependencies | Capabilities | Create
+type Dependencies = CommonDependencies | Capabilities | Create | StorageService
 
 export const register = (
   registrationRequest: RegistrationRequest,
@@ -149,6 +147,10 @@ export const register = (
     }
     const principal = yield* _(verify(verificationData))
 
+    const storageService = yield* _(StorageService)
+    storageService.storeToken(principal)
+    yield* _(logger.debug('Storing token in session storage'))
+
     return principal
   })
 
@@ -165,6 +167,7 @@ export const registerLive = (request: RegistrationRequest & Config) => {
     configLayers,
     capabilitiesLive,
     eventLoggerLive,
+    storageServiceLive,
   )
 
   const withLayers = E.provide(register(request), layers)

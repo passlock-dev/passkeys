@@ -35,6 +35,9 @@ module.exports = {
       "warn",
       "type"
     ],
+    "@typescript-eslint/consistent-type-imports": [
+      "error"
+    ],    
     "sort-imports": [
       "warn",
       {

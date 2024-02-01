@@ -2,6 +2,7 @@ import { ErrorCode, isPasslockError } from '@passlock/shared/error'
 import { Effect } from 'effect'
 
 import { authenticateLive } from './authentication/authenticate'
+import { verifyEmailLive } from './email/verifyEmail'
 import { makeUnionFn, makeUnsafeFn } from './exit'
 import { registerLive } from './registration/register'
 import { isExistingUserLive } from './user/status'
@@ -19,6 +20,9 @@ const registerUnsafe = makeUnsafeFn(registerLive)
 const authenticate = makeUnionFn(authenticateLive)
 const authenticateUnsafe = makeUnsafeFn(authenticateLive)
 
+const verifyEmail = makeUnionFn(verifyEmailLive)
+const verifyEmailUnsafe = makeUnsafeFn(verifyEmailLive)
+
 export {
   arePasskeysSupported,
   isAutofillSupported,
@@ -28,6 +32,8 @@ export {
   registerUnsafe,
   authenticate,
   authenticateUnsafe,
+  verifyEmail,
+  verifyEmailUnsafe,
   isPasslockError,
   ErrorCode,
 }

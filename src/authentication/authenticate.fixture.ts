@@ -2,8 +2,8 @@ import type { AuthenticationPublicKeyCredential } from '@github/webauthn-json/br
 import type { PasslockError } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer } from 'effect'
-import { Input } from 'valibot'
+import { Effect as E, Layer, Option as O } from 'effect'
+import type { Input } from 'valibot'
 import { vi } from 'vitest'
 
 import { type AuthenticationRequest, Get } from './authenticate'
@@ -11,6 +11,7 @@ import { authenticationOptions } from './authenticate.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
+import { StorageService } from '../storage/storage'
 import { NetworkServiceTest, type PostData, noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
@@ -79,7 +80,14 @@ const buildMocks = () => {
 }
 
 export type In<O> = E.Effect<
-  Tenancy | Endpoint | Capabilities | Abort | NetworkService | Get | PasslockLogger,
+  | Tenancy
+  | Endpoint
+  | Capabilities
+  | Abort
+  | NetworkService
+  | Get
+  | PasslockLogger
+  | StorageService,
   PasslockError,
   O
 >
@@ -102,6 +110,20 @@ export const buildTestLayers = () => {
     NetworkServiceTest.withPostData(postData),
   )
 
+  const storageServiceTest = Layer.succeed(
+    StorageService,
+    StorageService.of({
+      storeToken: () => E.unit,
+      getToken: () =>
+        O.some({
+          token: 'token',
+          authType: 'passkey',
+          expiresAt: Date.now(),
+        }),
+      clearToken: () => E.unit,
+    }),
+  )
+
   const layers = Layer.mergeAll(
     tenancyTest,
     endpointTest,
@@ -109,6 +131,7 @@ export const buildTestLayers = () => {
     capabilitiesTest,
     networkServiceLayer,
     getTest,
+    storageServiceTest,
     noopLogger,
   )
 

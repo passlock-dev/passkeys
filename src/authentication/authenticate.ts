@@ -3,19 +3,18 @@ import {
   get,
   parseRequestOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, PasslockError, error } from '@passlock/shared/error'
+import type { PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import {
-  AuthenticationOptions,
-  Principal,
-  UserVerification,
-  createParser,
-} from '@passlock/shared/schema'
+import type { UserVerification } from '@passlock/shared/schema'
+import { AuthenticationOptions, Principal, createParser } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger, pipe } from 'effect'
 
-import { Config, DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
+import type { Config } from '../config'
+import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
 import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
+import { StorageService, storageServiceLive } from '../storage/storage'
 import { Capabilities, type CommonDependencies, capabilitiesLive } from '../utils'
 
 /* Requests */
@@ -27,7 +26,7 @@ export type AuthenticationRequest = { userVerification?: UserVerification }
 export type Get = typeof get
 export const Get = Context.Tag<Get>()
 
-/* Helpers */
+/* Components */
 
 const toRequestOptions = (options: AuthenticationOptions) =>
   E.try({
@@ -76,8 +75,6 @@ const fetchOptions = (data: AuthenticationRequest) =>
   })
 
 const verify = (credential: AuthenticationPublicKeyCredential, session: string) => {
-  createParser(Principal)
-
   return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -103,7 +100,7 @@ const verify = (credential: AuthenticationPublicKeyCredential, session: string) 
   })
 }
 
-type Dependencies = CommonDependencies | Capabilities | Get
+type Dependencies = CommonDependencies | Capabilities | Get | StorageService
 
 export const authenticate = (
   data: AuthenticationRequest,
@@ -123,6 +120,10 @@ export const authenticate = (
 
     yield* _(logger.info('Verifying credential with Passlock'))
     const principal = yield* _(verify(credential, session))
+
+    const storageService = yield* _(StorageService)
+    storageService.storeToken(principal)
+    yield* _(logger.debug('Stored token in session storage'))
 
     return principal
   })
@@ -146,6 +147,7 @@ export const authenticateLive = (request: AuthenticationRequest & Config) => {
     networkServiceLive,
     capabilitiesLive,
     eventLoggerLive,
+    storageServiceLive,
   )
 
   const withLayers = E.provide(authenticate(request), layers)

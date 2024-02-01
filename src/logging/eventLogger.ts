@@ -1,4 +1,4 @@
-import { PasslockError } from '@passlock/shared/error'
+import type { PasslockError } from '@passlock/shared/error'
 import { LogLevel, PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 

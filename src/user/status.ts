@@ -1,11 +1,13 @@
-import { ErrorCode, PasslockError, error as passlockError } from '@passlock/shared/error'
+import type { PasslockError } from '@passlock/shared/error'
+import { ErrorCode, error as passlockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
 import type { Effect } from 'effect/Effect'
 import { identity } from 'effect/Function'
 import { not } from 'effect/Predicate'
 
-import { Config, DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
+import type { Config } from '../config'
+import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
 import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService, networkServiceLive } from '../network/network'
 import { type CommonDependencies } from '../utils'
@@ -14,7 +16,7 @@ import { type CommonDependencies } from '../utils'
 
 export type Email = { email: string }
 
-/* Helpers */
+/* Components */
 
 type RegisteredResponse = { registered: boolean }
 
