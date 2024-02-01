@@ -1,10 +1,10 @@
-import * as S from '@effect/schema/Schema'
 import type { AuthenticationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
 import { Effect as E, Layer } from 'effect'
 import { vi } from 'vitest'
+import { Input } from "valibot"
 
 import { type AuthenticationRequest, Get } from './authenticate'
 import { authenticationOptions } from './authenticate.fixture.json'
@@ -42,7 +42,7 @@ export const credential: AuthenticationPublicKeyCredential = {
 }
 
 // Frontend receives dates as objects
-export const expectedPrincipal: S.Schema.To<typeof Principal> = {
+export const expectedPrincipal: Principal = {
   token: 'token',
   subject: {
     id: '1',
@@ -60,7 +60,7 @@ export const expectedPrincipal: S.Schema.To<typeof Principal> = {
 }
 
 // Backend sends dates as strings
-const principal: S.Schema.From<typeof Principal> = {
+const principal: Input<typeof Principal> = {
   ...expectedPrincipal,
   authStatement: {
     ...expectedPrincipal.authStatement,

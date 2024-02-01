@@ -9,6 +9,7 @@ import {
   Principal,
   RegistrationOptions,
   UserVerification,
+  VerifyEmail,
   createParser,
 } from '@passlock/shared/schema'
 import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
@@ -26,6 +27,8 @@ export type RegistrationRequest = {
   firstName: string
   lastName: string
   userVerification?: UserVerification
+  verifyEmail?: VerifyEmail
+  redirectUrl?: string
 }
 
 /* Services */
@@ -63,7 +66,7 @@ const createCredential = (options: CredentialCreationOptions, signal?: AbortSign
 
 /* Effects */
 
-const fetchOptions = (data: RegistrationRequest) =>
+const fetchOptions = (registrationRequest: RegistrationRequest) =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -74,7 +77,7 @@ const fetchOptions = (data: RegistrationRequest) =>
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(networkService.postData(optionsURL, clientId, data))
+    const response = yield* _(networkService.postData(optionsURL, clientId, registrationRequest))
 
     yield* _(logger.debug('Parsing Passlock registration options'))
     const parse = createParser(RegistrationOptions)
@@ -88,7 +91,14 @@ const fetchOptions = (data: RegistrationRequest) =>
     return { options, session }
   })
 
-const verify = (credential: RegistrationPublicKeyCredential, session: string) => {
+type VerificationData = { 
+  credential: RegistrationPublicKeyCredential 
+  session: string
+  verifyEmail?: VerifyEmail
+  redirectUrl?: string 
+}
+
+const verify = (data: VerificationData) => {
   return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -100,10 +110,7 @@ const verify = (credential: RegistrationPublicKeyCredential, session: string) =>
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
     const response = yield* _(
-      networkService.postData(verificationURL, clientId, {
-        credential,
-        session,
-      }),
+      networkService.postData(verificationURL, clientId, data),
     )
 
     yield* _(logger.debug('Parsing Principal response'))
@@ -117,7 +124,7 @@ const verify = (credential: RegistrationPublicKeyCredential, session: string) =>
 type Dependencies = CommonDependencies | Capabilities | Create
 
 export const register = (
-  data: RegistrationRequest,
+  registrationRequest: RegistrationRequest,
 ): E.Effect<Dependencies, PasslockError, Principal> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
@@ -127,16 +134,22 @@ export const register = (
     yield* _(capabilities.passkeysSupported)
 
     yield* _(logger.info('Checking if already registered'))
-    yield* _(isNewUser(data))
+    yield* _(isNewUser(registrationRequest))
 
     yield* _(logger.info('Fetching registration options from Passlock'))
-    const { options, session } = yield* _(fetchOptions(data))
+    const { options, session } = yield* _(fetchOptions(registrationRequest))
 
     yield* _(logger.info('Building new credential'))
     const credential = yield* _(createCredential(options))
 
     yield* _(logger.info('Storing credential public key in Passlock'))
-    const principal = yield* _(verify(credential, session))
+    const verificationData = { 
+      credential, 
+      session, 
+      verifyEmail: registrationRequest.verifyEmail, 
+      redirectUrl: registrationRequest.redirectUrl 
+    }
+    const principal = yield* _(verify(verificationData))
 
     return principal
   })

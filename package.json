@@ -41,7 +41,8 @@
     "@github/webauthn-json": "^2.1.1",
     "@passlock/shared": "workspace:*",
     "effect": "2.2.2",
-    "lodash-es": "^4.17.21"
+    "lodash-es": "^4.17.21",
+    "valibot": "^0.27.1"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",

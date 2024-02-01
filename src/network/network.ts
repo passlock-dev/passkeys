@@ -1,4 +1,4 @@
-import * as S from '@effect/schema/Schema'
+import * as v from 'valibot'
 import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { createParser } from '@passlock/shared/schema'
@@ -66,9 +66,10 @@ const performFetch = (opts: FetchOptions) => {
   })
 }
 
-export const PasslockErrorSchema = S.struct({
-  message: S.string,
-  code: S.enums(ErrorCode),
+export const PasslockErrorSchema = v.object({
+  message: v.string(),
+  code: v.enum_(ErrorCode),
+  detail: v.any()
 })
 
 const parsePasslockError = createParser(PasslockErrorSchema)
