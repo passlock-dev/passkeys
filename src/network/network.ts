@@ -1,8 +1,8 @@
-import * as v from 'valibot'
 import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { createParser } from '@passlock/shared/schema'
 import { Context, Effect as E, Layer, Schedule, identity, pipe } from 'effect'
+import * as v from 'valibot'
 
 import { Abort } from '../config'
 import { eventLoggerLive } from '../logging/eventLogger'
@@ -69,7 +69,7 @@ const performFetch = (opts: FetchOptions) => {
 export const PasslockErrorSchema = v.object({
   message: v.string(),
   code: v.enum_(ErrorCode),
-  detail: v.any()
+  detail: v.any(),
 })
 
 const parsePasslockError = createParser(PasslockErrorSchema)

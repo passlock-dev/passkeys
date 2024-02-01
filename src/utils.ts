@@ -51,8 +51,8 @@ export const arePasskeysSupported = pipe(
   passkeysSupported,
   E.match({
     onFailure: () => false,
-    onSuccess: () => true
-  })
+    onSuccess: () => true,
+  }),
 )
 
 export const autofillSupported = pipe(passkeysSupported, E.andThen(hasConditionalUi))
@@ -60,8 +60,8 @@ export const isAutofillSupported = pipe(
   autofillSupported,
   E.match({
     onFailure: () => false,
-    onSuccess: () => true
-  })
+    onSuccess: () => true,
+  }),
 )
 
 /* Live */

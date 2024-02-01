@@ -57,8 +57,7 @@ describe('getData', () => {
     const noRequirements = E.provide(effect, layers)
     const res = await runUnion(noRequirements)
 
-    console.log(res)
-    expectPasslockError(res).toMatch('Unable to parse object', ErrorCode.InternalServerError)
+    expectPasslockError(res).toMatch('Validation failure', ErrorCode.InvalidRequest)
   })
 
   test("error when the server doesn't return an object", async () => {

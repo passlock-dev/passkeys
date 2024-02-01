@@ -62,9 +62,7 @@ export const isNewUser = (request: Email) => {
   const predicate = not(identity<boolean>)
   const error = () => passlockError('Email already registered', ErrorCode.DuplicateEmail)
 
-  return isExistingUser(request).pipe(
-    E.filterOrFail(predicate, error)
-  ).pipe(E.asUnit)
+  return isExistingUser(request).pipe(E.filterOrFail(predicate, error)).pipe(E.asUnit)
 }
 
 /* Live */

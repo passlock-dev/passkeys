@@ -91,11 +91,11 @@ const fetchOptions = (registrationRequest: RegistrationRequest) =>
     return { options, session }
   })
 
-type VerificationData = { 
-  credential: RegistrationPublicKeyCredential 
+type VerificationData = {
+  credential: RegistrationPublicKeyCredential
   session: string
   verifyEmail?: VerifyEmail
-  redirectUrl?: string 
+  redirectUrl?: string
 }
 
 const verify = (data: VerificationData) => {
@@ -109,9 +109,7 @@ const verify = (data: VerificationData) => {
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(
-      networkService.postData(verificationURL, clientId, data),
-    )
+    const response = yield* _(networkService.postData(verificationURL, clientId, data))
 
     yield* _(logger.debug('Parsing Principal response'))
     const parse = createParser(Principal)
@@ -143,11 +141,11 @@ export const register = (
     const credential = yield* _(createCredential(options))
 
     yield* _(logger.info('Storing credential public key in Passlock'))
-    const verificationData = { 
-      credential, 
-      session, 
-      verifyEmail: registrationRequest.verifyEmail, 
-      redirectUrl: registrationRequest.redirectUrl 
+    const verificationData = {
+      credential,
+      session,
+      verifyEmail: registrationRequest.verifyEmail,
+      redirectUrl: registrationRequest.redirectUrl,
     }
     const principal = yield* _(verify(verificationData))
 

@@ -1,9 +1,9 @@
-import { Input } from "valibot"
 import type { RegistrationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
 import { Effect as E, Layer } from 'effect'
+import { Input } from 'valibot'
 import { vi } from 'vitest'
 
 import { Create, type RegistrationRequest } from './register'

@@ -3,8 +3,8 @@ import type { PasslockError } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
 import { Effect as E, Layer } from 'effect'
+import { Input } from 'valibot'
 import { vi } from 'vitest'
-import { Input } from "valibot"
 
 import { type AuthenticationRequest, Get } from './authenticate'
 import { authenticationOptions } from './authenticate.fixture.json'
