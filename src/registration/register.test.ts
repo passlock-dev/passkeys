@@ -1,93 +1,132 @@
 import { ErrorCode } from '@passlock/shared/error'
-import { Effect as E, Layer } from 'effect'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { Effect as E, Layer, pipe } from 'effect'
+import { describe, expect, test } from 'vitest'
 
 import { Create, register } from './register'
 import {
   buildTestLayers,
   clientId,
+  request as data,
   encodedEmail,
   endpoint,
   expectedPrincipal,
-  request,
-  runEffect,
   tenancyId,
 } from './register.fixture'
-import { runUnion } from '../exit'
-import { expectPasslockError } from '../test/testUtils'
+import { NetworkService } from '../network/network'
 
 describe('register should', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('return a valid credential', async () => {
-    const effect = register(request)
-    const { result } = await runEffect(effect, false)
+    const program = E.gen(function* (_) {
+      const result = yield* _(register(data))
+      expect(result).toEqual(expectedPrincipal)
+    })
 
-    expect(result).toEqual(expectedPrincipal)
+    const layers = buildTestLayers(false)
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('check if the user is already registered', async () => {
-    const effect = register(request)
-    const { getData } = await runEffect(effect, false)
+    const program = E.gen(function* (_) {
+      const result = yield* _(register(data))
+      const networkService = yield* _(NetworkService)
+      const url = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
+      expect(networkService.getData).toHaveBeenCalledWith({ url, clientId })
+      expect(result).toEqual(expectedPrincipal)
+    })
 
-    const expectedUrl = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
-    expect(getData).toHaveBeenCalledWith(expectedUrl, clientId, undefined)
+    const layers = buildTestLayers(false)
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('pass the registration data to the backend', async () => {
-    const effect = register(request)
-    const { postData } = await runEffect(effect, false)
+    const program = E.gen(function* (_) {
+      const result = yield* _(register(data))
+      const networkService = yield* _(NetworkService)
+      const url = `${endpoint}/${tenancyId}/passkey/registration/options`
+      expect(networkService.postData).toHaveBeenCalledWith({ url, clientId, data })
+      expect(result).toEqual(expectedPrincipal)
+    })
 
-    const expectedUrl = `${endpoint}/${tenancyId}/passkey/registration/options`
-    expect(postData).toHaveBeenCalledWith(expectedUrl, clientId, request)
+    const layers = buildTestLayers(false)
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('send the new credential to the backend', async () => {
-    const effect = register(request)
-    const { postData } = await runEffect(effect, false)
+    const program = E.gen(function* (_) {
+      const result = yield* _(register(data))
+      const networkService = yield* _(NetworkService)
+      const url = `${endpoint}/${tenancyId}/passkey/registration/verification`
+      expect(networkService.postData).toHaveBeenCalledWith({
+        url,
+        clientId,
+        data: expect.any(Object) as object,
+      })
+      expect(result).toEqual(expectedPrincipal)
+    })
 
-    const expectedUrl = `${endpoint}/${tenancyId}/passkey/registration/verification`
-    expect(postData).toHaveBeenCalledWith(expectedUrl, clientId, expect.any(Object))
+    const layers = buildTestLayers(false)
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('short-circuit if the user is already registered', async () => {
-    const effect = register(request)
-    const { result } = await runEffect(effect, true)
+    const program = pipe(
+      register(data),
+      E.flip,
+      E.flatMap(e =>
+        E.sync(() => {
+          expect(e.message).toBe('Email already registered')
+          expect(e.code).toBe(ErrorCode.DuplicateEmail)
+        }),
+      ),
+    )
 
-    expectPasslockError(result).toMatch('Email already registered', ErrorCode.DuplicateEmail)
+    const layers = buildTestLayers(true)
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('generate an error if we try to reregister an existing passkey', async () => {
-    const effect = register(request)
-    const { layers } = buildTestLayers(false)
+    const effect = pipe(
+      register(data),
+      E.flip,
+      E.flatMap(e =>
+        E.sync(() => {
+          expect(e.message).toMatch(/Passkey already registered/)
+          expect(e.code).toBe(ErrorCode.DuplicatePasskey)
+        }),
+      ),
+    )
 
     const create: Create = () =>
       Promise.reject(new Error('credentialID matched by excludeCredentials'))
     const createTest = Layer.succeed(Create, Create.of(create))
-    const withFailingCreate = Layer.merge(layers, createTest)
+    const withFailingCreate = Layer.merge(buildTestLayers(false), createTest)
 
     const noRequirements = E.provide(effect, withFailingCreate)
-    const result = await runUnion(noRequirements)
-
-    expectPasslockError(result).toMatch(/Passkey already registered/, ErrorCode.DuplicatePasskey)
+    await E.runPromise(noRequirements)
   })
 
   test("return an error if the browser can't create a credential", async () => {
-    const effect = register(request)
-    const { layers } = buildTestLayers(false)
+    const effect = pipe(
+      register(data),
+      E.flip,
+      E.flatMap(e =>
+        E.sync(() => {
+          expect(e.message).toBe('Unable to create credential')
+          expect(e.code).toBe(ErrorCode.InternalBrowserError)
+        }),
+      ),
+    )
 
     const create: Create = () => Promise.reject(new Error('BOOM!'))
     const createTest = Layer.succeed(Create, Create.of(create))
-    const withFailingCreate = Layer.merge(layers, createTest)
+    const withFailingCreate = Layer.merge(buildTestLayers(false), createTest)
 
     const noRequirements = E.provide(effect, withFailingCreate)
-    const result = await runUnion(noRequirements)
-
-    expectPasslockError(result).toMatch(
-      /Unable to create credential/,
-      ErrorCode.InternalBrowserError,
-    )
+    await E.runPromise(noRequirements)
   })
 })

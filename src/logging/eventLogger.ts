@@ -4,6 +4,8 @@ import { Effect as E, Layer } from 'effect'
 
 import { fireEvent } from '../event/event'
 
+/** PasslockLogger implementation that also fires DOM events */
+
 export const log = <T>(message: T, logLevel: LogLevel): E.Effect<never, PasslockError, void> => {
   return E.gen(function* (_) {
     switch (logLevel) {
@@ -46,9 +48,9 @@ export const error = <T>(message: T) => log(message, LogLevel.ERROR)
 
 export const eventLoggerLive = Layer.succeed(PasslockLogger, {
   log,
+  logRaw,
   debug,
   info,
   warn,
   error,
-  logRaw,
 })

@@ -1,32 +1,37 @@
-import {
-  type AuthenticationPublicKeyCredential,
-  get,
-  parseRequestOptionsFromJSON,
-} from '@github/webauthn-json/browser-ponyfill'
+import { parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
+import type { AuthenticationPublicKeyCredential, get } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import type { UserVerification } from '@passlock/shared/schema'
 import { AuthenticationOptions, Principal, createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger, pipe } from 'effect'
+import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 
-import type { Config } from '../config'
-import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
-import { eventLoggerLive } from '../logging/eventLogger'
-import { NetworkService, networkServiceLive } from '../network/network'
-import { StorageService, storageServiceLive } from '../storage/storage'
-import { Capabilities, type CommonDependencies, capabilitiesLive } from '../utils'
+import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
+import { NetworkService } from '../network/network'
+import { StorageService } from '../storage/storage'
+import { Capabilities, type CommonDependencies } from '../utils'
 
 /* Requests */
 
 export type AuthenticationRequest = { userVerification?: UserVerification }
 
-/* Services */
+/* Dependencies */
 
 export type Get = typeof get
 export const Get = Context.Tag<Get>()
 
-/* Components */
+/* Services */
+
+export type AuthenticationService = {
+  authenticate: (
+    data: AuthenticationRequest,
+  ) => E.Effect<CommonDependencies, PasslockError, Principal>
+}
+
+export const AuthenticationService = Context.Tag<AuthenticationService>()
+
+/* Utilities */
 
 const toRequestOptions = (options: AuthenticationOptions) =>
   E.try({
@@ -39,15 +44,13 @@ const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) 
   const go = (get: Get) =>
     E.tryPromise({
       try: () => get({ ...options, signal }),
-      catch: () => {
-        return error('Unable to get credentials', ErrorCode.InternalBrowserError)
+      catch: e => {
+        return error('Unable to get credentials', ErrorCode.InternalBrowserError, e)
       },
     })
 
   return Get.pipe(E.flatMap(go))
 }
-
-/* Effects */
 
 const fetchOptions = (data: AuthenticationRequest) =>
   E.gen(function* (_) {
@@ -56,11 +59,11 @@ const fetchOptions = (data: AuthenticationRequest) =>
     const { tenancyId, clientId } = yield* _(Tenancy)
     const endpointConfig = yield* _(Endpoint)
     const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const optionsURL = `${endpoint}/${tenancyId}/passkey/authentication/options`
+    const url = `${endpoint}/${tenancyId}/passkey/authentication/options`
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(networkService.postData(optionsURL, clientId, data))
+    const response = yield* _(networkService.postData({ url, clientId, data }))
 
     yield* _(logger.debug('Parsing Passlock authentication options'))
     const parse = createParser(AuthenticationOptions)
@@ -81,16 +84,13 @@ const verify = (credential: AuthenticationPublicKeyCredential, session: string) 
     const { tenancyId, clientId } = yield* _(Tenancy)
     const endpointConfig = yield* _(Endpoint)
     const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const verificationURL = `${endpoint}/${tenancyId}/passkey/authentication/verification`
+    const url = `${endpoint}/${tenancyId}/passkey/authentication/verification`
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(
-      networkService.postData(verificationURL, clientId, {
-        credential,
-        session,
-      }),
-    )
+    const data = { credential, session }
+
+    const response = yield* _(networkService.postData({ url, clientId, data }))
 
     yield* _(logger.debug('Parsing Principal response'))
     const parse = createParser(Principal)
@@ -100,7 +100,15 @@ const verify = (credential: AuthenticationPublicKeyCredential, session: string) 
   })
 }
 
-type Dependencies = CommonDependencies | Capabilities | Get | StorageService
+/* Effects */
+
+type Dependencies =
+  | CommonDependencies
+  | Capabilities
+  | Get
+  | StorageService
+  | NetworkService
+  | PasslockLogger
 
 export const authenticate = (
   data: AuthenticationRequest,
@@ -122,35 +130,36 @@ export const authenticate = (
     const principal = yield* _(verify(credential, session))
 
     const storageService = yield* _(StorageService)
-    storageService.storeToken(principal)
-    yield* _(logger.debug('Stored token in session storage'))
+    yield* _(storageService.storeToken(principal))
+    yield* _(logger.debug('Stored token in local storage'))
+
+    yield* _(logger.debug('Defering local token deletion'))
+    yield* _(pipe(storageService.clearExpiredToken('passkey', true), E.fork))
 
     return principal
   })
 
 /* Live */
 
-/**
- * Authenticate user
- *
- * @param params Some params
- * @returns
- */
 /* v8 ignore start */
-export const authenticateLive = (request: AuthenticationRequest & Config) => {
-  const getLive = Layer.succeed(Get, Get.of(get))
-  const configLayers = buildConfigLayers(request)
-
-  const layers = Layer.mergeAll(
-    configLayers,
-    getLive,
-    networkServiceLive,
-    capabilitiesLive,
-    eventLoggerLive,
-    storageServiceLive,
-  )
-
-  const withLayers = E.provide(authenticate(request), layers)
-  return pipe(withLayers, Logger.withMinimumLogLevel(EffectLogLevel.Debug))
-}
+export const AuthenticateServiceLive = Layer.effect(
+  AuthenticationService,
+  E.gen(function* (_) {
+    const get = yield* _(Get)
+    const network = yield* _(NetworkService)
+    const capabilities = yield* _(Capabilities)
+    const logger = yield* _(PasslockLogger)
+    const storage = yield* _(StorageService)
+    return AuthenticationService.of({
+      authenticate: flow(
+        authenticate,
+        E.provideService(Get, get),
+        E.provideService(Capabilities, capabilities),
+        E.provideService(PasslockLogger, logger),
+        E.provideService(StorageService, storage),
+        E.provideService(NetworkService, network),
+      ),
+    })
+  }),
+)
 /* v8 ignore stop */

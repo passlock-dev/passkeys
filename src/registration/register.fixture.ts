@@ -1,18 +1,15 @@
 import type { RegistrationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill'
-import type { PasslockError } from '@passlock/shared/error'
-import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
 import { Effect as E, Layer, Option as O } from 'effect'
 import type { Input } from 'valibot'
-import { vi } from 'vitest'
+import { mock } from 'vitest-mock-extended'
 
 import { Create, type RegistrationRequest } from './register'
 import { registrationOptions } from './register.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
-import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
 import { StorageService } from '../storage/storage'
-import { type GetData, type PostData, noopLogger } from '../test/testUtils'
+import { noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
 const encoder = new TextEncoder()
@@ -75,37 +72,15 @@ const principal: Input<typeof Principal> = {
   expiresAt: expectedPrincipal.expiresAt.toISOString(),
 }
 
-export const buildMocks = (registered: boolean) => {
-  const getData: GetData = vi.fn().mockImplementationOnce(() => E.succeed({ registered }))
-
-  const postData: PostData = vi
-    .fn()
-    .mockImplementationOnce(() => E.succeed(registrationOptions))
-    .mockImplementationOnce(() => E.succeed(principal))
-
-  return { getData, postData }
+const buildNetworkMock = (registered: boolean) => {
+  const networkMock = mock<NetworkService>()
+  networkMock.getData.mockReturnValue(E.succeed({ registered }))
+  networkMock.postData.mockReturnValueOnce(E.succeed(registrationOptions))
+  networkMock.postData.mockReturnValueOnce(E.succeed(principal))
+  return networkMock
 }
 
-export type In<O> = E.Effect<
-  | Tenancy
-  | Endpoint
-  | Abort
-  | Capabilities
-  | NetworkService
-  | Create
-  | PasslockLogger
-  | StorageService,
-  PasslockError,
-  O
->
-export type Out<O> = Promise<{
-  result: PasslockError | O
-  getData: GetData
-  postData: PostData
-}>
-
 export const buildTestLayers = (registered: boolean) => {
-  const { getData, postData } = buildMocks(registered)
   const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
   const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
   const abortTest = Layer.succeed(Abort, Abort.of({}))
@@ -116,9 +91,10 @@ export const buildTestLayers = (registered: boolean) => {
 
   const create: Create = () => Promise.resolve(credential)
   const createTest = Layer.succeed(Create, Create.of(create))
-  const networkServiceLayer = Layer.succeed(
+
+  const networkServiceLayer = Layer.effect(
     NetworkService,
-    NetworkService.of({ getData, postData }),
+    E.sync(() => buildNetworkMock(registered)),
   )
 
   const storageServiceTest = Layer.succeed(
@@ -132,6 +108,7 @@ export const buildTestLayers = (registered: boolean) => {
           expiresAt: Date.now(),
         }),
       clearToken: () => E.unit,
+      clearExpiredToken: () => E.unit,
     }),
   )
 
@@ -146,13 +123,5 @@ export const buildTestLayers = (registered: boolean) => {
     noopLogger,
   )
 
-  return { layers, getData, postData }
-}
-
-export async function runEffect<O>(effect: In<O>, registered: boolean): Out<O> {
-  const { layers, getData, postData } = buildTestLayers(registered)
-  const noRequirements = E.provide(effect, layers)
-  const result = await runUnion(noRequirements)
-
-  return { result, getData, postData }
+  return layers
 }

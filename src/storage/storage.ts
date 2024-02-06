@@ -1,8 +1,9 @@
+import { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, Option as O, flow, pipe } from 'effect'
+import { Context, Effect as E, Layer, Option as O, Schedule, flow, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
-/* Services */
+/* Requests */
 
 export type AuthType = 'email' | 'passkey'
 
@@ -12,21 +13,27 @@ export type StoredToken = {
   expiresAt: number
 }
 
+/* Services */
+
 export type StorageService = {
   storeToken: (principal: Principal) => E.Effect<never, never, void>
   getToken: (authType: AuthType) => E.Effect<never, NoSuchElementException, StoredToken>
   clearToken: (authType: AuthType) => E.Effect<never, never, void>
+  clearExpiredToken: (authType: AuthType, defer: boolean) => E.Effect<never, never, void>
 }
 
-/* Components */
+/* Utilities */
 
 export const StorageService = Context.Tag<StorageService>()
 
-// Inject window.sessionStorage to make testing easier
+// Inject window.localStorage to make testing easier
 export const Storage = Context.Tag<Storage>()
 
-// prefix authType with passlock:token:
-export const buildKey = (authType: AuthType) => `passlock:token:${authType}`
+// => passlock:t:e || passlock:t:p
+export const buildKey = (authType: AuthType) => {
+  const a = authType[0]
+  return `passlock:${a}:t`
+}
 
 // => token:expiresAt
 export const compressToken = (principal: Principal): string => {
@@ -51,51 +58,95 @@ export const expandToken =
 
 /* Effects */
 
-// store compressed token in session storage
-const storeToken = (principal: Principal): E.Effect<Storage, never, void> => {
+// store compressed token in local storage
+export const storeToken = (principal: Principal): E.Effect<Storage, never, void> => {
   return E.gen(function* (_) {
-    const sessionStorage = yield* _(Storage)
-    E.try(() => {
+    const localStorage = yield* _(Storage)
+
+    const storeEffect = E.try(() => {
       const compressed = compressToken(principal)
       const key = buildKey(principal.authStatement.authType)
-      sessionStorage.setItem(key, compressed)
-    }).pipe(E.asUnit) // We dont care if it fails
+      localStorage.setItem(key, compressed)
+    }).pipe(E.orElse(() => E.unit)) // We dont care if it fails
+
+    return yield* _(storeEffect)
   })
 }
 
-// get stored token from session storage
-const getToken = (authType: AuthType): E.Effect<Storage, NoSuchElementException, StoredToken> => {
+// get stored token from local storage
+export const getToken = (
+  authType: AuthType,
+): E.Effect<Storage, NoSuchElementException, StoredToken> => {
   return E.gen(function* (_) {
-    const sessionStorage = yield* _(Storage)
-    return yield* _(
-      pipe(
-        O.some(buildKey(authType)),
-        O.flatMap(key => pipe(sessionStorage.getItem(key), O.fromNullable)),
-        O.flatMap(expandToken(authType)),
-        O.filter(({ expiresAt }) => expiresAt > Date.now()),
-      ),
+    const localStorage = yield* _(Storage)
+
+    const getEffect = pipe(
+      O.some(buildKey(authType)),
+      O.flatMap(key => pipe(localStorage.getItem(key), O.fromNullable)),
+      O.flatMap(expandToken(authType)),
+      O.filter(({ expiresAt }) => expiresAt > Date.now()),
     )
+
+    return yield* _(getEffect)
   })
 }
 
-const clearToken = (authType: AuthType): E.Effect<Storage, never, void> => {
+export const clearToken = (authType: AuthType): E.Effect<Storage, never, void> => {
   return E.gen(function* (_) {
-    const sessionStorage = yield* _(Storage)
-    sessionStorage.removeItem(buildKey(authType))
+    const localStorage = yield* _(Storage)
+    localStorage.removeItem(buildKey(authType))
   })
+}
+
+export const clearExpiredToken = (
+  authType: AuthType,
+  defer: boolean,
+): E.Effect<Storage, never, void> => {
+  const key = buildKey(authType)
+  const schedule = Schedule.union(Schedule.recurs(6), Schedule.fixed('30 seconds'))
+  const policy = Schedule.delayed(schedule, () => '5 minutes')
+
+  const effect = E.gen(function* (_) {
+    const storage = yield* _(Storage)
+    const item = yield* _(O.fromNullable(storage.getItem(key)))
+    const token = yield* _(expandToken(authType)(item))
+
+    if (token.expiresAt < Date.now()) {
+      storage.removeItem(key)
+    }
+  }).pipe(
+    E.match({
+      onSuccess: () => E.unit,
+      onFailure: () => E.unit,
+    }),
+  )
+
+  if (defer) {
+    return pipe(effect, E.schedule(policy))
+  } else {
+    return effect
+  }
 }
 
 /* Live */
 
 /* v8 ignore start */
-const storageLive = Layer.suspend(() => Layer.succeed(Storage, Storage.of(sessionStorage)))
-
-export const storageServiceLive = Layer.succeed(
+export const StorageServiceLive = Layer.effect(
   StorageService,
-  StorageService.of({
-    storeToken: flow(storeToken, E.provide(storageLive)),
-    getToken: flow(getToken, E.provide(storageLive)),
-    clearToken: flow(clearToken, E.provide(storageLive)),
+  E.gen(function* (_) {
+    const storageLive = yield* _(Storage)
+    const loggerLive = yield* _(PasslockLogger)
+
+    return StorageService.of({
+      storeToken: flow(storeToken, E.provideService(Storage, storageLive)),
+      getToken: flow(getToken, E.provideService(Storage, storageLive)),
+      clearToken: flow(clearToken, E.provideService(Storage, storageLive)),
+      clearExpiredToken: flow(
+        clearExpiredToken,
+        E.provideService(Storage, storageLive),
+        E.provideService(PasslockLogger, loggerLive),
+      ),
+    })
   }),
 )
 /* v8 ignore stop */

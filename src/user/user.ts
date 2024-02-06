@@ -1,22 +1,26 @@
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error as passlockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import { Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
-import type { Effect } from 'effect/Effect'
-import { identity } from 'effect/Function'
+import { Context, Effect as E, Layer, flow, identity } from 'effect'
 import { not } from 'effect/Predicate'
 
-import type { Config } from '../config'
-import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
-import { eventLoggerLive } from '../logging/eventLogger'
-import { NetworkService, networkServiceLive } from '../network/network'
+import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
+import { NetworkService } from '../network/network'
 import { type CommonDependencies } from '../utils'
 
-/* Request */
+/* Requests */
 
 export type Email = { email: string }
 
-/* Components */
+/* Services */
+
+export type UserService = {
+  isExistingUser: (email: Email) => E.Effect<CommonDependencies, PasslockError, boolean>
+}
+
+export const UserService = Context.Tag<UserService>()
+
+/* Utilities */
 
 type RegisteredResponse = { registered: boolean }
 
@@ -32,8 +36,6 @@ const isRegisteredResponse = (value: object) => {
   return E.succeed(value).pipe(E.filterOrFail(guard, error))
 }
 
-/* Effects */
-
 const buildUrl = (email: string) =>
   E.gen(function* (_) {
     const { tenancyId } = yield* _(Tenancy)
@@ -44,7 +46,9 @@ const buildUrl = (email: string) =>
     return `${statusURL}/${encodedEmail}`
   })
 
-type Dependencies = CommonDependencies
+/* Effects */
+
+type Dependencies = CommonDependencies | NetworkService | PasslockLogger
 
 export const isExistingUser = (request: Email): E.Effect<Dependencies, PasslockError, boolean> =>
   E.gen(function* (_) {
@@ -52,9 +56,9 @@ export const isExistingUser = (request: Email): E.Effect<Dependencies, PasslockE
 
     yield* _(logger.info('Checking registration status'))
     const { clientId } = yield* _(Tenancy)
-    const statusURL = yield* _(buildUrl(request.email))
+    const url = yield* _(buildUrl(request.email))
     const networkService = yield* _(NetworkService)
-    const object = yield* _(networkService.getData(statusURL, clientId, undefined))
+    const object = yield* _(networkService.getData({ url, clientId }))
     const data = yield* _(isRegisteredResponse(object))
 
     return data.registered
@@ -70,14 +74,18 @@ export const isNewUser = (request: Email) => {
 /* Live */
 
 /* v8 ignore start */
-export const isExistingUserLive = (
-  request: Email & Config,
-): Effect<never, PasslockError, boolean> => {
-  const configLayers = buildConfigLayers(request)
-  const layers = Layer.mergeAll(networkServiceLive, eventLoggerLive, configLayers)
-
-  const effect = isExistingUser(request)
-  const withLayers = E.provide(effect, layers)
-  return withLayers.pipe(Logger.withMinimumLogLevel(EffectLogLevel.Debug))
-}
+export const UserServiceLive = Layer.effect(
+  UserService,
+  E.gen(function* (_) {
+    const network = yield* _(NetworkService)
+    const logger = yield* _(PasslockLogger)
+    return UserService.of({
+      isExistingUser: flow(
+        isExistingUser,
+        E.provideService(PasslockLogger, logger),
+        E.provideService(NetworkService, network),
+      ),
+    })
+  }),
+)
 /* v8 ignore stop */

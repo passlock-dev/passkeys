@@ -1,12 +1,18 @@
 import { fail } from 'assert'
 
-import type { ErrorCode, PasslockError } from '@passlock/shared/error'
-import { isPasslockError } from '@passlock/shared/error'
+import { ErrorCode, type PasslockError } from '@passlock/shared/error'
+import { error, isPasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
-import { Effect as E, Layer } from 'effect'
+import { Effect as E, Layer, pipe } from 'effect'
 import { expect } from 'vitest'
 
 import type { NetworkService } from '../network/network'
+
+export const assert = (thunk: () => void) =>
+  pipe(
+    E.try(thunk),
+    E.mapError(e => error(e.message, ErrorCode.InternalServerError, e)),
+  )
 
 const noop = () => E.succeed(undefined)
 

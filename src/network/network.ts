@@ -1,31 +1,49 @@
 import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, Schedule, flow, identity, pipe } from 'effect'
+import type { Schedule } from 'effect'
+import { Context, Effect as E, Layer, flow, identity, pipe } from 'effect'
 import * as v from 'valibot'
 
 import { Abort } from '../config'
-import { eventLoggerLive } from '../logging/eventLogger'
 
-/* Services */
+/* Requests */
 
 export type Params = Record<string, string>
 
+type GetRequest = {
+  url: string
+  clientId: string
+  params?: Params
+}
+
+type PostRequest<T> = {
+  url: string
+  clientId: string
+  data: T
+}
+
+/* Dependencies */
+
+export type Fetch = typeof fetch
+export const Fetch = Context.Tag<Fetch>()
+
+export type RetrySchedule = {
+  schedule: Schedule.Schedule<never, unknown, unknown>
+}
+
+export const RetrySchedule = Context.Tag<RetrySchedule>()
+
+/* Services */
+
 export type NetworkService = {
-  getData: (
-    url: string,
-    clientId: string,
-    params?: Params,
-  ) => E.Effect<Abort, PasslockError, object>
-  postData: <T>(url: string, clientId: string, data: T) => E.Effect<Abort, PasslockError, object>
+  getData: (request: GetRequest) => E.Effect<Abort, PasslockError, object>
+  postData: <T>(request: PostRequest<T>) => E.Effect<Abort, PasslockError, object>
 }
 
 export const NetworkService = Context.Tag<NetworkService>()
 
-/* Components */
-
-export type Fetch = typeof fetch
-export const Fetch = Context.Tag<Fetch>()
+/* Utilities */
 
 const error = (message: string) =>
   new PasslockError({ message, code: ErrorCode.InternalServerError })
@@ -89,7 +107,8 @@ const handleError = (res: Response) =>
     toJson(res),
     E.flatMap(toObject),
     E.flatMap(parsePasslockError),
-    E.map(errorData => new PasslockError(errorData)),
+    E.mapError(() => error('Received unexpected (non PasslockError) from backend')),
+    E.map(passlockErrorData => new PasslockError(passlockErrorData)),
     E.match({ onFailure: identity, onSuccess: identity }),
     E.flip,
   )
@@ -110,13 +129,13 @@ const toObject = (json: unknown) => {
 
 /* Effects */
 
-type Dependencies = Abort | PasslockLogger | Fetch
+type Dependencies = Abort | PasslockLogger | Fetch | RetrySchedule
 
 export const postData = <T>(
-  url: string,
-  clientId: string,
-  data: T,
+  request: PostRequest<T>,
 ): E.Effect<Dependencies, PasslockError, object> => {
+  const { url, clientId, data } = request
+
   return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -135,12 +154,21 @@ export const postData = <T>(
       clientId,
       signal,
     })
-    const policy = Schedule.addDelay(Schedule.recurs(3), () => '100 millis')
-    const resilientPost = E.retry(postEffect, policy)
-    const res = yield* _(resilientPost)
 
-    yield* _(logger.debug('Check response status code'))
-    const okRes = yield* _(isOk(res))
+    const post200Effect = pipe(
+      postEffect,
+      E.tap(logger.debug('Check response status code')),
+      E.flatMap(isOk),
+    )
+
+    const { schedule } = yield* _(RetrySchedule)
+
+    const resilientGet = E.retry(post200Effect, {
+      schedule: schedule,
+      while: e => e.code === ErrorCode.InternalServerError,
+    })
+
+    const okRes = yield* _(resilientGet)
 
     yield* _(logger.debug('Extract JSON'))
     const json = yield* _(toJson(okRes))
@@ -152,11 +180,9 @@ export const postData = <T>(
   })
 }
 
-export const getData = (
-  url: string,
-  clientId: string,
-  params?: Params,
-): E.Effect<Dependencies, PasslockError, object> => {
+export const getData = (request: GetRequest): E.Effect<Dependencies, PasslockError, object> => {
+  const { url, clientId, params } = request
+
   const buildUrl = E.sync(() => {
     if (!params) return url
     const queryParams = new URLSearchParams(params)
@@ -173,6 +199,7 @@ export const getData = (
     const url = yield* _(buildUrl)
 
     yield* _(logger.debug('GET data'))
+
     const getEffect = performFetch({
       fetch,
       method: 'GET',
@@ -180,12 +207,21 @@ export const getData = (
       clientId,
       signal,
     })
-    const policy = Schedule.addDelay(Schedule.recurs(3), () => '100 millis')
-    const resilientGet = E.retry(getEffect, policy)
-    const res = yield* _(resilientGet)
 
-    yield* _(logger.debug('Check response status code'))
-    const okRes = yield* _(isOk(res))
+    const get200Effect = pipe(
+      getEffect,
+      E.tap(logger.debug('Check response status code')),
+      E.flatMap(isOk),
+    )
+
+    const { schedule } = yield* _(RetrySchedule)
+
+    const resilientGet = E.retry(get200Effect, {
+      schedule,
+      while: e => e.code === ErrorCode.InternalServerError,
+    })
+
+    const okRes = yield* _(resilientGet)
 
     yield* _(logger.debug('Extract JSON'))
     const json = yield* _(toJson(okRes))
@@ -200,17 +236,14 @@ export const getData = (
 /* Live */
 
 /* v8 ignore start */
-export const fetchLive = Layer.succeed(Fetch, Fetch.of(fetch))
-const liveLayers = Layer.mergeAll(fetchLive, eventLoggerLive)
-
-const getDataWithFetch = flow(getData, E.provide(liveLayers))
-const postDataWithFetch = flow(postData, E.provide(liveLayers))
-
-export const networkServiceLive = Layer.succeed(
+export const NetworkServiceLive = Layer.effect(
   NetworkService,
-  NetworkService.of({
-    getData: getDataWithFetch,
-    postData: postDataWithFetch,
+  E.gen(function* (_) {
+    const context = yield* _(E.context<Fetch | PasslockLogger | RetrySchedule>())
+    return NetworkService.of({
+      getData: flow(getData, E.provide(context)),
+      postData: flow(postData, E.provide(context)),
+    })
   }),
 )
 /* v8 ignore stop */

@@ -1,6 +1,6 @@
 import { LogLevel } from '@passlock/shared/logging'
 import { Effect as E, LogLevel as EffectLogLevel, Logger } from 'effect'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 
 import { debug, error, info, log, logRaw, warn } from './eventLogger'
 
@@ -13,10 +13,6 @@ import { debug, error, info, log, logRaw, warn } from './eventLogger'
  */
 
 describe('log', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('log DEBUG to the console', () => {
     const effect = debug('hello world')
 

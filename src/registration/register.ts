@@ -1,24 +1,22 @@
-import {
-  type RegistrationPublicKeyCredential,
+import { parseCreationOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
+import type {
+  RegistrationPublicKeyCredential,
   create,
-  parseCreationOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import type { UserVerification, VerifyEmail } from '@passlock/shared/schema'
 import { Principal, RegistrationOptions, createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, LogLevel as EffectLogLevel, Layer, Logger } from 'effect'
+import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 
-import type { Config } from '../config'
-import { DefaultEndpoint, Endpoint, Tenancy, buildConfigLayers } from '../config'
-import { eventLoggerLive } from '../logging/eventLogger'
-import { NetworkService, networkServiceLive } from '../network/network'
-import { StorageService, storageServiceLive } from '../storage/storage'
-import { isNewUser } from '../user/status'
-import { Capabilities, type CommonDependencies, capabilitiesLive } from '../utils'
+import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
+import { NetworkService } from '../network/network'
+import { StorageService } from '../storage/storage'
+import { isNewUser } from '../user/user'
+import { Capabilities, type CommonDependencies } from '../utils'
 
-/* Request */
+/* Requests */
 
 export type RegistrationRequest = {
   email: string
@@ -29,12 +27,20 @@ export type RegistrationRequest = {
   redirectUrl?: string
 }
 
-/* Services */
+/* Dependencies */
 
 export type Create = typeof create
 export const Create = Context.Tag<Create>()
 
-/* Components */
+/* Services */
+
+export type RegistrationService = {
+  register: (request: RegistrationRequest) => E.Effect<CommonDependencies, PasslockError, Principal>
+}
+
+export const RegistrationService = Context.Tag<RegistrationService>()
+
+/* Utilities */
 
 const toCreationOptions = (options: RegistrationOptions) =>
   E.try({
@@ -62,20 +68,18 @@ const createCredential = (options: CredentialCreationOptions, signal?: AbortSign
   return Create.pipe(E.flatMap(go))
 }
 
-/* Effects */
-
-const fetchOptions = (registrationRequest: RegistrationRequest) =>
+const fetchOptions = (data: RegistrationRequest) =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
     const { tenancyId, clientId } = yield* _(Tenancy)
     const endpointConfig = yield* _(Endpoint)
     const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const optionsURL = `${endpoint}/${tenancyId}/passkey/registration/options`
+    const url = `${endpoint}/${tenancyId}/passkey/registration/options`
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(networkService.postData(optionsURL, clientId, registrationRequest))
+    const response = yield* _(networkService.postData({ url, clientId, data }))
 
     yield* _(logger.debug('Parsing Passlock registration options'))
     const parse = createParser(RegistrationOptions)
@@ -103,11 +107,11 @@ const verify = (data: VerificationData) => {
     const { tenancyId, clientId } = yield* _(Tenancy)
     const endpointConfig = yield* _(Endpoint)
     const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const verificationURL = `${endpoint}/${tenancyId}/passkey/registration/verification`
+    const url = `${endpoint}/${tenancyId}/passkey/registration/verification`
 
     yield* _(logger.debug('Making request'))
     const networkService = yield* _(NetworkService)
-    const response = yield* _(networkService.postData(verificationURL, clientId, data))
+    const response = yield* _(networkService.postData({ url, clientId, data }))
 
     yield* _(logger.debug('Parsing Principal response'))
     const parse = createParser(Principal)
@@ -117,7 +121,15 @@ const verify = (data: VerificationData) => {
   })
 }
 
-type Dependencies = CommonDependencies | Capabilities | Create | StorageService
+/* Effects */
+
+type Dependencies =
+  | CommonDependencies
+  | Capabilities
+  | Create
+  | StorageService
+  | NetworkService
+  | PasslockLogger
 
 export const register = (
   registrationRequest: RegistrationRequest,
@@ -148,8 +160,11 @@ export const register = (
     const principal = yield* _(verify(verificationData))
 
     const storageService = yield* _(StorageService)
-    storageService.storeToken(principal)
-    yield* _(logger.debug('Storing token in session storage'))
+    yield* _(storageService.storeToken(principal))
+    yield* _(logger.debug('Storing token in local storage'))
+
+    yield* _(logger.debug('Defering local token deletion'))
+    yield* _(pipe(storageService.clearExpiredToken('passkey', true), E.fork))
 
     return principal
   })
@@ -157,20 +172,24 @@ export const register = (
 /* Live */
 
 /* v8 ignore start */
-export const registerLive = (request: RegistrationRequest & Config) => {
-  const configLayers = buildConfigLayers(request)
-  const createLive = Layer.succeed(Create, Create.of(create))
-
-  const layers = Layer.mergeAll(
-    createLive,
-    networkServiceLive,
-    configLayers,
-    capabilitiesLive,
-    eventLoggerLive,
-    storageServiceLive,
-  )
-
-  const withLayers = E.provide(register(request), layers)
-  return withLayers.pipe(Logger.withMinimumLogLevel(EffectLogLevel.Debug))
-}
+export const RegistrationServiceLive = Layer.effect(
+  RegistrationService,
+  E.gen(function* (_) {
+    const create = yield* _(Create)
+    const network = yield* _(NetworkService)
+    const capabilities = yield* _(Capabilities)
+    const logger = yield* _(PasslockLogger)
+    const storage = yield* _(StorageService)
+    return RegistrationService.of({
+      register: flow(
+        register,
+        E.provideService(Create, create),
+        E.provideService(Capabilities, capabilities),
+        E.provideService(PasslockLogger, logger),
+        E.provideService(StorageService, storage),
+        E.provideService(NetworkService, network),
+      ),
+    })
+  }),
+)
 /* v8 ignore stop */

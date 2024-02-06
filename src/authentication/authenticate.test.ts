@@ -1,59 +1,108 @@
 import { ErrorCode } from '@passlock/shared/error'
-import { Effect as E, Layer } from 'effect'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { Effect as E, Layer, pipe } from 'effect'
+import { describe, expect, test } from 'vitest'
 
 import { Get, authenticate } from './authenticate'
 import {
   buildTestLayers,
   clientId,
+  request as data,
   endpoint,
   expectedPrincipal,
-  request,
-  runEffect,
   tenancyId,
 } from './authenticate.fixture'
-import { runUnion } from '../exit'
-import { expectPasslockError } from '../test/testUtils'
+import { NetworkService } from '../network/network'
+import { StorageService } from '../storage/storage'
 
 describe('authenticate should', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('return a valid credential', async () => {
-    const effect = authenticate(request)
-    const { result } = await runEffect(effect)
+    const program = E.gen(function* (_) {
+      const result = yield* _(authenticate(data))
+      expect(result).toEqual(expectedPrincipal)
+    })
 
-    expect(result).toEqual(expectedPrincipal)
+    const layers = buildTestLayers()
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('pass the authentication request to the backend', async () => {
-    const effect = authenticate(request)
-    const { postData } = await runEffect(effect)
+    const program = E.gen(function* (_) {
+      const result = yield* _(authenticate(data))
+      const networkService = yield* _(NetworkService)
+      const url = `${endpoint}/${tenancyId}/passkey/authentication/options`
 
-    const expectedUrl = `${endpoint}/${tenancyId}/passkey/authentication/options`
-    expect(postData).toHaveBeenCalledWith(expectedUrl, clientId, request)
+      expect(networkService.postData).toHaveBeenCalledWith({ url, clientId, data })
+      expect(result).toEqual(expectedPrincipal)
+    })
+
+    const layers = buildTestLayers()
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test('send the credential to the backend', async () => {
-    const effect = authenticate(request)
-    const { postData } = await runEffect(effect)
+    const program = E.gen(function* (_) {
+      const result = yield* _(authenticate(data))
+      const networkService = yield* _(NetworkService)
+      const url = `${endpoint}/${tenancyId}/passkey/authentication/verification`
 
-    const expectedUrl = `${endpoint}/${tenancyId}/passkey/authentication/verification`
-    expect(postData).toHaveBeenCalledWith(expectedUrl, clientId, expect.any(Object))
+      expect(networkService.postData).toHaveBeenCalledWith({
+        url,
+        clientId,
+        data: expect.any(Object) as object,
+      })
+      expect(result).toEqual(expectedPrincipal)
+    })
+
+    const layers = buildTestLayers()
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
+  })
+
+  test('store the credential in local storage', async () => {
+    const program = E.gen(function* (_) {
+      const result = yield* _(authenticate(data))
+      const storageService = yield* _(StorageService)
+
+      expect(storageService.storeToken).toHaveBeenCalledWith(expectedPrincipal)
+      expect(result).toEqual(expectedPrincipal)
+    })
+
+    const layers = buildTestLayers()
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
+  })
+
+  test('schedule deletion of the local token', async () => {
+    const program = E.gen(function* (_) {
+      const result = yield* _(authenticate(data))
+      const storageService = yield* _(StorageService)
+
+      expect(storageService.clearExpiredToken).toHaveBeenCalledWith('passkey', true)
+      expect(result).toEqual(expectedPrincipal)
+    })
+
+    const layers = buildTestLayers()
+    const noRequirements = E.provide(program, layers)
+    await E.runPromise(noRequirements)
   })
 
   test("return an error if the browser can't create a credential", async () => {
-    const effect = authenticate(request)
-    const { layers } = buildTestLayers()
+    const program = pipe(
+      authenticate(data),
+      E.flip,
+      E.tap(e => {
+        expect(e.message).toBe('Unable to get credentials')
+        expect(e.code).toBe(ErrorCode.InternalBrowserError)
+      }),
+    )
 
+    const layers = buildTestLayers()
     const get: Get = () => Promise.reject(new Error('BOOM!'))
     const createTest = Layer.succeed(Get, Get.of(get))
     const withFailingCreate = Layer.merge(layers, createTest)
-
-    const noRequirements = E.provide(effect, withFailingCreate)
-    const result = await runUnion(noRequirements)
-
-    expectPasslockError(result).toMatch('Unable to get credentials', ErrorCode.InternalBrowserError)
+    const noRequirements = E.provide(program, withFailingCreate)
+    await E.runPromise(noRequirements)
   })
 })

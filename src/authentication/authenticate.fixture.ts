@@ -1,18 +1,15 @@
 import type { AuthenticationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill'
-import type { PasslockError } from '@passlock/shared/error'
-import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer, Option as O } from 'effect'
+import { Effect as E, Layer } from 'effect'
 import type { Input } from 'valibot'
-import { vi } from 'vitest'
+import { mock } from 'vitest-mock-extended'
 
 import { type AuthenticationRequest, Get } from './authenticate'
 import { authenticationOptions } from './authenticate.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
-import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
 import { StorageService } from '../storage/storage'
-import { NetworkServiceTest, type PostData, noopLogger } from '../test/testUtils'
+import { noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
 export { authenticationOptions } from './authenticate.fixture.json'
@@ -70,28 +67,19 @@ const principal: Input<typeof Principal> = {
   expiresAt: expectedPrincipal.expiresAt.toISOString(),
 }
 
-const buildMocks = () => {
-  const postData: PostData = vi
-    .fn()
-    .mockImplementationOnce(() => E.succeed(authenticationOptions))
-    .mockImplementationOnce(() => E.succeed(principal))
-
-  return postData
+const buildNetworkMock = () => {
+  const networkMock = mock<NetworkService>()
+  networkMock.postData.mockReturnValueOnce(E.succeed(authenticationOptions))
+  networkMock.postData.mockReturnValueOnce(E.succeed(principal))
+  return networkMock
 }
 
-export type In<O> = E.Effect<
-  | Tenancy
-  | Endpoint
-  | Capabilities
-  | Abort
-  | NetworkService
-  | Get
-  | PasslockLogger
-  | StorageService,
-  PasslockError,
-  O
->
-export type Out<O> = Promise<{ result: PasslockError | O; postData: PostData }>
+const buildStorageMock = () => {
+  const storageMock = mock<StorageService>()
+  storageMock.storeToken.mockReturnValueOnce(E.unit)
+  storageMock.clearExpiredToken.mockReturnValueOnce(E.unit)
+  return storageMock
+}
 
 export const buildTestLayers = () => {
   const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
@@ -103,26 +91,11 @@ export const buildTestLayers = () => {
   )
 
   const get: Get = () => Promise.resolve(credential)
-  const postData = buildMocks()
   const getTest = Layer.succeed(Get, Get.of(get))
-  const networkServiceLayer = Layer.succeed(
-    NetworkService,
-    NetworkServiceTest.withPostData(postData),
-  )
 
-  const storageServiceTest = Layer.succeed(
-    StorageService,
-    StorageService.of({
-      storeToken: () => E.unit,
-      getToken: () =>
-        O.some({
-          token: 'token',
-          authType: 'passkey',
-          expiresAt: Date.now(),
-        }),
-      clearToken: () => E.unit,
-    }),
-  )
+  const networkServiceLayer = Layer.effect(NetworkService, E.sync(buildNetworkMock))
+
+  const storageServiceTest = Layer.effect(StorageService, E.sync(buildStorageMock))
 
   const layers = Layer.mergeAll(
     tenancyTest,
@@ -135,13 +108,5 @@ export const buildTestLayers = () => {
     noopLogger,
   )
 
-  return { layers, postData }
-}
-
-export async function runEffect<O>(effect: In<O>): Out<O> {
-  const { layers, postData } = buildTestLayers()
-  const noRequirements = E.provide(effect, layers)
-  const result = await runUnion(noRequirements)
-
-  return { result, postData }
+  return layers
 }

@@ -1,10 +1,8 @@
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error, fail } from '@passlock/shared/error'
-import type { PasslockLogger } from '@passlock/shared/logging'
 import { Context, Effect as E, Layer, identity, pipe } from 'effect'
 
 import type { Abort, Endpoint, Tenancy } from './config'
-import type { NetworkService } from './network/network'
 
 /* Services */
 
@@ -14,7 +12,7 @@ export type Capabilities = {
 
 export const Capabilities = Context.Tag<Capabilities>()
 
-export type CommonDependencies = NetworkService | Abort | Endpoint | Tenancy | PasslockLogger
+export type CommonDependencies = Abort | Endpoint | Tenancy
 
 /* Effects */
 

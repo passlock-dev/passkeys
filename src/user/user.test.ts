@@ -4,7 +4,7 @@ import type { PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import { type Email, isExistingUser, isNewUser } from './status'
+import { type Email, isExistingUser, isNewUser } from './user'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
@@ -47,10 +47,6 @@ function runEffect<O>(effect: In<O>, opts: boolean | GetData): Out<O> {
 }
 
 describe('isRegistered should', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   test('return true when the backend returns registered:true', async () => {
     const effect = isExistingUser(request)
     const alreadyRegistered = await runEffect(effect, true)
@@ -69,8 +65,8 @@ describe('isRegistered should', () => {
     await runEffect(effect, getData)
 
     const encodedEmail = encodeURIComponent(email)
-    const expectedUrl = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
-    expect(getData).toBeCalledWith(expectedUrl, clientId, undefined)
+    const url = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
+    expect(getData).toBeCalledWith({ url, clientId })
   })
 
   test("fail if the backend doesn't return a {registered:boolean} object", async () => {
