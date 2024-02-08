@@ -166,11 +166,11 @@ Exactly the same as for registration. Exchange the token for a `Principal` and u
 
 ## Next steps
 
-This was a very quick overview. Please see the [tutorial] and [documentation] for more information.
+This was a very quick overview. Please see the [tutorial][tutorial] and [documentation][docs] for more information.
 
 ## Contact
 
-Our [contact details][contact] can be found on our website
+Questions? Please use the [GitHub discussions][discussions] or see the [contact][contact] details on our main project site.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -178,5 +178,7 @@ Our [contact details][contact] can be found on our website
 [demo]: https://passlock.dev/#demo
 [webauthn]: https://www.w3.org/TR/webauthn-2/
 [contact]: https://passlock.dev/contact
+[tutorial]: https://docs.passlock.dev/docs/tutorial/intro
 [docs]: https://docs.passlock.dev
 [passlock-signup]: https://console.passlock.dev/register
+[discussions]: https://github.com/passlock-dev/passkeys/discussions
