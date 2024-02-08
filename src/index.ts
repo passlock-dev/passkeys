@@ -94,28 +94,37 @@ const isRegisteredLive = (request: Email & Config) => {
   )
 }
 
-const registerLive = (request: RegistrationRequest & Config) => {
+const registerPasskeylive = (request: RegistrationRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
-    E.flatMap(RegistrationService, s => s.register(request)),
+    E.flatMap(RegistrationService, s => s.registerPasskey(request)),
     E.provide(registrationServiceLive),
     E.provide(configLive),
   )
 }
 
-const authenticateLive = (request: AuthenticationRequest & Config) => {
+const authenticatePasskeyLive = (request: AuthenticationRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
-    E.flatMap(AuthenticationService, s => s.authenticate(request)),
+    E.flatMap(AuthenticationService, s => s.authenticatePasskey(request)),
     E.provide(authenticationServiceLive),
     E.provide(configLive),
   )
 }
 
-const verifyEmailLive = (request: VerifyRequest & Config) => {
+const verifyEmailCodeLive = (request: VerifyRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
-    E.flatMap(EmailService, s => s.verifyEmail(request)),
+    E.flatMap(EmailService, s => s.verifyEmailCode(request)),
+    E.provide(emailServiceLive),
+    E.provide(configLive),
+  )
+}
+
+const verifyEmailLinkLive = (request: Config) => {
+  const configLive = buildConfigLayers(request)
+  return pipe(
+    E.flatMap(EmailService, s => s.verifyEmailLink()),
     E.provide(emailServiceLive),
     E.provide(configLive),
   )
@@ -134,41 +143,53 @@ const getSessionToken = (authType: AuthType): string | undefined => {
   )
 }
 
-const clearExpiredToken = (authType: AuthType) => {
+const clearExpiredToken = (authType: AuthType, defer: boolean) =>
   pipe(
-    E.flatMap(StorageService, s => s.clearExpiredToken(authType, true)),
+    E.flatMap(StorageService, s => s.clearExpiredToken(authType, defer)),
     E.provide(storageServiceLive),
-    E.runSync,
+    E.runPromise,
   )
-}
+
+const clearExpiredTokens = (defer: boolean) =>
+  pipe(
+    E.flatMap(StorageService, s => s.clearExpiredTokens(defer)),
+    E.provide(storageServiceLive),
+    E.runPromise,
+  )
 
 /* Exports */
 
 const isRegistered = makeUnionFn(isRegisteredLive)
 const isRegisteredUnsafe = makeUnsafeFn(isRegisteredLive)
 
-const register = makeUnionFn(registerLive)
-const registerUnsafe = makeUnsafeFn(registerLive)
+const registerPasskey = makeUnionFn(registerPasskeylive)
+const registerUnsafe = makeUnsafeFn(registerPasskeylive)
 
-const authenticate = makeUnionFn(authenticateLive)
-const authenticateUnsafe = makeUnsafeFn(authenticateLive)
+const authenticatePasskey = makeUnionFn(authenticatePasskeyLive)
+const authenticateUnsafe = makeUnsafeFn(authenticatePasskeyLive)
 
-const verifyEmail = makeUnionFn(verifyEmailLive)
-const verifyEmailUnsafe = makeUnsafeFn(verifyEmailLive)
+const verifyEmailCode = makeUnionFn(verifyEmailCodeLive)
+const verifyEmailCodeUnsafe = makeUnsafeFn(verifyEmailCodeLive)
+
+const verifyEmailLink = makeUnionFn(verifyEmailLinkLive)
+const verifyEmailLinkUnsafe = makeUnsafeFn(verifyEmailLinkLive)
 
 export {
   ErrorCode,
   arePasskeysSupported,
-  authenticate,
+  authenticatePasskey,
   authenticateUnsafe,
   clearExpiredToken,
+  clearExpiredTokens,
   getSessionToken,
   isAutofillSupported,
   isPasslockError,
   isRegistered,
   isRegisteredUnsafe,
-  register,
+  registerPasskey,
   registerUnsafe,
-  verifyEmail,
-  verifyEmailUnsafe,
+  verifyEmailCode,
+  verifyEmailCodeUnsafe,
+  verifyEmailLink,
+  verifyEmailLinkUnsafe,
 }

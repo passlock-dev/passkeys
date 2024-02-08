@@ -109,6 +109,7 @@ export const buildTestLayers = (registered: boolean) => {
         }),
       clearToken: () => E.unit,
       clearExpiredToken: () => E.unit,
+      clearExpiredTokens: () => E.unit,
     }),
   )
 

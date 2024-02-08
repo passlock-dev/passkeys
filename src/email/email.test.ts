@@ -48,7 +48,7 @@ describe('verifyEmail should', () => {
       AuthenticationService,
       E.sync(() => {
         const authService = mock<AuthenticationService>()
-        authService.authenticate.mockReturnValue(E.succeed(principal))
+        authService.authenticatePasskey.mockReturnValue(E.succeed(principal))
         return authService
       }),
     )
@@ -57,7 +57,7 @@ describe('verifyEmail should', () => {
       const authService = yield* _(AuthenticationService)
       const result = yield* _(verifyEmail({ code: '123' }))
 
-      expect(authService.authenticate).toHaveBeenCalled()
+      expect(authService.authenticatePasskey).toHaveBeenCalled()
       expect(result).toBe(true)
     })
 

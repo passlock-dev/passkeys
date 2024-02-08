@@ -2,7 +2,7 @@ import { ErrorCode } from '@passlock/shared/error'
 import { Effect as E, Layer, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 
-import { Get, authenticate } from './authenticate'
+import { Get, authenticatePasskey } from './authenticate'
 import {
   buildTestLayers,
   clientId,
@@ -17,7 +17,7 @@ import { StorageService } from '../storage/storage'
 describe('authenticate should', () => {
   test('return a valid credential', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(authenticate(data))
+      const result = yield* _(authenticatePasskey(data))
       expect(result).toEqual(expectedPrincipal)
     })
 
@@ -28,7 +28,7 @@ describe('authenticate should', () => {
 
   test('pass the authentication request to the backend', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(authenticate(data))
+      const result = yield* _(authenticatePasskey(data))
       const networkService = yield* _(NetworkService)
       const url = `${endpoint}/${tenancyId}/passkey/authentication/options`
 
@@ -43,7 +43,7 @@ describe('authenticate should', () => {
 
   test('send the credential to the backend', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(authenticate(data))
+      const result = yield* _(authenticatePasskey(data))
       const networkService = yield* _(NetworkService)
       const url = `${endpoint}/${tenancyId}/passkey/authentication/verification`
 
@@ -62,7 +62,7 @@ describe('authenticate should', () => {
 
   test('store the credential in local storage', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(authenticate(data))
+      const result = yield* _(authenticatePasskey(data))
       const storageService = yield* _(StorageService)
 
       expect(storageService.storeToken).toHaveBeenCalledWith(expectedPrincipal)
@@ -76,7 +76,7 @@ describe('authenticate should', () => {
 
   test('schedule deletion of the local token', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(authenticate(data))
+      const result = yield* _(authenticatePasskey(data))
       const storageService = yield* _(StorageService)
 
       expect(storageService.clearExpiredToken).toHaveBeenCalledWith('passkey', true)
@@ -90,7 +90,7 @@ describe('authenticate should', () => {
 
   test("return an error if the browser can't create a credential", async () => {
     const program = pipe(
-      authenticate(data),
+      authenticatePasskey(data),
       E.flip,
       E.tap(e => {
         expect(e.message).toBe('Unable to get credentials')

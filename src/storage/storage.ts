@@ -1,4 +1,4 @@
-import { PasslockLogger } from '@passlock/shared/logging'
+import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
 import { Context, Effect as E, Layer, Option as O, Schedule, flow, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
@@ -20,6 +20,7 @@ export type StorageService = {
   getToken: (authType: AuthType) => E.Effect<never, NoSuchElementException, StoredToken>
   clearToken: (authType: AuthType) => E.Effect<never, never, void>
   clearExpiredToken: (authType: AuthType, defer: boolean) => E.Effect<never, never, void>
+  clearExpiredTokens: (defer: boolean) => E.Effect<never, never, void>
 }
 
 /* Utilities */
@@ -128,24 +129,23 @@ export const clearExpiredToken = (
   }
 }
 
+export const clearExpiredTokens = (defer: boolean): E.Effect<Storage, never, void> => {
+  return E.all([clearExpiredToken('passkey', defer), clearExpiredToken('email', defer)])
+}
+
 /* Live */
 
 /* v8 ignore start */
 export const StorageServiceLive = Layer.effect(
   StorageService,
   E.gen(function* (_) {
-    const storageLive = yield* _(Storage)
-    const loggerLive = yield* _(PasslockLogger)
-
+    const context = yield* _(E.context<Storage | PasslockLogger>())
     return StorageService.of({
-      storeToken: flow(storeToken, E.provideService(Storage, storageLive)),
-      getToken: flow(getToken, E.provideService(Storage, storageLive)),
-      clearToken: flow(clearToken, E.provideService(Storage, storageLive)),
-      clearExpiredToken: flow(
-        clearExpiredToken,
-        E.provideService(Storage, storageLive),
-        E.provideService(PasslockLogger, loggerLive),
-      ),
+      storeToken: flow(storeToken, E.provide(context)),
+      getToken: flow(getToken, E.provide(context)),
+      clearToken: flow(clearToken, E.provide(context)),
+      clearExpiredToken: flow(clearExpiredToken, E.provide(context)),
+      clearExpiredTokens: flow(clearExpiredTokens, E.provide(context)),
     })
   }),
 )

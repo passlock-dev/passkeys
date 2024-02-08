@@ -77,14 +77,9 @@ export const isNewUser = (request: Email) => {
 export const UserServiceLive = Layer.effect(
   UserService,
   E.gen(function* (_) {
-    const network = yield* _(NetworkService)
-    const logger = yield* _(PasslockLogger)
+    const context = yield* _(E.context<NetworkService | PasslockLogger>())
     return UserService.of({
-      isExistingUser: flow(
-        isExistingUser,
-        E.provideService(PasslockLogger, logger),
-        E.provideService(NetworkService, network),
-      ),
+      isExistingUser: flow(isExistingUser, E.provide(context)),
     })
   }),
 )

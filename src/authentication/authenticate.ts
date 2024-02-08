@@ -24,7 +24,7 @@ export const Get = Context.Tag<Get>()
 /* Services */
 
 export type AuthenticationService = {
-  authenticate: (
+  authenticatePasskey: (
     data: AuthenticationRequest,
   ) => E.Effect<CommonDependencies, PasslockError, Principal>
 }
@@ -110,7 +110,7 @@ type Dependencies =
   | NetworkService
   | PasslockLogger
 
-export const authenticate = (
+export const authenticatePasskey = (
   data: AuthenticationRequest,
 ): E.Effect<Dependencies, PasslockError, Principal> =>
   E.gen(function* (_) {
@@ -145,20 +145,11 @@ export const authenticate = (
 export const AuthenticateServiceLive = Layer.effect(
   AuthenticationService,
   E.gen(function* (_) {
-    const get = yield* _(Get)
-    const network = yield* _(NetworkService)
-    const capabilities = yield* _(Capabilities)
-    const logger = yield* _(PasslockLogger)
-    const storage = yield* _(StorageService)
+    const context = yield* _(
+      E.context<Get | NetworkService | Capabilities | PasslockLogger | StorageService>(),
+    )
     return AuthenticationService.of({
-      authenticate: flow(
-        authenticate,
-        E.provideService(Get, get),
-        E.provideService(Capabilities, capabilities),
-        E.provideService(PasslockLogger, logger),
-        E.provideService(StorageService, storage),
-        E.provideService(NetworkService, network),
-      ),
+      authenticatePasskey: flow(authenticatePasskey, E.provide(context)),
     })
   }),
 )

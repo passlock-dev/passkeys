@@ -1,7 +1,7 @@
-import type { PasslockError } from '@passlock/shared/error'
+import { ErrorCode, type PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { VerifyEmailResponse, createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, flow, pipe } from 'effect'
+import { Context, Effect as E, Layer, Option as O, flow, pipe } from 'effect'
 
 import { AuthenticationService } from '../authentication/authenticate'
 import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
@@ -18,7 +18,8 @@ export type VerifyRequest = {
 /* Service */
 
 export type EmailService = {
-  verifyEmail: (request: VerifyRequest) => E.Effect<CommonDependencies, PasslockError, boolean>
+  verifyEmailCode: (request: VerifyRequest) => E.Effect<CommonDependencies, PasslockError, boolean>
+  verifyEmailLink: () => E.Effect<CommonDependencies, PasslockError, boolean>
 }
 
 export const EmailService = Context.Tag<EmailService>()
@@ -50,7 +51,7 @@ const getToken = () =>
       onFailure: () =>
         // No token, need to authenticate the user
         pipe(
-          authenticationService.authenticate({ userVerification: 'preferred' }),
+          authenticationService.authenticatePasskey({ userVerification: 'preferred' }),
           E.map(principal => ({
             token: principal.token,
             authType: principal.authStatement.authType,
@@ -91,23 +92,34 @@ export const verifyEmail = (
     return verified
   })
 
+export const extractCodeFromHref = () =>
+  pipe(
+    O.fromNullable(globalThis.window),
+    O.map(window => window.location.search),
+    O.map(search => new URLSearchParams(search)),
+    O.flatMap(search => O.fromNullable(search.get('code'))),
+  )
+
+export const verifyEmailLink = () =>
+  pipe(
+    extractCodeFromHref(),
+    E.mapError(() =>
+      error('Expected ?code=xxx in window.location', ErrorCode.InternalBrowserError),
+    ),
+    E.flatMap(code => verifyEmail({ code })),
+  )
+
 /* Live */
 /* v8 ignore start */
 export const EmailServiceLive = Layer.effect(
   EmailService,
   E.gen(function* (_) {
-    const network = yield* _(NetworkService)
-    const authentication = yield* _(AuthenticationService)
-    const logger = yield* _(PasslockLogger)
-    const storage = yield* _(StorageService)
+    const context = yield* _(
+      E.context<NetworkService | AuthenticationService | PasslockLogger | StorageService>(),
+    )
     return EmailService.of({
-      verifyEmail: flow(
-        verifyEmail,
-        E.provideService(AuthenticationService, authentication),
-        E.provideService(PasslockLogger, logger),
-        E.provideService(StorageService, storage),
-        E.provideService(NetworkService, network),
-      ),
+      verifyEmailCode: flow(verifyEmail, E.provide(context)),
+      verifyEmailLink: flow(verifyEmailLink, E.provide(context)),
     })
   }),
 )

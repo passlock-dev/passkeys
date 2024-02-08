@@ -2,7 +2,7 @@ import { ErrorCode } from '@passlock/shared/error'
 import { Effect as E, Layer, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 
-import { Create, register } from './register'
+import { Create, registerPasskey } from './register'
 import {
   buildTestLayers,
   clientId,
@@ -17,7 +17,7 @@ import { NetworkService } from '../network/network'
 describe('register should', () => {
   test('return a valid credential', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(register(data))
+      const result = yield* _(registerPasskey(data))
       expect(result).toEqual(expectedPrincipal)
     })
 
@@ -28,7 +28,7 @@ describe('register should', () => {
 
   test('check if the user is already registered', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(register(data))
+      const result = yield* _(registerPasskey(data))
       const networkService = yield* _(NetworkService)
       const url = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
       expect(networkService.getData).toHaveBeenCalledWith({ url, clientId })
@@ -42,7 +42,7 @@ describe('register should', () => {
 
   test('pass the registration data to the backend', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(register(data))
+      const result = yield* _(registerPasskey(data))
       const networkService = yield* _(NetworkService)
       const url = `${endpoint}/${tenancyId}/passkey/registration/options`
       expect(networkService.postData).toHaveBeenCalledWith({ url, clientId, data })
@@ -56,7 +56,7 @@ describe('register should', () => {
 
   test('send the new credential to the backend', async () => {
     const program = E.gen(function* (_) {
-      const result = yield* _(register(data))
+      const result = yield* _(registerPasskey(data))
       const networkService = yield* _(NetworkService)
       const url = `${endpoint}/${tenancyId}/passkey/registration/verification`
       expect(networkService.postData).toHaveBeenCalledWith({
@@ -74,7 +74,7 @@ describe('register should', () => {
 
   test('short-circuit if the user is already registered', async () => {
     const program = pipe(
-      register(data),
+      registerPasskey(data),
       E.flip,
       E.flatMap(e =>
         E.sync(() => {
@@ -91,7 +91,7 @@ describe('register should', () => {
 
   test('generate an error if we try to reregister an existing passkey', async () => {
     const effect = pipe(
-      register(data),
+      registerPasskey(data),
       E.flip,
       E.flatMap(e =>
         E.sync(() => {
@@ -112,7 +112,7 @@ describe('register should', () => {
 
   test("return an error if the browser can't create a credential", async () => {
     const effect = pipe(
-      register(data),
+      registerPasskey(data),
       E.flip,
       E.flatMap(e =>
         E.sync(() => {

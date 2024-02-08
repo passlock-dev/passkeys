@@ -35,7 +35,9 @@ export const Create = Context.Tag<Create>()
 /* Services */
 
 export type RegistrationService = {
-  register: (request: RegistrationRequest) => E.Effect<CommonDependencies, PasslockError, Principal>
+  registerPasskey: (
+    request: RegistrationRequest,
+  ) => E.Effect<CommonDependencies, PasslockError, Principal>
 }
 
 export const RegistrationService = Context.Tag<RegistrationService>()
@@ -131,7 +133,7 @@ type Dependencies =
   | NetworkService
   | PasslockLogger
 
-export const register = (
+export const registerPasskey = (
   registrationRequest: RegistrationRequest,
 ): E.Effect<Dependencies, PasslockError, Principal> =>
   E.gen(function* (_) {
@@ -181,8 +183,8 @@ export const RegistrationServiceLive = Layer.effect(
     const logger = yield* _(PasslockLogger)
     const storage = yield* _(StorageService)
     return RegistrationService.of({
-      register: flow(
-        register,
+      registerPasskey: flow(
+        registerPasskey,
         E.provideService(Create, create),
         E.provideService(Capabilities, capabilities),
         E.provideService(PasslockLogger, logger),
