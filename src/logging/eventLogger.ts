@@ -6,7 +6,7 @@ import { fireEvent } from '../event/event'
 
 /** PasslockLogger implementation that also fires DOM events */
 
-export const log = <T>(message: T, logLevel: LogLevel): E.Effect<never, PasslockError, void> => {
+export const log = <T>(message: T, logLevel: LogLevel): E.Effect<void, PasslockError> => {
   return E.gen(function* (_) {
     switch (logLevel) {
       case LogLevel.ERROR:

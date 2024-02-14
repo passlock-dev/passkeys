@@ -7,10 +7,10 @@ import type { Abort, Endpoint, Tenancy } from './config'
 /* Services */
 
 export type Capabilities = {
-  passkeysSupported: E.Effect<never, PasslockError, void>
+  passkeysSupported: E.Effect<void, PasslockError>
 }
 
-export const Capabilities = Context.Tag<Capabilities>()
+export const Capabilities = Context.GenericTag<Capabilities>("@services/Capabilities")
 
 export type CommonDependencies = Abort | Endpoint | Tenancy
 

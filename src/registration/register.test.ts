@@ -30,7 +30,7 @@ describe('register should', () => {
     const program = E.gen(function* (_) {
       const result = yield* _(registerPasskey(data))
       const networkService = yield* _(NetworkService)
-      const url = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
+      const url = `${endpoint}/${tenancyId}/user/status/${encodedEmail}`
       expect(networkService.getData).toHaveBeenCalledWith({ url, clientId })
       expect(result).toEqual(expectedPrincipal)
     })

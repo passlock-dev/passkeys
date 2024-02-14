@@ -1,8 +1,8 @@
-import { parseCreationOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
 import type {
   RegistrationPublicKeyCredential,
   create,
 } from '@github/webauthn-json/browser-ponyfill'
+import { parseCreationOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
@@ -30,17 +30,18 @@ export type RegistrationRequest = {
 /* Dependencies */
 
 export type Create = typeof create
-export const Create = Context.Tag<Create>()
+export const Create = Context.GenericTag<Create>("@services/Create")
 
 /* Services */
 
 export type RegistrationService = {
+  preConnect: E.Effect<void, PasslockError, CommonDependencies>,
   registerPasskey: (
     request: RegistrationRequest,
-  ) => E.Effect<CommonDependencies, PasslockError, Principal>
+  ) => E.Effect<Principal, PasslockError, CommonDependencies>
 }
 
-export const RegistrationService = Context.Tag<RegistrationService>()
+export const RegistrationService = Context.GenericTag<RegistrationService>("@services/RegistrationService")
 
 /* Utilities */
 
@@ -133,9 +134,28 @@ type Dependencies =
   | NetworkService
   | PasslockLogger
 
+export const preConnect = E.gen(function* (_) {
+  const logger = yield* _(PasslockLogger)
+  const { tenancyId, clientId } = yield* _(Tenancy)
+  yield* _(logger.debug('Hitting options & verification endpoints')) 
+
+  const endpointConfig = yield* _(Endpoint)
+  const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
+  const optionsUrl = `${endpoint}/${tenancyId}/passkey/registration/options?warm=true`
+  const verifyUrl = `${endpoint}/${tenancyId}/passkey/registration/verification?warm=true`
+
+  yield* _(logger.debug('Making requests'))
+  const networkService = yield* _(NetworkService)
+  const optionsResponseE = networkService.postData({ url: optionsUrl, clientId, data: {} })
+  const verifyResponseE = networkService.postData({ url: verifyUrl, clientId, data: {} })
+
+  const all = E.all([ optionsResponseE, verifyResponseE ], { concurrency: 'unbounded' })
+  return yield* _(all)
+})  
+
 export const registerPasskey = (
   registrationRequest: RegistrationRequest,
-): E.Effect<Dependencies, PasslockError, Principal> =>
+): E.Effect<Principal, PasslockError, Dependencies> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -177,20 +197,13 @@ export const registerPasskey = (
 export const RegistrationServiceLive = Layer.effect(
   RegistrationService,
   E.gen(function* (_) {
-    const create = yield* _(Create)
-    const network = yield* _(NetworkService)
-    const capabilities = yield* _(Capabilities)
-    const logger = yield* _(PasslockLogger)
-    const storage = yield* _(StorageService)
+    const context = yield* _(
+      E.context<Create | NetworkService | Capabilities | PasslockLogger | StorageService>(),
+    )
+
     return RegistrationService.of({
-      registerPasskey: flow(
-        registerPasskey,
-        E.provideService(Create, create),
-        E.provideService(Capabilities, capabilities),
-        E.provideService(PasslockLogger, logger),
-        E.provideService(StorageService, storage),
-        E.provideService(NetworkService, network),
-      ),
+      preConnect: pipe(preConnect, E.provide(context)),
+      registerPasskey: flow(registerPasskey, E.provide(context)),
     })
   }),
 )

@@ -16,19 +16,19 @@ export type StoredToken = {
 /* Services */
 
 export type StorageService = {
-  storeToken: (principal: Principal) => E.Effect<never, never, void>
-  getToken: (authType: AuthType) => E.Effect<never, NoSuchElementException, StoredToken>
-  clearToken: (authType: AuthType) => E.Effect<never, never, void>
-  clearExpiredToken: (authType: AuthType, defer: boolean) => E.Effect<never, never, void>
-  clearExpiredTokens: (defer: boolean) => E.Effect<never, never, void>
+  storeToken: (principal: Principal) => E.Effect<void>
+  getToken: (authType: AuthType) => E.Effect<StoredToken, NoSuchElementException>
+  clearToken: (authType: AuthType) => E.Effect<void>
+  clearExpiredToken: (authType: AuthType, defer: boolean) => E.Effect<void>
+  clearExpiredTokens: (defer: boolean) => E.Effect<void>
 }
 
 /* Utilities */
 
-export const StorageService = Context.Tag<StorageService>()
+export const StorageService = Context.GenericTag<StorageService>("@services/StorageService")
 
 // Inject window.localStorage to make testing easier
-export const Storage = Context.Tag<Storage>()
+export const Storage = Context.GenericTag<Storage>("@services/Storage")
 
 // => passlock:t:e || passlock:t:p
 export const buildKey = (authType: AuthType) => {
@@ -60,7 +60,7 @@ export const expandToken =
 /* Effects */
 
 // store compressed token in local storage
-export const storeToken = (principal: Principal): E.Effect<Storage, never, void> => {
+export const storeToken = (principal: Principal): E.Effect<void, never, Storage> => {
   return E.gen(function* (_) {
     const localStorage = yield* _(Storage)
 
@@ -77,7 +77,7 @@ export const storeToken = (principal: Principal): E.Effect<Storage, never, void>
 // get stored token from local storage
 export const getToken = (
   authType: AuthType,
-): E.Effect<Storage, NoSuchElementException, StoredToken> => {
+): E.Effect<StoredToken, NoSuchElementException, Storage> => {
   return E.gen(function* (_) {
     const localStorage = yield* _(Storage)
 
@@ -92,7 +92,7 @@ export const getToken = (
   })
 }
 
-export const clearToken = (authType: AuthType): E.Effect<Storage, never, void> => {
+export const clearToken = (authType: AuthType): E.Effect<void, never, Storage> => {
   return E.gen(function* (_) {
     const localStorage = yield* _(Storage)
     localStorage.removeItem(buildKey(authType))
@@ -102,7 +102,7 @@ export const clearToken = (authType: AuthType): E.Effect<Storage, never, void> =
 export const clearExpiredToken = (
   authType: AuthType,
   defer: boolean,
-): E.Effect<Storage, never, void> => {
+): E.Effect<void, never, Storage> => {
   const key = buildKey(authType)
   const schedule = Schedule.union(Schedule.recurs(6), Schedule.fixed('30 seconds'))
   const policy = Schedule.delayed(schedule, () => '5 minutes')
@@ -129,7 +129,7 @@ export const clearExpiredToken = (
   }
 }
 
-export const clearExpiredTokens = (defer: boolean): E.Effect<Storage, never, void> => {
+export const clearExpiredTokens = (defer: boolean): E.Effect<void, never, Storage> => {
   return E.all([clearExpiredToken('passkey', defer), clearExpiredToken('email', defer)])
 }
 

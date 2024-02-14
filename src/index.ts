@@ -4,9 +4,9 @@ import { Effect as E, Layer as L, Schedule, identity, pipe } from 'effect'
 
 import {
   AuthenticateServiceLive,
-  type AuthenticationRequest,
   AuthenticationService,
   Get,
+  type AuthenticationRequest
 } from './authentication/authenticate'
 import type { Config } from './config'
 import { buildConfigLayers } from './config'
@@ -16,15 +16,16 @@ import { eventLoggerLive } from './logging/eventLogger'
 import { Fetch, NetworkServiceLive, RetrySchedule } from './network/network'
 import {
   Create,
-  type RegistrationRequest,
   RegistrationService,
   RegistrationServiceLive,
+  type RegistrationRequest,
 } from './registration/register'
 import type { AuthType } from './storage/storage'
 import { Storage, StorageService, StorageServiceLive } from './storage/storage'
-import { type Email, UserService, UserServiceLive } from './user/user'
+import { UserService, UserServiceLive, type Email } from './user/user'
 import * as Utils from './utils'
 import { capabilitiesLive } from './utils'
+import { WarmerService, WarmerServiceLive, type PreConnectRequest } from './warmer/warmer'
 
 const arePasskeysSupported = () => E.runPromise(Utils.arePasskeysSupported)
 const isAutofillSupported = () => E.runPromise(Utils.isAutofillSupported)
@@ -74,6 +75,18 @@ const authenticationServiceLive = pipe(
   L.provide(storageServiceLive),
 )
 
+const warmerServiceLive = pipe(
+  WarmerServiceLive,
+  L.provide(userServiceLive),
+  L.provide(registrationServiceLive),
+  L.provide(authenticationServiceLive),
+  L.provide(networkService),
+  L.provide(loggerLive),
+  L.provide(capabilitiesLive),
+  L.provide(getLive),
+  L.provide(storageServiceLive),
+)
+
 const emailServiceLive = pipe(
   EmailServiceLive,
   L.provide(networkService),
@@ -99,6 +112,15 @@ const registerPasskeylive = (request: RegistrationRequest & Config) => {
   return pipe(
     E.flatMap(RegistrationService, s => s.registerPasskey(request)),
     E.provide(registrationServiceLive),
+    E.provide(configLive),
+  )
+}
+
+const preConnectLive = (request: PreConnectRequest & Config) => {
+  const configLive = buildConfigLayers(request)
+  return pipe(
+    E.flatMap(WarmerService, s => s.preConnect(request)),
+    E.provide(warmerServiceLive),
     E.provide(configLive),
   )
 }
@@ -165,6 +187,9 @@ const isRegisteredUnsafe = makeUnsafeFn(isRegisteredLive)
 const registerPasskey = makeUnionFn(registerPasskeylive)
 const registerUnsafe = makeUnsafeFn(registerPasskeylive)
 
+const preConnect = makeUnionFn(preConnectLive)
+const preConnectUnsafe = makeUnsafeFn(preConnectLive)
+
 const authenticatePasskey = makeUnionFn(authenticatePasskeyLive)
 const authenticateUnsafe = makeUnsafeFn(authenticatePasskeyLive)
 
@@ -176,8 +201,7 @@ const verifyEmailLinkUnsafe = makeUnsafeFn(verifyEmailLinkLive)
 
 export {
   ErrorCode,
-  arePasskeysSupported,
-  authenticatePasskey,
+  arePasskeysSupported, authenticatePasskey,
   authenticateUnsafe,
   clearExpiredToken,
   clearExpiredTokens,
@@ -186,10 +210,13 @@ export {
   isPasslockError,
   isRegistered,
   isRegisteredUnsafe,
+  preConnect,
+  preConnectUnsafe, 
   registerPasskey,
   registerUnsafe,
   verifyEmailCode,
   verifyEmailCodeUnsafe,
   verifyEmailLink,
-  verifyEmailLinkUnsafe,
+  verifyEmailLinkUnsafe
 }
+

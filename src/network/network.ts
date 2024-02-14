@@ -26,22 +26,22 @@ type PostRequest<T> = {
 /* Dependencies */
 
 export type Fetch = typeof fetch
-export const Fetch = Context.Tag<Fetch>()
+export const Fetch = Context.GenericTag<Fetch>("@services/Fetch")
 
 export type RetrySchedule = {
   schedule: Schedule.Schedule<never, unknown, unknown>
 }
 
-export const RetrySchedule = Context.Tag<RetrySchedule>()
+export const RetrySchedule = Context.GenericTag<RetrySchedule>("@services/RetrySchedule")
 
 /* Services */
 
 export type NetworkService = {
-  getData: (request: GetRequest) => E.Effect<Abort, PasslockError, object>
-  postData: <T>(request: PostRequest<T>) => E.Effect<Abort, PasslockError, object>
+  getData: (request: GetRequest) => E.Effect<object, PasslockError, Abort>
+  postData: <T>(request: PostRequest<T>) => E.Effect<object, PasslockError, Abort>
 }
 
-export const NetworkService = Context.Tag<NetworkService>()
+export const NetworkService = Context.GenericTag<NetworkService>("@services/NetworkService")
 
 /* Utilities */
 
@@ -56,7 +56,7 @@ const stringify = <T>(data: T) =>
 
 type FetchOptions = {
   fetch: Fetch
-  method: 'GET' | 'POST' | 'PUT'
+  method: 'HEAD' | 'GET' | 'POST' | 'PUT'
   url: string
   clientId: string
   body?: string
@@ -133,7 +133,7 @@ type Dependencies = Abort | PasslockLogger | Fetch | RetrySchedule
 
 export const postData = <T>(
   request: PostRequest<T>,
-): E.Effect<Dependencies, PasslockError, object> => {
+): E.Effect<object, PasslockError, Dependencies> => {
   const { url, clientId, data } = request
 
   return E.gen(function* (_) {
@@ -180,7 +180,7 @@ export const postData = <T>(
   })
 }
 
-export const getData = (request: GetRequest): E.Effect<Dependencies, PasslockError, object> => {
+export const getData = (request: GetRequest): E.Effect<object, PasslockError, Dependencies> => {
   const { url, clientId, params } = request
 
   const buildUrl = E.sync(() => {

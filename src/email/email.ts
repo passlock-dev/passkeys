@@ -18,11 +18,11 @@ export type VerifyRequest = {
 /* Service */
 
 export type EmailService = {
-  verifyEmailCode: (request: VerifyRequest) => E.Effect<CommonDependencies, PasslockError, boolean>
-  verifyEmailLink: () => E.Effect<CommonDependencies, PasslockError, boolean>
+  verifyEmailCode: (request: VerifyRequest) => E.Effect<boolean, PasslockError, CommonDependencies>
+  verifyEmailLink: () => E.Effect<boolean, PasslockError, CommonDependencies>
 }
 
-export const EmailService = Context.Tag<EmailService>()
+export const EmailService = Context.GenericTag<EmailService>("@services/EmailService")
 
 /* Effects */
 
@@ -68,7 +68,7 @@ const getToken = () =>
 
 export const verifyEmail = (
   verificationRequest: VerifyRequest,
-): E.Effect<Dependencies, PasslockError, boolean> =>
+): E.Effect<boolean, PasslockError, Dependencies> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
     const { tenancyId, clientId } = yield* _(Tenancy)

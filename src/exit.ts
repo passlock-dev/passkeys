@@ -2,7 +2,7 @@ import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error, isPasslockError } from '@passlock/shared/error'
 import { Cause, Exit as EX, Effect, flow } from 'effect'
 
-type InFn<I, O> = (input: I) => Effect.Effect<never, PasslockError, O>
+type InFn<I, O> = (input: I) => Effect.Effect<O, PasslockError>
 type UnionFn<I, O> = (input: I) => Promise<PasslockError | O>
 type UnsafeFn<I, O> = (input: I) => Promise<O>
 
@@ -13,7 +13,7 @@ type UnsafeFn<I, O> = (input: I) => Promise<O>
  * @param exit
  * @returns
  */
-export const transformExit = <T>(exit: EX.Exit<PasslockError, T>): PasslockError | T => {
+export const transformExit = <T>(exit: EX.Exit<T, PasslockError>): PasslockError | T => {
   return EX.getOrElse(exit, cause => {
     if (Cause.isFailType(cause)) {
       return cause.error
@@ -31,7 +31,7 @@ export const transformExit = <T>(exit: EX.Exit<PasslockError, T>): PasslockError
  * @returns
  */
 export const runUnion = async <O>(
-  input: Effect.Effect<never, PasslockError, O>,
+  input: Effect.Effect<O, PasslockError>,
 ): Promise<PasslockError | O> => {
   return Effect.runPromiseExit(input).then(transformExit)
 }
@@ -50,7 +50,7 @@ export const makeUnionFn = <I, O>(fn: InFn<I, O>): UnionFn<I, O> => flow(fn, run
  * @param e Effect
  * @returns Promise that could throw
  */
-export const runUnsafe = async <T>(e: Effect.Effect<never, PasslockError, T>): Promise<T> =>
+export const runUnsafe = async <T>(e: Effect.Effect<T, PasslockError>): Promise<T> =>
   runUnion(e).then(t => (isPasslockError(t) ? Promise.reject(t) : Promise.resolve(t)))
 
 /**

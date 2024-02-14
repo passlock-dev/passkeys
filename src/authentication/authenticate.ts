@@ -1,5 +1,5 @@
-import { parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
 import type { AuthenticationPublicKeyCredential, get } from '@github/webauthn-json/browser-ponyfill'
+import { parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
@@ -19,17 +19,19 @@ export type AuthenticationRequest = { userVerification?: UserVerification }
 /* Dependencies */
 
 export type Get = typeof get
-export const Get = Context.Tag<Get>()
+export const Get = Context.GenericTag<Get>("@services/Get")
 
 /* Services */
 
 export type AuthenticationService = {
+  preConnect: E.Effect<void, PasslockError, CommonDependencies>
+
   authenticatePasskey: (
     data: AuthenticationRequest,
-  ) => E.Effect<CommonDependencies, PasslockError, Principal>
+  ) => E.Effect<Principal, PasslockError, CommonDependencies>
 }
 
-export const AuthenticationService = Context.Tag<AuthenticationService>()
+export const AuthenticationService = Context.GenericTag<AuthenticationService>("@services/AuthenticationService")
 
 /* Utilities */
 
@@ -52,7 +54,7 @@ const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) 
   return Get.pipe(E.flatMap(go))
 }
 
-const fetchOptions = (data: AuthenticationRequest) =>
+export const fetchOptions = (data: AuthenticationRequest) =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -69,12 +71,7 @@ const fetchOptions = (data: AuthenticationRequest) =>
     const parse = createParser(AuthenticationOptions)
     const optionsJSON = yield* _(parse(response))
 
-    yield* _(logger.debug('Converting Passlock options to CredentialRequestOptions'))
-    const options = yield* _(toRequestOptions(optionsJSON))
-
-    const session = optionsJSON.session
-
-    return { options, session }
+    return optionsJSON
   })
 
 const verify = (credential: AuthenticationPublicKeyCredential, session: string) => {
@@ -110,9 +107,28 @@ type Dependencies =
   | NetworkService
   | PasslockLogger
 
+export const preConnect = E.gen(function* (_) {
+  const logger = yield* _(PasslockLogger)
+  const { tenancyId, clientId } = yield* _(Tenancy)
+  yield* _(logger.debug('Hitting options & verification endpoints')) 
+
+  const endpointConfig = yield* _(Endpoint)
+  const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
+  const optionsUrl = `${endpoint}/${tenancyId}/passkey/authentication/options?warm=true`
+  const verifyUrl = `${endpoint}/${tenancyId}/passkey/authentication/verification?warm=true`
+
+  yield* _(logger.debug('Making requests'))
+  const networkService = yield* _(NetworkService)
+  const optionsResponseE = networkService.postData({ url: optionsUrl, clientId, data: {} })
+  const verifyResponseE = networkService.postData({ url: verifyUrl, clientId, data: {} })
+
+  const all = E.all([ optionsResponseE, verifyResponseE ], { concurrency: 'unbounded' })
+  return yield* _(all)
+})
+
 export const authenticatePasskey = (
   data: AuthenticationRequest,
-): E.Effect<Dependencies, PasslockError, Principal> =>
+): E.Effect<Principal, PasslockError, Dependencies> =>
   E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
@@ -121,7 +137,12 @@ export const authenticatePasskey = (
     yield* _(capabilities.passkeysSupported)
 
     yield* _(logger.info('Fetching authentication options from Passlock'))
-    const { options, session } = yield* _(fetchOptions(data))
+    const optionsJSON = yield* _(fetchOptions(data))
+
+    yield* _(logger.debug('Converting Passlock options to CredentialRequestOptions'))
+    const options = yield* _(toRequestOptions(optionsJSON))
+
+    const session = optionsJSON.session
 
     yield* _(logger.info('Looking up credential'))
     const credential = yield* _(getCredential(options))
@@ -148,7 +169,9 @@ export const AuthenticateServiceLive = Layer.effect(
     const context = yield* _(
       E.context<Get | NetworkService | Capabilities | PasslockLogger | StorageService>(),
     )
+
     return AuthenticationService.of({
+      preConnect: pipe(preConnect, E.provide(context)),
       authenticatePasskey: flow(authenticatePasskey, E.provide(context)),
     })
   }),

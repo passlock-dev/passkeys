@@ -16,11 +16,7 @@ const endpoint = 'https://example.com'
 const email = 'john.doe@gmail.com'
 const request: Email = { email: email }
 
-type In<O> = E.Effect<
-  NetworkService | PasslockLogger | Tenancy | Endpoint | Abort,
-  PasslockError,
-  O
->
+type In<O> = E.Effect<O, PasslockError, NetworkService | PasslockLogger | Tenancy | Endpoint | Abort>
 type Out<O> = Promise<PasslockError | O>
 
 function runEffect<O>(effect: In<O>, opts: boolean | GetData): Out<O> {
@@ -65,7 +61,7 @@ describe('isRegistered should', () => {
     await runEffect(effect, getData)
 
     const encodedEmail = encodeURIComponent(email)
-    const url = `${endpoint}/${tenancyId}/users/status/${encodedEmail}`
+    const url = `${endpoint}/${tenancyId}/user/status/${encodedEmail}`
     expect(getData).toBeCalledWith({ url, clientId })
   })
 
