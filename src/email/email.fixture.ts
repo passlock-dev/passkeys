@@ -6,7 +6,7 @@ import { AuthenticationService } from '../authentication/authenticate'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { eventLoggerLive } from '../logging/eventLogger'
 import { NetworkService } from '../network/network'
-import { StorageService } from '../storage/storage'
+import { Storage, StorageService } from '../storage/storage'
 
 const tenancyId = 'testTenancy'
 const clientId = 'clientId'
@@ -48,6 +48,8 @@ export const storageServiceTest = Layer.effect(
   }),
 )
 
+const storageTest = Layer.succeed(Storage, mock<Storage>())
+
 const authenticationServiceTest = Layer.effect(
   AuthenticationService,
   E.sync(() => {
@@ -74,6 +76,7 @@ const abortTest = Layer.succeed(Abort, Abort.of({}))
 
 export const testLayers = Layer.mergeAll(
   storageServiceTest,
+  storageTest,
   networkServiceTest,
   authenticationServiceTest,
   eventLoggerLive,

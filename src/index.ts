@@ -1,12 +1,12 @@
 import { create, get } from '@github/webauthn-json/browser-ponyfill'
 import { ErrorCode, isPasslockError } from '@passlock/shared/error'
-import { Effect as E, Layer as L, Schedule, identity, pipe } from 'effect'
+import { Effect as E, Layer as L, Layer, Schedule, Scope, identity, pipe } from 'effect'
 
 import {
   AuthenticateServiceLive,
+  type AuthenticationRequest,
   AuthenticationService,
   Get,
-  type AuthenticationRequest
 } from './authentication/authenticate'
 import type { Config } from './config'
 import { buildConfigLayers } from './config'
@@ -16,16 +16,16 @@ import { eventLoggerLive } from './logging/eventLogger'
 import { Fetch, NetworkServiceLive, RetrySchedule } from './network/network'
 import {
   Create,
+  type RegistrationRequest,
   RegistrationService,
   RegistrationServiceLive,
-  type RegistrationRequest,
 } from './registration/register'
 import type { AuthType } from './storage/storage'
 import { Storage, StorageService, StorageServiceLive } from './storage/storage'
-import { UserService, UserServiceLive, type Email } from './user/user'
+import { type Email, UserService, UserServiceLive } from './user/user'
 import * as Utils from './utils'
 import { capabilitiesLive } from './utils'
-import { WarmerService, WarmerServiceLive, type PreConnectRequest } from './warmer/warmer'
+import { type PreConnectRequest, WarmerService, WarmerServiceLive } from './warmer/warmer'
 
 const arePasskeysSupported = () => E.runPromise(Utils.arePasskeysSupported)
 const isAutofillSupported = () => E.runPromise(Utils.isAutofillSupported)
@@ -44,22 +44,20 @@ const schedule = Schedule.intersect(Schedule.recurs(3), Schedule.exponential('10
 
 const retryScheduleLive = L.succeed(RetrySchedule, RetrySchedule.of({ schedule }))
 
-const storageLive = L.suspend(() => L.succeed(Storage, Storage.of(localStorage)))
-
-const networkService = pipe(
+const networkServiceLive = pipe(
   NetworkServiceLive,
   L.provide(fetchLive),
   L.provide(loggerLive),
   L.provide(retryScheduleLive),
 )
 
-const userServiceLive = pipe(UserServiceLive, L.provide(networkService), L.provide(loggerLive))
+const userServiceLive = pipe(UserServiceLive, L.provide(networkServiceLive), L.provide(loggerLive))
 
-const storageServiceLive = pipe(StorageServiceLive, L.provide(storageLive), L.provide(loggerLive))
+const storageServiceLive = pipe(StorageServiceLive, L.provide(loggerLive))
 
 const registrationServiceLive = pipe(
   RegistrationServiceLive,
-  L.provide(networkService),
+  L.provide(networkServiceLive),
   L.provide(loggerLive),
   L.provide(capabilitiesLive),
   L.provide(createLive),
@@ -68,7 +66,7 @@ const registrationServiceLive = pipe(
 
 const authenticationServiceLive = pipe(
   AuthenticateServiceLive,
-  L.provide(networkService),
+  L.provide(networkServiceLive),
   L.provide(loggerLive),
   L.provide(capabilitiesLive),
   L.provide(getLive),
@@ -80,7 +78,7 @@ const warmerServiceLive = pipe(
   L.provide(userServiceLive),
   L.provide(registrationServiceLive),
   L.provide(authenticationServiceLive),
-  L.provide(networkService),
+  L.provide(networkServiceLive),
   L.provide(loggerLive),
   L.provide(capabilitiesLive),
   L.provide(getLive),
@@ -89,20 +87,43 @@ const warmerServiceLive = pipe(
 
 const emailServiceLive = pipe(
   EmailServiceLive,
-  L.provide(networkService),
+  L.provide(networkServiceLive),
   L.provide(loggerLive),
   L.provide(capabilitiesLive),
   L.provide(authenticationServiceLive),
   L.provide(storageServiceLive),
 )
 
+const all = Layer.mergeAll(
+  userServiceLive,
+  registrationServiceLive,
+  authenticationServiceLive,
+  warmerServiceLive,
+  emailServiceLive,
+)
+
+// Create a scope for resources used in the layers
+const scope = E.runSync(Scope.make())
+
+// Transform the layer into a runtime
+const runtime = E.runSync(Layer.toRuntime(all).pipe(Scope.extend(scope)))
+
 /* Effects */
+
+// We don't want to eagerly build this layer as this file could be included
+// during SSR (where there is not localStorage). The effects are never run
+// during SSR, only during a browser render, so it's fine to provide them
+// when the effects are created and run
+const storageLive = Layer.effect(
+  Storage,
+  E.sync(() => localStorage),
+)
 
 const isRegisteredLive = (request: Email & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(UserService, s => s.isExistingUser(request)),
-    E.provide(userServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -111,7 +132,7 @@ const registerPasskeylive = (request: RegistrationRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(RegistrationService, s => s.registerPasskey(request)),
-    E.provide(registrationServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -120,7 +141,7 @@ const preConnectLive = (request: PreConnectRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(WarmerService, s => s.preConnect(request)),
-    E.provide(warmerServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -129,7 +150,7 @@ const authenticatePasskeyLive = (request: AuthenticationRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(AuthenticationService, s => s.authenticatePasskey(request)),
-    E.provide(authenticationServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -138,7 +159,7 @@ const verifyEmailCodeLive = (request: VerifyRequest & Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(EmailService, s => s.verifyEmailCode(request)),
-    E.provide(emailServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -147,7 +168,7 @@ const verifyEmailLinkLive = (request: Config) => {
   const configLive = buildConfigLayers(request)
   return pipe(
     E.flatMap(EmailService, s => s.verifyEmailLink()),
-    E.provide(emailServiceLive),
+    E.provide(storageLive),
     E.provide(configLive),
   )
 }
@@ -157,6 +178,7 @@ const getSessionToken = (authType: AuthType): string | undefined => {
     E.flatMap(StorageService, s => s.getToken(authType)),
     E.map(t => t.token),
     E.provide(storageServiceLive),
+    E.provide(storageLive),
     E.match({
       onSuccess: identity,
       onFailure: () => undefined,
@@ -165,43 +187,46 @@ const getSessionToken = (authType: AuthType): string | undefined => {
   )
 }
 
-const clearExpiredToken = (authType: AuthType, defer: boolean) =>
+const clearExpiredToken = (authType: AuthType) =>
   pipe(
-    E.flatMap(StorageService, s => s.clearExpiredToken(authType, defer)),
+    E.flatMap(StorageService, s => s.clearExpiredToken(authType)),
     E.provide(storageServiceLive),
+    E.provide(storageLive),
     E.runPromise,
   )
 
-const clearExpiredTokens = (defer: boolean) =>
+const clearExpiredTokens = () =>
   pipe(
-    E.flatMap(StorageService, s => s.clearExpiredTokens(defer)),
+    E.flatMap(StorageService, s => s.clearExpiredTokens),
     E.provide(storageServiceLive),
+    E.provide(storageLive),
     E.runPromise,
   )
 
 /* Exports */
 
-const isRegistered = makeUnionFn(isRegisteredLive)
-const isRegisteredUnsafe = makeUnsafeFn(isRegisteredLive)
+const isRegistered = makeUnionFn(isRegisteredLive, runtime)
+const isRegisteredUnsafe = makeUnsafeFn(isRegisteredLive, runtime)
 
-const registerPasskey = makeUnionFn(registerPasskeylive)
-const registerUnsafe = makeUnsafeFn(registerPasskeylive)
+const registerPasskey = makeUnionFn(registerPasskeylive, runtime)
+const registerUnsafe = makeUnsafeFn(registerPasskeylive, runtime)
 
-const preConnect = makeUnionFn(preConnectLive)
-const preConnectUnsafe = makeUnsafeFn(preConnectLive)
+const preConnect = makeUnionFn(preConnectLive, runtime)
+const preConnectUnsafe = makeUnsafeFn(preConnectLive, runtime)
 
-const authenticatePasskey = makeUnionFn(authenticatePasskeyLive)
-const authenticateUnsafe = makeUnsafeFn(authenticatePasskeyLive)
+const authenticatePasskey = makeUnionFn(authenticatePasskeyLive, runtime)
+const authenticateUnsafe = makeUnsafeFn(authenticatePasskeyLive, runtime)
 
-const verifyEmailCode = makeUnionFn(verifyEmailCodeLive)
-const verifyEmailCodeUnsafe = makeUnsafeFn(verifyEmailCodeLive)
+const verifyEmailCode = makeUnionFn(verifyEmailCodeLive, runtime)
+const verifyEmailCodeUnsafe = makeUnsafeFn(verifyEmailCodeLive, runtime)
 
-const verifyEmailLink = makeUnionFn(verifyEmailLinkLive)
-const verifyEmailLinkUnsafe = makeUnsafeFn(verifyEmailLinkLive)
+const verifyEmailLink = makeUnionFn(verifyEmailLinkLive, runtime)
+const verifyEmailLinkUnsafe = makeUnsafeFn(verifyEmailLinkLive, runtime)
 
 export {
   ErrorCode,
-  arePasskeysSupported, authenticatePasskey,
+  arePasskeysSupported,
+  authenticatePasskey,
   authenticateUnsafe,
   clearExpiredToken,
   clearExpiredTokens,
@@ -211,12 +236,11 @@ export {
   isRegistered,
   isRegisteredUnsafe,
   preConnect,
-  preConnectUnsafe, 
+  preConnectUnsafe,
   registerPasskey,
   registerUnsafe,
   verifyEmailCode,
   verifyEmailCodeUnsafe,
   verifyEmailLink,
-  verifyEmailLinkUnsafe
+  verifyEmailLinkUnsafe,
 }
-

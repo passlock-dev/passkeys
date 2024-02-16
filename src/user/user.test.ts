@@ -1,13 +1,15 @@
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error } from '@passlock/shared/error'
 import type { PasslockLogger } from '@passlock/shared/logging'
-import { Effect as E, Layer } from 'effect'
+import { Effect as E, Layer, Runtime } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
+import { mock } from 'vitest-mock-extended'
 
 import { type Email, isExistingUser, isNewUser } from './user'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { runUnion } from '../exit'
 import { NetworkService } from '../network/network'
+import { Storage } from '../storage/storage'
 import { type GetData, NetworkServiceTest, noopLogger } from '../test/testUtils'
 
 const tenancyId = 'testTenancy'
@@ -16,7 +18,11 @@ const endpoint = 'https://example.com'
 const email = 'john.doe@gmail.com'
 const request: Email = { email: email }
 
-type In<O> = E.Effect<O, PasslockError, NetworkService | PasslockLogger | Tenancy | Endpoint | Abort>
+type In<O> = E.Effect<
+  O,
+  PasslockError,
+  NetworkService | PasslockLogger | Tenancy | Endpoint | Abort | Storage
+>
 type Out<O> = Promise<PasslockError | O>
 
 function runEffect<O>(effect: In<O>, opts: boolean | GetData): Out<O> {
@@ -30,16 +36,20 @@ function runEffect<O>(effect: In<O>, opts: boolean | GetData): Out<O> {
       : NetworkServiceTest.withData({ registered: opts })
 
   const networkServiceLayer = Layer.succeed(NetworkService, NetworkService.of(networkService))
+
+  const storageTest = Layer.succeed(Storage, mock<Storage>())
+
   const layers = Layer.mergeAll(
     tenancyTest,
     endpointTest,
     abortTest,
     networkServiceLayer,
     noopLogger,
+    storageTest,
   )
 
   const noRequirements = E.provide(effect, layers)
-  return runUnion(noRequirements)
+  return runUnion(noRequirements, Runtime.defaultRuntime)
 }
 
 describe('isRegistered should', () => {

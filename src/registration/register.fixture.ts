@@ -8,7 +8,7 @@ import { Create, type RegistrationRequest } from './register'
 import { registrationOptions } from './register.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { NetworkService } from '../network/network'
-import { StorageService } from '../storage/storage'
+import { Storage, StorageService } from '../storage/storage'
 import { noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
 
@@ -109,9 +109,11 @@ export const buildTestLayers = (registered: boolean) => {
         }),
       clearToken: () => E.unit,
       clearExpiredToken: () => E.unit,
-      clearExpiredTokens: () => E.unit,
+      clearExpiredTokens: E.unit,
     }),
   )
+
+  const storageTest = Layer.succeed(Storage, mock<Storage>())
 
   const layers = Layer.mergeAll(
     tenancyTest,
@@ -121,6 +123,7 @@ export const buildTestLayers = (registered: boolean) => {
     networkServiceLayer,
     createTest,
     storageServiceTest,
+    storageTest,
     noopLogger,
   )
 

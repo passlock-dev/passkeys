@@ -1,10 +1,13 @@
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error, isPasslockError } from '@passlock/shared/error'
-import { Cause, Exit as EX, Effect, flow } from 'effect'
+import type { Effect } from 'effect'
+import { Cause, Exit as EX, Runtime, flow } from 'effect'
 
-type InFn<I, O> = (input: I) => Effect.Effect<O, PasslockError>
-type UnionFn<I, O> = (input: I) => Promise<PasslockError | O>
-type UnsafeFn<I, O> = (input: I) => Promise<O>
+type PasslockRuntime<R> = Runtime.Runtime<R>
+
+type InFn<I, A, R> = (input: I) => Effect.Effect<A, PasslockError, R>
+type UnionFn<I, A> = (input: I) => Promise<PasslockError | A>
+type UnsafeFn<I, A> = (input: I) => Promise<A>
 
 /**
  * Poor man's either - transform an Exit into a union of
@@ -30,10 +33,11 @@ export const transformExit = <T>(exit: EX.Exit<T, PasslockError>): PasslockError
  * @param input Effect
  * @returns
  */
-export const runUnion = async <O>(
-  input: Effect.Effect<O, PasslockError>,
-): Promise<PasslockError | O> => {
-  return Effect.runPromiseExit(input).then(transformExit)
+export const runUnion = <A, R>(
+  input: Effect.Effect<A, PasslockError, R>,
+  runtime: PasslockRuntime<R>,
+): Promise<PasslockError | A> => {
+  return Runtime.runPromiseExit(runtime)(input).then(transformExit)
 }
 
 /**
@@ -42,7 +46,12 @@ export const runUnion = async <O>(
  * @param fn Function that returns an Effect
  * @returns Function that returns a Promise wrapping a union
  */
-export const makeUnionFn = <I, O>(fn: InFn<I, O>): UnionFn<I, O> => flow(fn, runUnion)
+export const makeUnionFn = <I, A, R>(
+  fn: InFn<I, A, R>,
+  runtime: PasslockRuntime<R>,
+): UnionFn<I, A> => {
+  return flow(fn, e => runUnion(e, runtime))
+}
 
 /**
  * Transform an effect into one that potentially throws a PasslockError
@@ -50,8 +59,14 @@ export const makeUnionFn = <I, O>(fn: InFn<I, O>): UnionFn<I, O> => flow(fn, run
  * @param e Effect
  * @returns Promise that could throw
  */
-export const runUnsafe = async <T>(e: Effect.Effect<T, PasslockError>): Promise<T> =>
-  runUnion(e).then(t => (isPasslockError(t) ? Promise.reject(t) : Promise.resolve(t)))
+export const runUnsafe = <A, R>(
+  e: Effect.Effect<A, PasslockError, R>,
+  runtime: PasslockRuntime<R>,
+): Promise<A> => {
+  return runUnion(e, runtime).then(t =>
+    isPasslockError(t) ? Promise.reject(t) : Promise.resolve(t),
+  )
+}
 
 /**
  * Transform a function that returns an effect to one that returns a promise that could reject
@@ -59,4 +74,9 @@ export const runUnsafe = async <T>(e: Effect.Effect<T, PasslockError>): Promise<
  * @param fn Function that returns an Effect
  * @returns Function that returns a Promise that could reject
  */
-export const makeUnsafeFn = <I, O>(fn: InFn<I, O>): UnsafeFn<I, O> => flow(fn, runUnsafe)
+export const makeUnsafeFn = <I, A, R>(
+  fn: InFn<I, A, R>,
+  runtime: PasslockRuntime<R>,
+): UnsafeFn<I, A> => {
+  return flow(fn, e => runUnsafe(e, runtime))
+}

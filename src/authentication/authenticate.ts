@@ -1,3 +1,6 @@
+/**
+ * Passkey authentication effects
+ */
 import type { AuthenticationPublicKeyCredential, get } from '@github/webauthn-json/browser-ponyfill'
 import { parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
 import type { PasslockError } from '@passlock/shared/error'
@@ -19,9 +22,9 @@ export type AuthenticationRequest = { userVerification?: UserVerification }
 /* Dependencies */
 
 export type Get = typeof get
-export const Get = Context.GenericTag<Get>("@services/Get")
+export const Get = Context.GenericTag<Get>('@services/Get')
 
-/* Services */
+/* Service */
 
 export type AuthenticationService = {
   preConnect: E.Effect<void, PasslockError, CommonDependencies>
@@ -31,16 +34,19 @@ export type AuthenticationService = {
   ) => E.Effect<Principal, PasslockError, CommonDependencies>
 }
 
-export const AuthenticationService = Context.GenericTag<AuthenticationService>("@services/AuthenticationService")
+export const AuthenticationService = Context.GenericTag<AuthenticationService>(
+  '@services/AuthenticationService',
+)
 
 /* Utilities */
 
-const toRequestOptions = (options: AuthenticationOptions) =>
-  E.try({
+const toRequestOptions = (options: AuthenticationOptions) => {
+  return E.try({
     try: () => parseRequestOptionsFromJSON(options),
     catch: () =>
       error('Unable to create credential request options', ErrorCode.InternalServerError),
   })
+}
 
 const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) => {
   const go = (get: Get) =>
@@ -54,8 +60,8 @@ const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) 
   return Get.pipe(E.flatMap(go))
 }
 
-export const fetchOptions = (data: AuthenticationRequest) =>
-  E.gen(function* (_) {
+export const fetchOptions = (data: AuthenticationRequest) => {
+  return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
     const { tenancyId, clientId } = yield* _(Tenancy)
@@ -73,6 +79,7 @@ export const fetchOptions = (data: AuthenticationRequest) =>
 
     return optionsJSON
   })
+}
 
 const verify = (credential: AuthenticationPublicKeyCredential, session: string) => {
   return E.gen(function* (_) {
@@ -107,10 +114,14 @@ type Dependencies =
   | NetworkService
   | PasslockLogger
 
+/**
+ * Hit the options & verification urls
+ * to warmup any lambdas before the real requests
+ */
 export const preConnect = E.gen(function* (_) {
   const logger = yield* _(PasslockLogger)
   const { tenancyId, clientId } = yield* _(Tenancy)
-  yield* _(logger.debug('Hitting options & verification endpoints')) 
+  yield* _(logger.debug('Hitting options & verification endpoints'))
 
   const endpointConfig = yield* _(Endpoint)
   const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
@@ -122,14 +133,14 @@ export const preConnect = E.gen(function* (_) {
   const optionsResponseE = networkService.postData({ url: optionsUrl, clientId, data: {} })
   const verifyResponseE = networkService.postData({ url: verifyUrl, clientId, data: {} })
 
-  const all = E.all([ optionsResponseE, verifyResponseE ], { concurrency: 'unbounded' })
+  const all = E.all([optionsResponseE, verifyResponseE], { concurrency: 'unbounded' })
   return yield* _(all)
 })
 
 export const authenticatePasskey = (
   data: AuthenticationRequest,
-): E.Effect<Principal, PasslockError, Dependencies> =>
-  E.gen(function* (_) {
+): E.Effect<Principal, PasslockError, Dependencies> => {
+  return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
 
     yield* _(logger.info('Checking if browser supports Passkeys'))
@@ -155,10 +166,16 @@ export const authenticatePasskey = (
     yield* _(logger.debug('Stored token in local storage'))
 
     yield* _(logger.debug('Defering local token deletion'))
-    yield* _(pipe(storageService.clearExpiredToken('passkey', true), E.fork))
+    const delayedClearTokenE = pipe(
+      storageService.clearExpiredToken('passkey'),
+      E.delay('6 minutes'),
+      E.fork,
+    )
+    yield* _(delayedClearTokenE)
 
     return principal
   })
+}
 
 /* Live */
 

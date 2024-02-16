@@ -1,18 +1,21 @@
+/**
+ * Test if the browser supports passkeys, conditional UI etc
+ */
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error, fail } from '@passlock/shared/error'
 import { Context, Effect as E, Layer, identity, pipe } from 'effect'
 
 import type { Abort, Endpoint, Tenancy } from './config'
 
-/* Services */
+/* Service */
 
 export type Capabilities = {
   passkeysSupported: E.Effect<void, PasslockError>
 }
 
-export const Capabilities = Context.GenericTag<Capabilities>("@services/Capabilities")
+export const Capabilities = Context.GenericTag<Capabilities>('@services/Capabilities')
 
-export type CommonDependencies = Abort | Endpoint | Tenancy
+export type CommonDependencies = Abort | Endpoint | Tenancy | Storage
 
 /* Effects */
 

@@ -6,20 +6,20 @@ export type Tenancy = {
   tenancyId: string
   clientId: string
 }
-export const Tenancy = Context.GenericTag<Tenancy>("@services/Tenancy")
+export const Tenancy = Context.GenericTag<Tenancy>('@services/Tenancy')
 
 export type Endpoint = {
   endpoint?: string
 }
-export const Endpoint = Context.GenericTag<Endpoint>("@services/Endpoint")
+export const Endpoint = Context.GenericTag<Endpoint>('@services/Endpoint')
 
 export type Abort = {
   signal?: AbortSignal
 }
-export const Abort = Context.GenericTag<Abort>("@services/Abort")
+export const Abort = Context.GenericTag<Abort>('@services/Abort')
 
 export type Config = Tenancy & Endpoint & Abort
-export const Config = Context.GenericTag<Config>("@services/Config")
+export const Config = Context.GenericTag<Config>('@services/Config')
 
 export const buildConfigLayers = (config: Config) => {
   const abortLive = Layer.succeed(Abort, Abort.of(config))

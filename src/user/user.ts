@@ -1,3 +1,6 @@
+/**
+ * Check for an existing user
+ */
 import type { PasslockError } from '@passlock/shared/error'
 import { ErrorCode, error as passlockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
@@ -12,15 +15,14 @@ import { type CommonDependencies } from '../utils'
 
 export type Email = { email: string }
 
-/* Services */
+/* Service */
 
 export type UserService = {
   preConnect: E.Effect<void, PasslockError, CommonDependencies>
-
   isExistingUser: (email: Email) => E.Effect<boolean, PasslockError, CommonDependencies>
 }
 
-export const UserService = Context.GenericTag<UserService>("@services/UserService")
+export const UserService = Context.GenericTag<UserService>('@services/UserService')
 
 /* Utilities */
 
@@ -55,7 +57,7 @@ type Dependencies = CommonDependencies | NetworkService | PasslockLogger
 export const preConnect = E.gen(function* (_) {
   const logger = yield* _(PasslockLogger)
   const { tenancyId, clientId } = yield* _(Tenancy)
-  yield* _(logger.debug('Hitting user endpoint')) 
+  yield* _(logger.debug('Hitting user endpoint'))
 
   const endpointConfig = yield* _(Endpoint)
   const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
@@ -66,7 +68,7 @@ export const preConnect = E.gen(function* (_) {
   const userStatusE = networkService.getData({ url: userStatusUrl, clientId })
 
   return yield* _(userStatusE)
-})  
+})
 
 export const isExistingUser = (request: Email): E.Effect<boolean, PasslockError, Dependencies> =>
   E.gen(function* (_) {

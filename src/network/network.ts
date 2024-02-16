@@ -1,3 +1,8 @@
+/**
+ * Handles get & post requests.
+ * Also propagates backend errors into PasslockErrors in the client.
+ * TODO use platform/httpClient utils
+ */
 import { ErrorCode, PasslockError } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { createParser } from '@passlock/shared/schema'
@@ -26,22 +31,22 @@ type PostRequest<T> = {
 /* Dependencies */
 
 export type Fetch = typeof fetch
-export const Fetch = Context.GenericTag<Fetch>("@services/Fetch")
+export const Fetch = Context.GenericTag<Fetch>('@services/Fetch')
 
 export type RetrySchedule = {
   schedule: Schedule.Schedule<never, unknown, unknown>
 }
 
-export const RetrySchedule = Context.GenericTag<RetrySchedule>("@services/RetrySchedule")
+export const RetrySchedule = Context.GenericTag<RetrySchedule>('@services/RetrySchedule')
 
-/* Services */
+/* Service */
 
 export type NetworkService = {
   getData: (request: GetRequest) => E.Effect<object, PasslockError, Abort>
   postData: <T>(request: PostRequest<T>) => E.Effect<object, PasslockError, Abort>
 }
 
-export const NetworkService = Context.GenericTag<NetworkService>("@services/NetworkService")
+export const NetworkService = Context.GenericTag<NetworkService>('@services/NetworkService')
 
 /* Utilities */
 
@@ -95,15 +100,17 @@ const parsePasslockError = createParser(PasslockErrorSchema)
 /**
  * A little counter intuitive but we want to parse the
  * server response (which is assumed to be PasslockError data)
- * into a PasslockError instance. This parsing could in iself
+ * into a PasslockError instance. This parsing could iself
  * fail so we end up with Either<PasslockError, PasslockError>
- * which we fold and then flip.
+ * which we fold to give <PasslockError, never>. We then flip
+ * it to give <never, PasslockError>. Remember Effect is now
+ * A, E, R.
  *
  * @param res
  * @returns
  */
-const handleError = (res: Response) =>
-  pipe(
+const handleError = (res: Response) => {
+  return pipe(
     toJson(res),
     E.flatMap(toObject),
     E.flatMap(parsePasslockError),
@@ -112,6 +119,7 @@ const handleError = (res: Response) =>
     E.match({ onFailure: identity, onSuccess: identity }),
     E.flip,
   )
+}
 
 const isOk = (res: Response) => E.suspend(() => (res.ok ? E.succeed(res) : handleError(res)))
 

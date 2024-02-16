@@ -1,3 +1,6 @@
+/**
+ * Email verification effects
+ */
 import { ErrorCode, type PasslockError, error } from '@passlock/shared/error'
 import { PasslockLogger } from '@passlock/shared/logging'
 import { VerifyEmailResponse, createParser } from '@passlock/shared/schema'
@@ -9,7 +12,7 @@ import { NetworkService } from '../network/network'
 import { StorageService } from '../storage/storage'
 import type { CommonDependencies } from '../utils'
 
-/* Request */
+/* Requests */
 
 export type VerifyRequest = {
   code: string
@@ -22,9 +25,9 @@ export type EmailService = {
   verifyEmailLink: () => E.Effect<boolean, PasslockError, CommonDependencies>
 }
 
-export const EmailService = Context.GenericTag<EmailService>("@services/EmailService")
+export const EmailService = Context.GenericTag<EmailService>('@services/EmailService')
 
-/* Effects */
+/* Utils */
 
 export type Dependencies =
   | CommonDependencies
@@ -34,13 +37,12 @@ export type Dependencies =
   | NetworkService
 
 /**
- * Check for existing token in sessionStorage, otherwise force
- * passkey re-authentication
- *
+ * Check for existing token in sessionStorage,
+ * otherwise force passkey re-authentication
  * @returns
  */
-const getToken = () =>
-  E.gen(function* (_) {
+const getToken = () => {
+  return E.gen(function* (_) {
     // Check for existing token
     const storageService = yield* _(StorageService)
     const existingTokenE = storageService.getToken('passkey')
@@ -65,11 +67,32 @@ const getToken = () =>
 
     return token
   })
+}
 
+/**
+ * Look for ?code=<code> in the url
+ * @returns
+ */
+export const extractCodeFromHref = () => {
+  return pipe(
+    O.fromNullable(globalThis.window),
+    O.map(window => window.location.search),
+    O.map(search => new URLSearchParams(search)),
+    O.flatMap(search => O.fromNullable(search.get('code'))),
+  )
+}
+
+/* Effects */
+
+/**
+ * Verify the mailbox using the given code
+ * @param verificationRequest
+ * @returns
+ */
 export const verifyEmail = (
   verificationRequest: VerifyRequest,
-): E.Effect<boolean, PasslockError, Dependencies> =>
-  E.gen(function* (_) {
+): E.Effect<boolean, PasslockError, Dependencies> => {
+  return E.gen(function* (_) {
     const logger = yield* _(PasslockLogger)
     const { tenancyId, clientId } = yield* _(Tenancy)
 
@@ -91,15 +114,11 @@ export const verifyEmail = (
 
     return verified
   })
-
-export const extractCodeFromHref = () =>
-  pipe(
-    O.fromNullable(globalThis.window),
-    O.map(window => window.location.search),
-    O.map(search => new URLSearchParams(search)),
-    O.flatMap(search => O.fromNullable(search.get('code'))),
-  )
-
+}
+/**
+ * Look for a code in the current url and verify it
+ * @returns
+ */
 export const verifyEmailLink = () =>
   pipe(
     extractCodeFromHref(),
@@ -110,6 +129,7 @@ export const verifyEmailLink = () =>
   )
 
 /* Live */
+
 /* v8 ignore start */
 export const EmailServiceLive = Layer.effect(
   EmailService,

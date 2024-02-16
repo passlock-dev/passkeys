@@ -4,13 +4,13 @@ import { Effect as E, Layer } from 'effect'
 import type { Input } from 'valibot'
 import { mock } from 'vitest-mock-extended'
 
+import { type AuthenticationRequest, Get } from './authenticate'
+import { authenticationOptions } from './authenticate.fixture.json'
 import { Abort, Endpoint, Tenancy } from '../config'
 import { NetworkService } from '../network/network'
-import { StorageService } from '../storage/storage'
+import { Storage, StorageService } from '../storage/storage'
 import { noopLogger } from '../test/testUtils'
 import { Capabilities } from '../utils'
-import { Get, type AuthenticationRequest } from './authenticate'
-import { authenticationOptions } from './authenticate.fixture.json'
 
 export { authenticationOptions } from './authenticate.fixture.json'
 
@@ -94,6 +94,7 @@ export const buildTestLayers = () => {
   const getTest = Layer.succeed(Get, Get.of(get))
   const networkServiceLayer = Layer.effect(NetworkService, E.sync(buildNetworkMock))
   const storageServiceTest = Layer.effect(StorageService, E.sync(buildStorageMock))
+  const storageTest = Layer.succeed(Storage, mock<Storage>())
 
   const layers = Layer.mergeAll(
     tenancyTest,
@@ -103,6 +104,7 @@ export const buildTestLayers = () => {
     networkServiceLayer,
     getTest,
     storageServiceTest,
+    storageTest,
     noopLogger,
   )
 

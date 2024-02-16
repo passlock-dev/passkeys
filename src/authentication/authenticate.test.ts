@@ -79,7 +79,7 @@ describe('authenticate should', () => {
       const result = yield* _(authenticatePasskey(data))
       const storageService = yield* _(StorageService)
 
-      expect(storageService.clearExpiredToken).toHaveBeenCalledWith('passkey', true)
+      expect(storageService.clearExpiredToken).toHaveBeenCalledWith('passkey')
       expect(result).toEqual(expectedPrincipal)
     })
 

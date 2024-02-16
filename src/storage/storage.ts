@@ -1,6 +1,10 @@
+/**
+ * Wrapper around local storage that allows us to store
+ * authentication tokens in local storage for a short period.
+ */
 import type { PasslockLogger } from '@passlock/shared/logging'
 import type { Principal } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, Option as O, Schedule, flow, pipe } from 'effect'
+import { Context, Effect as E, Layer, Option as O, flow, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
 /* Requests */
@@ -13,22 +17,22 @@ export type StoredToken = {
   expiresAt: number
 }
 
-/* Services */
+/* Service */
 
 export type StorageService = {
-  storeToken: (principal: Principal) => E.Effect<void>
-  getToken: (authType: AuthType) => E.Effect<StoredToken, NoSuchElementException>
-  clearToken: (authType: AuthType) => E.Effect<void>
-  clearExpiredToken: (authType: AuthType, defer: boolean) => E.Effect<void>
-  clearExpiredTokens: (defer: boolean) => E.Effect<void>
+  storeToken: (principal: Principal) => E.Effect<void, never, Storage>
+  getToken: (authType: AuthType) => E.Effect<StoredToken, NoSuchElementException, Storage>
+  clearToken: (authType: AuthType) => E.Effect<void, never, Storage>
+  clearExpiredToken: (authType: AuthType) => E.Effect<void, never, Storage>
+  clearExpiredTokens: E.Effect<void, never, Storage>
 }
 
 /* Utilities */
 
-export const StorageService = Context.GenericTag<StorageService>("@services/StorageService")
+export const StorageService = Context.GenericTag<StorageService>('@services/StorageService')
 
-// Inject window.localStorage to make testing easier
-export const Storage = Context.GenericTag<Storage>("@services/Storage")
+// inject window.localStorage to make testing easier
+export const Storage = Context.GenericTag<Storage>('@services/Storage')
 
 // => passlock:t:e || passlock:t:p
 export const buildKey = (authType: AuthType) => {
@@ -59,7 +63,11 @@ export const expandToken =
 
 /* Effects */
 
-// store compressed token in local storage
+/**
+ * Store compressed token in local storage
+ * @param principal
+ * @returns
+ */
 export const storeToken = (principal: Principal): E.Effect<void, never, Storage> => {
   return E.gen(function* (_) {
     const localStorage = yield* _(Storage)
@@ -74,7 +82,11 @@ export const storeToken = (principal: Principal): E.Effect<void, never, Storage>
   })
 }
 
-// get stored token from local storage
+/**
+ * Get stored token from local storage
+ * @param authType
+ * @returns
+ */
 export const getToken = (
   authType: AuthType,
 ): E.Effect<StoredToken, NoSuchElementException, Storage> => {
@@ -92,6 +104,11 @@ export const getToken = (
   })
 }
 
+/**
+ * Remove token from local storage
+ * @param authType
+ * @returns
+ */
 export const clearToken = (authType: AuthType): E.Effect<void, never, Storage> => {
   return E.gen(function* (_) {
     const localStorage = yield* _(Storage)
@@ -99,13 +116,14 @@ export const clearToken = (authType: AuthType): E.Effect<void, never, Storage> =
   })
 }
 
-export const clearExpiredToken = (
-  authType: AuthType,
-  defer: boolean,
-): E.Effect<void, never, Storage> => {
+/**
+ * Only clear if now > token.expiresAt
+ * @param authType
+ * @param defer
+ * @returns
+ */
+export const clearExpiredToken = (authType: AuthType): E.Effect<void, never, Storage> => {
   const key = buildKey(authType)
-  const schedule = Schedule.union(Schedule.recurs(6), Schedule.fixed('30 seconds'))
-  const policy = Schedule.delayed(schedule, () => '5 minutes')
 
   const effect = E.gen(function* (_) {
     const storage = yield* _(Storage)
@@ -115,23 +133,22 @@ export const clearExpiredToken = (
     if (token.expiresAt < Date.now()) {
       storage.removeItem(key)
     }
-  }).pipe(
+  })
+
+  // we don't care if it fails
+  return pipe(
+    effect,
     E.match({
       onSuccess: () => E.unit,
       onFailure: () => E.unit,
     }),
   )
-
-  if (defer) {
-    return pipe(effect, E.schedule(policy))
-  } else {
-    return effect
-  }
 }
 
-export const clearExpiredTokens = (defer: boolean): E.Effect<void, never, Storage> => {
-  return E.all([clearExpiredToken('passkey', defer), clearExpiredToken('email', defer)])
-}
+export const clearExpiredTokens: E.Effect<void, never, Storage> = E.all([
+  clearExpiredToken('passkey'),
+  clearExpiredToken('email'),
+])
 
 /* Live */
 
@@ -139,13 +156,13 @@ export const clearExpiredTokens = (defer: boolean): E.Effect<void, never, Storag
 export const StorageServiceLive = Layer.effect(
   StorageService,
   E.gen(function* (_) {
-    const context = yield* _(E.context<Storage | PasslockLogger>())
+    const context = yield* _(E.context<PasslockLogger>())
     return StorageService.of({
       storeToken: flow(storeToken, E.provide(context)),
       getToken: flow(getToken, E.provide(context)),
       clearToken: flow(clearToken, E.provide(context)),
       clearExpiredToken: flow(clearExpiredToken, E.provide(context)),
-      clearExpiredTokens: flow(clearExpiredTokens, E.provide(context)),
+      clearExpiredTokens: pipe(clearExpiredTokens, E.provide(context)),
     })
   }),
 )

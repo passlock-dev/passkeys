@@ -1,10 +1,14 @@
+/**
+ * PasslockLogger implementation that also fires DOM events.
+ * This is useful to allow external code to plug into the logging
+ * mechanism. E.g. the Passlock demo subscribes to events to generate
+ * a typewriter style effect
+ */
 import type { PasslockError } from '@passlock/shared/error'
 import { LogLevel, PasslockLogger } from '@passlock/shared/logging'
 import { Effect as E, Layer } from 'effect'
 
 import { fireEvent } from '../event/event'
-
-/** PasslockLogger implementation that also fires DOM events */
 
 export const log = <T>(message: T, logLevel: LogLevel): E.Effect<void, PasslockError> => {
   return E.gen(function* (_) {
@@ -36,10 +40,11 @@ export const log = <T>(message: T, logLevel: LogLevel): E.Effect<void, PasslockE
  * @param message
  * @returns
  */
-export const logRaw = <T>(message: T) =>
-  E.sync(() => {
+export const logRaw = <T>(message: T) => {
+  return E.sync(() => {
     console.log(message)
   })
+}
 
 export const debug = <T>(message: T) => log(message, LogLevel.DEBUG)
 export const info = <T>(message: T) => log(message, LogLevel.INFO)

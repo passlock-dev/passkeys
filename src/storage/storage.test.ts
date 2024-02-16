@@ -124,7 +124,7 @@ describe('clearExpiredToken should', () => {
 
     const program = E.gen(function* (_) {
       const storage = yield* _(Storage)
-      yield* _(clearExpiredToken('passkey', false))
+      yield* _(clearExpiredToken('passkey'))
       expect(storage.getItem).toHaveBeenCalledWith('passlock:p:t')
       expect(storage.removeItem).toHaveBeenCalledWith('passlock:p:t')
     })
@@ -146,7 +146,7 @@ describe('clearExpiredToken should', () => {
 
     const program = E.gen(function* (_) {
       const storage = yield* _(Storage)
-      yield* _(clearExpiredToken('passkey', false))
+      yield* _(clearExpiredToken('passkey'))
       expect(storage.getItem).toHaveBeenCalledWith('passlock:p:t')
       expect(storage.removeItem).not.toHaveBeenCalled()
     })

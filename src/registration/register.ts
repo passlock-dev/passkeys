@@ -1,3 +1,6 @@
+/**
+ * User & passkey registration effects
+ */
 import type {
   RegistrationPublicKeyCredential,
   create,
@@ -30,18 +33,20 @@ export type RegistrationRequest = {
 /* Dependencies */
 
 export type Create = typeof create
-export const Create = Context.GenericTag<Create>("@services/Create")
+export const Create = Context.GenericTag<Create>('@services/Create')
 
-/* Services */
+/* Service */
 
 export type RegistrationService = {
-  preConnect: E.Effect<void, PasslockError, CommonDependencies>,
+  preConnect: E.Effect<void, PasslockError, CommonDependencies>
   registerPasskey: (
     request: RegistrationRequest,
   ) => E.Effect<Principal, PasslockError, CommonDependencies>
 }
 
-export const RegistrationService = Context.GenericTag<RegistrationService>("@services/RegistrationService")
+export const RegistrationService = Context.GenericTag<RegistrationService>(
+  '@services/RegistrationService',
+)
 
 /* Utilities */
 
@@ -137,7 +142,7 @@ type Dependencies =
 export const preConnect = E.gen(function* (_) {
   const logger = yield* _(PasslockLogger)
   const { tenancyId, clientId } = yield* _(Tenancy)
-  yield* _(logger.debug('Hitting options & verification endpoints')) 
+  yield* _(logger.debug('Hitting options & verification endpoints'))
 
   const endpointConfig = yield* _(Endpoint)
   const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
@@ -149,9 +154,9 @@ export const preConnect = E.gen(function* (_) {
   const optionsResponseE = networkService.postData({ url: optionsUrl, clientId, data: {} })
   const verifyResponseE = networkService.postData({ url: verifyUrl, clientId, data: {} })
 
-  const all = E.all([ optionsResponseE, verifyResponseE ], { concurrency: 'unbounded' })
+  const all = E.all([optionsResponseE, verifyResponseE], { concurrency: 'unbounded' })
   return yield* _(all)
-})  
+})
 
 export const registerPasskey = (
   registrationRequest: RegistrationRequest,
@@ -186,7 +191,12 @@ export const registerPasskey = (
     yield* _(logger.debug('Storing token in local storage'))
 
     yield* _(logger.debug('Defering local token deletion'))
-    yield* _(pipe(storageService.clearExpiredToken('passkey', true), E.fork))
+    const delayedClearTokenE = pipe(
+      storageService.clearExpiredToken('passkey'),
+      E.delay('6 minutes'),
+      E.fork,
+    )
+    yield* _(delayedClearTokenE)
 
     return principal
   })
