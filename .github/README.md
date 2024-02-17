@@ -18,7 +18,7 @@
     ·
     <a href="https://docs.passlock.dev">Documentation</a>
     ·
-    <a href="https://passlock.dev/contact">Request Feature</a>
+    <a href="https://docs.passlock.dev/docs/tutorial/intro">Tutorial</a>
   </p>
 </div>
 
