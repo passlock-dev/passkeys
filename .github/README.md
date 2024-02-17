@@ -35,6 +35,7 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
   <summary>Table of Contents</summary>
 
   * [Features](#features)
+  * [Screenshot](#screenshot)
   * [Getting started](#getting-started)
   * [Basic usage](#basic-usage)
     * [Passkey registration](#passkey-registration)
@@ -65,6 +66,13 @@ Passkeys and the WebAuthn API are quite complex. We've taken an opinionated appr
 3. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
 
 5. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+# Screenshot
+
+![Passlock user console](https://github.com/passlock-dev/passkeys/assets/208345/3ad54658-df4e-4145-ad39-059a48392f03)
+<p align="center">Viewing a user's authentication activity on their profile page</p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
