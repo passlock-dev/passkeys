@@ -71,7 +71,7 @@ Passkeys and the WebAuthn API are quite complex. We've taken an opinionated appr
 
 # Screenshot
 
-![Passlock user console](https://github.com/passlock-dev/passkeys/assets/208345/3ad54658-df4e-4145-ad39-059a48392f03)
+![Passlock user profile](https://github.com/passlock-dev/passkeys/assets/208345/a4a5c4b8-86cb-4076-bd26-7c29ed2151c6)
 <p align="center">Viewing a user's authentication activity on their profile page</p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
