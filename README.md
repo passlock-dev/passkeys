@@ -30,11 +30,6 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 
 <br />
 
-> [!IMPORTANT]
-> Passlock is expected to launch in Jan/Feb '24. Please subscribe to our [newsletter][newsletter] for updates.
-
-<br />
-
 <!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
@@ -109,7 +104,7 @@ import { registerPasskey } from '@passlock/passkeys'
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
 
-// pseudocode - get these details from your registration form, 
+// pseudocode - get these details from your registration form
 const { email, firstName, lastName } = getUserDetails()
 
 const result = await registerPasskey({ tenancyId, clientId, email, firstName, lastName })
@@ -134,7 +129,6 @@ This will return a JSON object including a `subject`:
   "token": "2arafoq-8coasjl-qx4jz3x",
   "subject": {
     "id": "khXCYCxcGwJTLoaG6kVxB",
-    ...
   },
   "expiresAt": "2024-01-25T12:06:07.000Z"
 }
