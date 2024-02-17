@@ -1,14 +1,19 @@
 {
   "name": "@passlock/passkeys",
-  "version": "0.8.0",
-  "description": "",
-  "keywords": [],
+  "version": "0.8.1",
+  "description": "Framework agnostic Passkey library for React/Next.js, Vue/Nuxt.js, SvelteKit and others. Passlock works with pretty much any frontend/backend stack - check out the tutorial",
+  "keywords": ["passkey", "passkeys", "webauthn", "react", "next", "vue", "nuxt", "svelte"],
   "author": {
     "name": "Toby Hobson",
     "email": "toby@passlock.dev"
   },
   "license": "MIT",
-  "homepage": "https://github.com/passlock-dev/passkeys",
+  "homepage": "https://passlock.dev",
+  "repository": "github.com/passlock-dev/passkeys",
+  "bugs": {
+    "url": "https://github.com/passlock-dev/passkeys/issues",
+    "email": "team@passlock.dev"
+  },
   "type": "module",
   "exports": {
     ".": {
