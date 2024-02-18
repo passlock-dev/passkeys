@@ -118,7 +118,7 @@ const { email, firstName, lastName } = getUserDetails()
 const result = await registerPasskey({ tenancyId, clientId, email, firstName, lastName })
 
 // send result.token to your backend, maybe add a hidden field to your registration form?
-console.log(result)
+console.log(result.token)
 ```
 
 ### Link the passkey (backend)
@@ -159,7 +159,7 @@ const clientId = process.env.PASSLOCK_CLIENT_ID
 const result = await authenticatePasskey({ tenancyId, clientId })
 
 // send result.token to your backend
-console.log(result)
+console.log(result.token)
 ```
 
 ### Verify the passkey (backend)
