@@ -1,16 +1,14 @@
 /**
  * Email verification effects
  */
-import { ErrorCode, type PasslockError, error } from '@passlock/shared/error'
-import { PasslockLogger } from '@passlock/shared/logging'
-import { VerifyEmailResponse, createParser } from '@passlock/shared/schema'
-import { Context, Effect as E, Layer, Option as O, flow, pipe } from 'effect'
-
-import { AuthenticationService } from '../authentication/authenticate'
-import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
-import { NetworkService } from '../network/network'
+import { BadRequest } from '@passlock/shared/dist/error/error'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import type { VerifyEmailErrors as RpcErrors} from '@passlock/shared/dist/rpc/user';
+import { VerifyEmailReq } from '@passlock/shared/dist/rpc/user'
+import { Context, Effect as E, Layer, Option as O, flow, identity, pipe } from 'effect'
+import { type AuthenticationErrors, AuthenticationService } from '../authentication/authenticate'
 import { StorageService } from '../storage/storage'
-import type { CommonDependencies } from '../utils'
+
 
 /* Requests */
 
@@ -18,23 +16,29 @@ export type VerifyRequest = {
   code: string
 }
 
+/* Errors */
+
+export type VerifyEmailErrors = RpcErrors | AuthenticationErrors
+
+/* Dependencies */
+
+export class LocationSearch extends Context.Tag('LocationSearch')<
+  LocationSearch,
+  E.Effect<string>
+>() {}
+
 /* Service */
 
 export type EmailService = {
-  verifyEmailCode: (request: VerifyRequest) => E.Effect<boolean, PasslockError, CommonDependencies>
-  verifyEmailLink: () => E.Effect<boolean, PasslockError, CommonDependencies>
+  verifyEmailCode: (request: VerifyRequest) => E.Effect<boolean, VerifyEmailErrors>
+  verifyEmailLink: () => E.Effect<boolean, VerifyEmailErrors>
 }
 
 export const EmailService = Context.GenericTag<EmailService>('@services/EmailService')
 
 /* Utils */
 
-export type Dependencies =
-  | CommonDependencies
-  | StorageService
-  | AuthenticationService
-  | PasslockLogger
-  | NetworkService
+export type Dependencies = StorageService | AuthenticationService | RpcClient
 
 /**
  * Check for existing token in sessionStorage,
@@ -57,7 +61,7 @@ const getToken = () => {
           E.map(principal => ({
             token: principal.token,
             authType: principal.authStatement.authType,
-            expiresAt: principal.expiresAt.getTime(),
+            expiresAt: principal.expireAt.getTime(),
           })),
         ),
     })
@@ -75,10 +79,10 @@ const getToken = () => {
  */
 export const extractCodeFromHref = () => {
   return pipe(
-    O.fromNullable(globalThis.window),
-    O.map(window => window.location.search),
-    O.map(search => new URLSearchParams(search)),
-    O.flatMap(search => O.fromNullable(search.get('code'))),
+    LocationSearch,
+    E.flatMap(identity),
+    E.map(search => new URLSearchParams(search)),
+    E.flatMap(params => O.fromNullable(params.get('code'))),
   )
 }
 
@@ -91,30 +95,21 @@ export const extractCodeFromHref = () => {
  */
 export const verifyEmail = (
   verificationRequest: VerifyRequest,
-): E.Effect<boolean, PasslockError, Dependencies> => {
+): E.Effect<boolean, VerifyEmailErrors, Dependencies> => {
   return E.gen(function* (_) {
-    const logger = yield* _(PasslockLogger)
-    const { tenancyId, clientId } = yield* _(Tenancy)
-
     // Re-authenticate the user if required
     const { token } = yield* _(getToken())
 
-    const endpointConfig = yield* _(Endpoint)
-    const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const url = `${endpoint}/${tenancyId}/email/verify`
-
-    yield* _(logger.debug('Making request'))
-    const networkService = yield* _(NetworkService)
-    const data = { ...verificationRequest, token }
-    const response = yield* _(networkService.postData({ url, clientId, data }))
-
-    yield* _(logger.debug('Parsing Passlock verification response'))
-    const parse = createParser(VerifyEmailResponse)
-    const { verified } = yield* _(parse(response))
+    yield* _(E.logDebug('Making request'))
+    const client = yield* _(RpcClient)
+    const { verified } = yield* _(
+      client.verifyEmail(new VerifyEmailReq({ token, code: verificationRequest.code })),
+    )
 
     return verified
   })
 }
+
 /**
  * Look for a code in the current url and verify it
  * @returns
@@ -122,9 +117,7 @@ export const verifyEmail = (
 export const verifyEmailLink = () =>
   pipe(
     extractCodeFromHref(),
-    E.mapError(() =>
-      error('Expected ?code=xxx in window.location', ErrorCode.InternalBrowserError),
-    ),
+    E.mapError(() => new BadRequest({ message: 'Expected ?code=xxx in window.location' })),
     E.flatMap(code => verifyEmail({ code })),
   )
 
@@ -135,7 +128,7 @@ export const EmailServiceLive = Layer.effect(
   EmailService,
   E.gen(function* (_) {
     const context = yield* _(
-      E.context<NetworkService | AuthenticationService | PasslockLogger | StorageService>(),
+      E.context<RpcClient | AuthenticationService | StorageService | LocationSearch>(),
     )
     return EmailService.of({
       verifyEmailCode: flow(verifyEmail, E.provide(context)),

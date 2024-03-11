@@ -1,37 +1,50 @@
 /**
  * Passkey authentication effects
  */
-import type { AuthenticationPublicKeyCredential, get } from '@github/webauthn-json/browser-ponyfill'
-import { parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill'
-import type { PasslockError } from '@passlock/shared/error'
-import { ErrorCode, error } from '@passlock/shared/error'
-import { PasslockLogger } from '@passlock/shared/logging'
-import type { UserVerification } from '@passlock/shared/schema'
-import { AuthenticationOptions, Principal, createParser } from '@passlock/shared/schema'
+import {
+  type CredentialRequestOptionsJSON,
+  parseRequestOptionsFromJSON,
+} from '@github/webauthn-json/browser-ponyfill'
+import {
+  type BadRequest,
+  InternalBrowserError,
+  type NotSupported,
+} from '@passlock/shared/dist/error/error'
+import type {
+  VerificationErrors} from '@passlock/shared/dist/rpc/authentication';
+import {
+  OptionsReq,
+  VerificationReq,
+} from '@passlock/shared/dist/rpc/authentication'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import type {
+  AuthenticationCredential,
+  Principal,
+ UserVerification } from '@passlock/shared/dist/schema/schema'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
-
-import { DefaultEndpoint, Endpoint, Tenancy } from '../config'
-import { NetworkService } from '../network/network'
+import { Capabilities } from '../capabilities/capabilities'
 import { StorageService } from '../storage/storage'
-import { Capabilities, type CommonDependencies } from '../utils'
+
 
 /* Requests */
 
 export type AuthenticationRequest = { userVerification?: UserVerification }
 
+/* Errors */
+
+export type AuthenticationErrors = NotSupported | BadRequest | VerificationErrors
+
 /* Dependencies */
 
-export type Get = typeof get
-export const Get = Context.GenericTag<Get>('@services/Get')
+export type GetCredential = (
+  options: CredentialRequestOptions,
+) => E.Effect<AuthenticationCredential, InternalBrowserError>
+export const GetCredential = Context.GenericTag<GetCredential>('@services/Get')
 
 /* Service */
 
 export type AuthenticationService = {
-  preConnect: E.Effect<void, PasslockError, CommonDependencies>
-
-  authenticatePasskey: (
-    data: AuthenticationRequest,
-  ) => E.Effect<Principal, PasslockError, CommonDependencies>
+  authenticatePasskey: (data: AuthenticationRequest) => E.Effect<Principal, AuthenticationErrors>
 }
 
 export const AuthenticationService = Context.GenericTag<AuthenticationService>(
@@ -40,65 +53,39 @@ export const AuthenticationService = Context.GenericTag<AuthenticationService>(
 
 /* Utilities */
 
-const toRequestOptions = (options: AuthenticationOptions) => {
-  return E.try({
-    try: () => parseRequestOptionsFromJSON(options),
-    catch: () =>
-      error('Unable to create credential request options', ErrorCode.InternalServerError),
+const fetchOptions = (req: OptionsReq) => {
+  return E.gen(function* (_) {
+    yield* _(E.logDebug('Making request'))
+
+    const rpcClient = yield* _(RpcClient)
+    const { publicKey, session } = yield* _(rpcClient.getAuthenticationOptions(req))
+
+    yield* _(E.logDebug('Converting Passlock options to CredentialRequestOptions'))
+    const options = yield* _(toRequestOptions({ publicKey }))
+
+    return { options, session }
   })
 }
 
-const getCredential = (options: CredentialRequestOptions, signal?: AbortSignal) => {
-  const go = (get: Get) =>
-    E.tryPromise({
-      try: () => get({ ...options, signal }),
-      catch: e => {
-        return error('Unable to get credentials', ErrorCode.InternalBrowserError, e)
-      },
-    })
-
-  return Get.pipe(E.flatMap(go))
+const toRequestOptions = (options: CredentialRequestOptionsJSON) => {
+  return pipe(
+    E.try(() => parseRequestOptionsFromJSON(options)),
+    E.mapError(
+      error =>
+        new InternalBrowserError({
+          message: 'Browser was unable to create credential request options',
+          detail: String(error.error),
+        }),
+    ),
+  )
 }
 
-export const fetchOptions = (data: AuthenticationRequest) => {
+const verifyCredential = (req: VerificationReq) => {
   return E.gen(function* (_) {
-    const logger = yield* _(PasslockLogger)
+    yield* _(E.logDebug('Making request'))
 
-    const { tenancyId, clientId } = yield* _(Tenancy)
-    const endpointConfig = yield* _(Endpoint)
-    const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const url = `${endpoint}/${tenancyId}/passkey/authentication/options`
-
-    yield* _(logger.debug('Making request'))
-    const networkService = yield* _(NetworkService)
-    const response = yield* _(networkService.postData({ url, clientId, data }))
-
-    yield* _(logger.debug('Parsing Passlock authentication options'))
-    const parse = createParser(AuthenticationOptions)
-    const optionsJSON = yield* _(parse(response))
-
-    return optionsJSON
-  })
-}
-
-const verify = (credential: AuthenticationPublicKeyCredential, session: string) => {
-  return E.gen(function* (_) {
-    const logger = yield* _(PasslockLogger)
-
-    const { tenancyId, clientId } = yield* _(Tenancy)
-    const endpointConfig = yield* _(Endpoint)
-    const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-    const url = `${endpoint}/${tenancyId}/passkey/authentication/verification`
-
-    yield* _(logger.debug('Making request'))
-    const networkService = yield* _(NetworkService)
-    const data = { credential, session }
-
-    const response = yield* _(networkService.postData({ url, clientId, data }))
-
-    yield* _(logger.debug('Parsing Principal response'))
-    const parse = createParser(Principal)
-    const principal = yield* _(parse(response))
+    const rpcClient = yield* _(RpcClient)
+    const { principal } = yield* _(rpcClient.verifyAuthenticationCredential(req))
 
     return principal
   })
@@ -106,66 +93,31 @@ const verify = (credential: AuthenticationPublicKeyCredential, session: string) 
 
 /* Effects */
 
-type Dependencies =
-  | CommonDependencies
-  | Capabilities
-  | Get
-  | StorageService
-  | NetworkService
-  | PasslockLogger
-
-/**
- * Hit the options & verification urls
- * to warmup any lambdas before the real requests
- */
-export const preConnect = E.gen(function* (_) {
-  const logger = yield* _(PasslockLogger)
-  const { tenancyId, clientId } = yield* _(Tenancy)
-  yield* _(logger.debug('Hitting options & verification endpoints'))
-
-  const endpointConfig = yield* _(Endpoint)
-  const endpoint = endpointConfig.endpoint ?? DefaultEndpoint
-  const optionsUrl = `${endpoint}/${tenancyId}/passkey/authentication/options?warm=true`
-  const verifyUrl = `${endpoint}/${tenancyId}/passkey/authentication/verification?warm=true`
-
-  yield* _(logger.debug('Making requests'))
-  const networkService = yield* _(NetworkService)
-  const optionsResponseE = networkService.postData({ url: optionsUrl, clientId, data: {} })
-  const verifyResponseE = networkService.postData({ url: verifyUrl, clientId, data: {} })
-
-  const all = E.all([optionsResponseE, verifyResponseE], { concurrency: 'unbounded' })
-  return yield* _(all)
-})
+type Dependencies = GetCredential | Capabilities | StorageService | RpcClient
 
 export const authenticatePasskey = (
-  data: AuthenticationRequest,
-): E.Effect<Principal, PasslockError, Dependencies> => {
-  return E.gen(function* (_) {
-    const logger = yield* _(PasslockLogger)
-
-    yield* _(logger.info('Checking if browser supports Passkeys'))
+  request: AuthenticationRequest,
+): E.Effect<Principal, AuthenticationErrors, Dependencies> => {
+  const effect = E.gen(function* (_) {
+    yield* _(E.logInfo('Checking if browser supports Passkeys'))
     const capabilities = yield* _(Capabilities)
-    yield* _(capabilities.passkeysSupported)
+    yield* _(capabilities.passkeySupport)
 
-    yield* _(logger.info('Fetching authentication options from Passlock'))
-    const optionsJSON = yield* _(fetchOptions(data))
+    yield* _(E.logInfo('Fetching authentication options from Passlock'))
+    const { options, session } = yield* _(fetchOptions(new OptionsReq(request)))
 
-    yield* _(logger.debug('Converting Passlock options to CredentialRequestOptions'))
-    const options = yield* _(toRequestOptions(optionsJSON))
+    yield* _(E.logInfo('Looking up credential'))
+    const get = yield* _(GetCredential)
+    const credential = yield* _(get(options))
 
-    const session = optionsJSON.session
-
-    yield* _(logger.info('Looking up credential'))
-    const credential = yield* _(getCredential(options))
-
-    yield* _(logger.info('Verifying credential with Passlock'))
-    const principal = yield* _(verify(credential, session))
+    yield* _(E.logInfo('Verifying credential with Passlock'))
+    const principal = yield* _(verifyCredential(new VerificationReq({ credential, session })))
 
     const storageService = yield* _(StorageService)
     yield* _(storageService.storeToken(principal))
-    yield* _(logger.debug('Stored token in local storage'))
+    yield* _(E.logDebug('Stored token in local storage'))
 
-    yield* _(logger.debug('Defering local token deletion'))
+    yield* _(E.logDebug('Defering local token deletion'))
     const delayedClearTokenE = pipe(
       storageService.clearExpiredToken('passkey'),
       E.delay('6 minutes'),
@@ -175,6 +127,8 @@ export const authenticatePasskey = (
 
     return principal
   })
+
+  return E.catchTag(effect, 'InternalBrowserError', e => E.die(e))
 }
 
 /* Live */
@@ -183,12 +137,9 @@ export const authenticatePasskey = (
 export const AuthenticateServiceLive = Layer.effect(
   AuthenticationService,
   E.gen(function* (_) {
-    const context = yield* _(
-      E.context<Get | NetworkService | Capabilities | PasslockLogger | StorageService>(),
-    )
+    const context = yield* _(E.context<GetCredential | RpcClient | Capabilities | StorageService>())
 
     return AuthenticationService.of({
-      preConnect: pipe(preConnect, E.provide(context)),
       authenticatePasskey: flow(authenticatePasskey, E.provide(context)),
     })
   }),

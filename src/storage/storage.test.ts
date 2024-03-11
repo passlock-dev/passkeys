@@ -1,8 +1,7 @@
-import { Effect as E, Layer, identity, pipe } from 'effect'
+import { Effect as E, Layer, LogLevel, Logger, identity, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-
-import { Storage, clearExpiredToken, clearToken, getToken, storeToken } from './storage'
+import { Storage, StorageService, clearExpiredToken, clearToken, getToken } from './storage'
 import { principal, testLayers } from './storage.fixture'
 
 // eslint chokes on expect(storage.setItem) etc
@@ -10,43 +9,70 @@ import { principal, testLayers } from './storage.fixture'
 
 describe('storeToken should', () => {
   test('set the token in local storage', () => {
-    const program = E.gen(function* (_) {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(StorageService)
+      yield* _(service.storeToken(principal))
+
       const storage = yield* _(Storage)
-      yield* _(storeToken(principal))
       expect(storage.setItem).toHaveBeenCalled()
     })
 
-    const noRequirements = E.provide(program, testLayers)
-    E.runSync(noRequirements)
+    const effect = pipe(
+      E.provide(assertions, testLayers()),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
   })
 
-  test('with the key passlock:p:t', () => {
-    const program = E.gen(function* (_) {
+  test('with the key passlock:passkey:token', () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(StorageService)
+      yield* _(service.storeToken(principal))
+
       const storage = yield* _(Storage)
-      yield* _(storeToken(principal))
-      expect(storage.setItem).toHaveBeenCalledWith('passlock:p:t', expect.any(String))
+      expect(storage.setItem).toHaveBeenCalledWith('passlock:passkey:token', expect.any(String))
     })
 
-    const noRequirements = E.provide(program, testLayers)
-    E.runSync(noRequirements)
+    const effect = pipe(
+      E.provide(assertions, testLayers()),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
   })
 
   test('with the value token:expiry', () => {
-    const program = E.gen(function* (_) {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(StorageService)
+      yield* _(service.storeToken(principal))
+
       const storage = yield* _(Storage)
-      yield* _(storeToken(principal))
       const token = principal.token
-      const expiry = principal.expiresAt.getTime()
-      expect(storage.setItem).toHaveBeenCalledWith('passlock:p:t', `${token}:${expiry}`)
+      const expiry = principal.expireAt.getTime()
+      expect(storage.setItem).toHaveBeenCalledWith('passlock:passkey:token', `${token}:${expiry}`)
     })
 
-    const noRequirements = E.provide(program, testLayers)
-    E.runSync(noRequirements)
+    const effect = pipe(
+      E.provide(assertions, testLayers()),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
   })
 })
 
 describe('getToken should', () => {
   test('get the token from local storage', () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(StorageService)
+      yield* _(service.getToken('passkey'))
+
+      const storage = yield* _(Storage)
+      expect(storage.getItem).toHaveBeenCalled()
+      expect(storage.getItem).toHaveBeenCalledWith('passlock:passkey:token')
+    })
+
     const storageTest = Layer.effect(
       Storage,
       E.sync(() => {
@@ -57,29 +83,16 @@ describe('getToken should', () => {
       }),
     )
 
-    const program = E.gen(function* (_) {
-      const storage = yield* _(Storage)
-      const token = yield* _(getToken('passkey'))
-      expect(storage.getItem).toHaveBeenCalledWith('passlock:p:t')
-      return token
-    })
+    const effect = pipe(
+      E.provide(assertions, testLayers(storageTest)),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
 
-    const noRequirements = E.provide(program, storageTest)
-    E.runSync(noRequirements)
+    E.runSync(effect)
   })
 
   test('filter out expired tokens', () => {
-    const storageTest = Layer.effect(
-      Storage,
-      E.sync(() => {
-        const mockStorage = mock<Storage>()
-        const expiry = Date.now() - 1000
-        mockStorage.getItem.mockReturnValue(`token:${expiry}`)
-        return mockStorage
-      }),
-    )
-
-    const program = pipe(
+    const assertions = pipe(
       getToken('passkey'),
       E.match({
         onSuccess: identity,
@@ -92,26 +105,6 @@ describe('getToken should', () => {
       ),
     )
 
-    const noRequirements = E.provide(program, storageTest)
-    E.runSync(noRequirements)
-  })
-})
-
-describe('clearToken should', () => {
-  test('clear the token in local storage', () => {
-    const program = E.gen(function* (_) {
-      const storage = yield* _(Storage)
-      yield* _(clearToken('passkey'))
-      expect(storage.removeItem).toHaveBeenCalledWith('passlock:p:t')
-    })
-
-    const noRequirements = E.provide(program, testLayers)
-    E.runSync(noRequirements)
-  })
-})
-
-describe('clearExpiredToken should', () => {
-  test('clear an expired token from local storage', () => {
     const storageTest = Layer.effect(
       Storage,
       E.sync(() => {
@@ -122,18 +115,67 @@ describe('clearExpiredToken should', () => {
       }),
     )
 
-    const program = E.gen(function* (_) {
+    const effect = pipe(
+      E.provide(assertions, testLayers(storageTest)),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
+  })
+})
+
+describe('clearToken should', () => {
+  test('clear the token in local storage', () => {
+    const assertions = E.gen(function* (_) {
       const storage = yield* _(Storage)
-      yield* _(clearExpiredToken('passkey'))
-      expect(storage.getItem).toHaveBeenCalledWith('passlock:p:t')
-      expect(storage.removeItem).toHaveBeenCalledWith('passlock:p:t')
+      yield* _(clearToken('passkey'))
+      expect(storage.removeItem).toHaveBeenCalledWith('passlock:passkey:token')
     })
 
-    const noRequirements = E.provide(program, storageTest)
-    E.runSync(noRequirements)
+    const effect = pipe(
+      E.provide(assertions, testLayers()),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
+  })
+})
+
+describe('clearExpiredToken should', () => {
+  test('clear an expired token from local storage', () => {
+    const assertions = E.gen(function* (_) {
+      const storage = yield* _(Storage)
+      yield* _(clearExpiredToken('passkey'))
+      expect(storage.getItem).toHaveBeenCalledWith('passlock:passkey:token')
+      expect(storage.removeItem).toHaveBeenCalledWith('passlock:passkey:token')
+    })
+
+    const storageTest = Layer.effect(
+      Storage,
+      E.sync(() => {
+        const mockStorage = mock<Storage>()
+        const expiry = Date.now() - 1000
+        mockStorage.getItem.mockReturnValue(`token:${expiry}`)
+        return mockStorage
+      }),
+    )
+
+    const effect = pipe(
+      E.provide(assertions, testLayers(storageTest)),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
+
+    E.runSync(effect)
   })
 
   test('leave a live token in local storage', () => {
+    const assertions = E.gen(function* (_) {
+      const storage = yield* _(Storage)
+      yield* _(clearExpiredToken('passkey'))
+      expect(storage.getItem).toHaveBeenCalledWith('passlock:passkey:token')
+      expect(storage.removeItem).not.toHaveBeenCalled()
+    })
+
     const storageTest = Layer.effect(
       Storage,
       E.sync(() => {
@@ -144,14 +186,11 @@ describe('clearExpiredToken should', () => {
       }),
     )
 
-    const program = E.gen(function* (_) {
-      const storage = yield* _(Storage)
-      yield* _(clearExpiredToken('passkey'))
-      expect(storage.getItem).toHaveBeenCalledWith('passlock:p:t')
-      expect(storage.removeItem).not.toHaveBeenCalled()
-    })
+    const effect = pipe(
+      E.provide(assertions, testLayers(storageTest)),
+      Logger.withMinimumLogLevel(LogLevel.None),
+    )
 
-    const noRequirements = E.provide(program, storageTest)
-    E.runSync(noRequirements)
+    E.runSync(effect)
   })
 })

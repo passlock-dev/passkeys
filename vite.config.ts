@@ -9,10 +9,10 @@ export default defineConfig({
       reporter: ['text', ['html', { subdir: 'html' }]],
       exclude: [
         'src/index.ts', // no real logic here
-        'src/schema.ts', // no real logic here
         'src/config.ts', // no real logic here
+        'src/effect.ts', // no real logic here
         'src/**/*.fixture.ts', // test fixtures
-        'src/test/testUtils.ts', // test fixtures
+        'src/test/fixtures.ts', // test fixtures
       ],
     },
   },

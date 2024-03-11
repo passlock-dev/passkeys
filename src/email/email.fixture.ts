@@ -1,86 +1,49 @@
-import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer } from 'effect'
-import { mock } from 'vitest-mock-extended'
 
+import { BadRequest } from '@passlock/shared/dist/error/error'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { VerifyEmailReq, VerifyEmailRes } from '@passlock/shared/dist/rpc/user'
+import { Effect as E, Layer as L } from 'effect'
+import { LocationSearch } from './email'
 import { AuthenticationService } from '../authentication/authenticate'
-import { Abort, Endpoint, Tenancy } from '../config'
-import { eventLoggerLive } from '../logging/eventLogger'
-import { NetworkService } from '../network/network'
-import { Storage, StorageService } from '../storage/storage'
+import * as Fixtures from '../test/fixtures'
 
-const tenancyId = 'testTenancy'
-const clientId = 'clientId'
-const endpoint = 'https://example.com'
 
-export const principal: Principal = {
-  token: 'token',
-  subject: {
-    id: '1',
-    email: 'john.doe@gmail.com',
-    firstName: 'john',
-    lastName: 'doe',
-    emailVerified: false,
-  },
-  authStatement: {
-    authType: 'passkey',
-    userVerified: false,
-    authTimestamp: new Date(0),
-  },
-  expiresAt: new Date(100),
-}
+export const token = 'token'
+export const code = 'code'
+export const authType = 'passkey'
+export const expireAt = Date.now() + 10000
 
-export const storageServiceTest = Layer.effect(
-  StorageService,
-  E.sync(() => {
-    const storageServiceMock = mock<StorageService>()
-
-    storageServiceMock.getToken.mockReturnValue(
-      E.succeed({
-        authType: 'passkey',
-        token: 'token',
-        expiresAt: Date.now() + 1000,
-      }),
-    )
-
-    storageServiceMock.clearToken.mockReturnValue(E.unit)
-
-    return storageServiceMock
-  }),
+export const locationSearchTest = L.succeed(
+  LocationSearch,
+  LocationSearch.of(E.succeed(`?code=${code}`)),
 )
 
-const storageTest = Layer.succeed(Storage, mock<Storage>())
-
-const authenticationServiceTest = Layer.effect(
+export const authenticationServiceTest = L.succeed(
   AuthenticationService,
-  E.sync(() => {
-    return mock<AuthenticationService>()
+  AuthenticationService.of({
+    authenticatePasskey: () => E.succeed(Fixtures.principal),
   }),
 )
 
-const networkServiceTest = Layer.effect(
-  NetworkService,
-  E.sync(() => {
-    const networkServiceMock = mock<NetworkService>()
-    networkServiceMock.postData.mockReturnValue(
-      E.succeed({
-        verified: true,
-      }),
-    )
-    return networkServiceMock
+export const rpcClientTest = L.succeed(
+  RpcClient,
+  RpcClient.of({
+    preConnect: () => E.succeed({ warmed: true }),
+    isExistingUser: () => E.succeed({ existingUser: true }),
+    verifyEmail: () => E.succeed({ verified: true }),
+    getRegistrationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    verifyRegistrationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    getAuthenticationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    verifyAuthenticationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
   }),
 )
 
-const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
-const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
-const abortTest = Layer.succeed(Abort, Abort.of({}))
+export const verifyEmailReq = new VerifyEmailReq({ token, code })
 
-export const testLayers = Layer.mergeAll(
-  storageServiceTest,
-  storageTest,
-  networkServiceTest,
-  authenticationServiceTest,
-  eventLoggerLive,
-  tenancyTest,
-  endpointTest,
-  abortTest,
-)
+export const verifyEmailRes = new VerifyEmailRes({ verified: true })
+
+export const principal = Fixtures.principal
+
+export const storedToken = Fixtures.storedToken
+
+export const storageServiceTest = Fixtures.storageServiceTest

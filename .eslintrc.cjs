@@ -48,6 +48,7 @@ module.exports = {
         allowSeparatedGroups: true,
       },
     ],
+    
     "import/no-unresolved": "error",
     "import/newline-after-import": [
       "warn", 
@@ -66,7 +67,7 @@ module.exports = {
           'index', // <- index imports
           'unknown', // <- unknown
         ],
-        'newlines-between': 'always',
+        'newlines-between': 'ignore',
         alphabetize: {
           /* sort in ascending order. Options: ["ignore", "asc", "desc"] */
           order: 'asc',

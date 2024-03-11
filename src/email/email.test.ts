@@ -1,82 +1,186 @@
-import { Effect as E, Layer } from 'effect'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { Effect as E, Layer as L, LogLevel, Logger, pipe } from 'effect'
 import { NoSuchElementException } from 'effect/Cause'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-
-import { verifyEmail } from './email'
-import { principal, testLayers } from './email.fixture'
+import { EmailService, EmailServiceLive } from './email'
+import * as Fixture from './email.fixture'
 import { AuthenticationService } from '../authentication/authenticate'
-import { NetworkService } from '../network/network'
 import { StorageService } from '../storage/storage'
 
-describe('verifyEmail should', () => {
-  test('return true when the backend says so', async () => {
-    const program = E.gen(function* (_) {
-      const result = yield* _(verifyEmail({ code: '123' }))
+
+describe('verifyEmailCode should', () => {
+  test('return true when the verification is successful', async () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(EmailService)
+      const result = yield* _(service.verifyEmailCode({ code: '123' }))
+
       expect(result).toBe(true)
     })
 
-    const noRequirements = E.provide(program, testLayers)
-    await E.runPromise(noRequirements)
+    const service = pipe(
+      EmailServiceLive,
+      L.provide(Fixture.locationSearchTest),
+      L.provide(Fixture.authenticationServiceTest),
+      L.provide(Fixture.storageServiceTest),
+      L.provide(Fixture.rpcClientTest),
+    )
+
+    const effect = pipe(E.provide(assertions, service), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
   })
 
   test('check for a token in local storage', async () => {
-    const program = E.gen(function* (_) {
-      const storage = yield* _(StorageService)
-      const result = yield* _(verifyEmail({ code: '123' }))
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(EmailService)
+      yield* _(service.verifyEmailCode({ code: '123' }))
 
-      expect(storage.getToken).toHaveBeenCalledWith('passkey')
-      expect(result).toBe(true)
+      const storageService = yield* _(StorageService)
+      expect(storageService.getToken).toHaveBeenCalledWith('passkey')
     })
 
-    const noRequirements = E.provide(program, testLayers)
-    await E.runPromise(noRequirements)
+    const storageServiceTest = L.effect(
+      StorageService,
+      E.sync(() => {
+        const storageServiceMock = mock<StorageService>()
+
+        storageServiceMock.getToken.mockReturnValue(E.succeed(Fixture.storedToken))
+        storageServiceMock.clearToken.mockReturnValue(E.unit)
+
+        return storageServiceMock
+      }),
+    )
+
+    const service = pipe(
+      EmailServiceLive,
+      L.provide(Fixture.locationSearchTest),
+      L.provide(Fixture.authenticationServiceTest),
+      L.provide(storageServiceTest),
+      L.provide(Fixture.rpcClientTest),
+    )
+
+    const layers = L.merge(service, storageServiceTest)
+    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
   })
 
   test('re-authenticate the user if no local token', async () => {
-    const storageTest = Layer.effect(
-      StorageService,
-      E.sync(() => {
-        const mockStorage = mock<StorageService>()
-        mockStorage.getToken.mockReturnValue(E.fail(new NoSuchElementException()))
-        mockStorage.clearToken.mockReturnValue(E.unit)
-        return mockStorage
-      }),
-    )
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(EmailService)
+      yield* _(service.verifyEmailCode({ code: '123' }))
 
-    const authenticateTest = Layer.effect(
-      AuthenticationService,
-      E.sync(() => {
-        const authService = mock<AuthenticationService>()
-        authService.authenticatePasskey.mockReturnValue(E.succeed(principal))
-        return authService
-      }),
-    )
-
-    const program = E.gen(function* (_) {
       const authService = yield* _(AuthenticationService)
-      const result = yield* _(verifyEmail({ code: '123' }))
-
       expect(authService.authenticatePasskey).toHaveBeenCalled()
-      expect(result).toBe(true)
     })
 
-    const layers = Layer.mergeAll(testLayers, storageTest, authenticateTest)
-    const noRequirements = E.provide(program, layers)
-    await E.runPromise(noRequirements)
+    const storageServiceTest = L.effect(
+      StorageService,
+      E.sync(() => {
+        const storageServiceMock = mock<StorageService>()
+
+        storageServiceMock.getToken.mockReturnValue(E.fail(new NoSuchElementException()))
+        storageServiceMock.clearToken.mockReturnValue(E.unit)
+
+        return storageServiceMock
+      }),
+    )
+
+    const authServiceTest = L.effect(
+      AuthenticationService,
+      E.sync(() => {
+        const authServiceMock = mock<AuthenticationService>()
+
+        authServiceMock.authenticatePasskey.mockReturnValue(E.succeed(Fixture.principal))
+
+        return authServiceMock
+      }),
+    )
+
+    const service = pipe(
+      EmailServiceLive,
+      L.provide(Fixture.locationSearchTest),
+      L.provide(authServiceTest),
+      L.provide(storageServiceTest),
+      L.provide(Fixture.rpcClientTest),
+    )
+
+    const layers = L.mergeAll(service, storageServiceTest, authServiceTest)
+    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
   })
 
   test('call the backend', async () => {
-    const program = E.gen(function* (_) {
-      const networkService = yield* _(NetworkService)
-      const result = yield* _(verifyEmail({ code: '123' }))
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(EmailService)
+      yield* _(service.verifyEmailCode({ code: Fixture.code }))
 
-      expect(networkService.postData).toHaveBeenCalled()
-      expect(result).toBe(true)
+      const rpcClient = yield* _(RpcClient)
+      expect(rpcClient.verifyEmail).toHaveBeenCalledWith(Fixture.verifyEmailReq)
     })
 
-    const layers = Layer.mergeAll(testLayers)
-    const noRequirements = E.provide(program, layers)
-    await E.runPromise(noRequirements)
+    const rpcClientTest = L.effect(
+      RpcClient,
+      E.sync(() => {
+        const rpcMock = mock<RouterOps>()
+
+        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.verifyEmailRes))
+
+        return rpcMock
+      }),
+    )
+
+    const service = pipe(
+      EmailServiceLive,
+      L.provide(Fixture.locationSearchTest),
+      L.provide(Fixture.authenticationServiceTest),
+      L.provide(Fixture.storageServiceTest),
+      L.provide(rpcClientTest),
+    )
+
+    const layers = L.merge(service, rpcClientTest)
+    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
+  })
+})
+
+describe('verifyEmailLink should', () => {
+  test('extract the code from the current url', async () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(EmailService)
+      yield* _(service.verifyEmailLink())
+
+      // LocationSearch return ?code=code
+      // and we expect rpcClient to be called with code
+      const rpcClient = yield* _(RpcClient)
+      expect(rpcClient.verifyEmail).toBeCalledWith(Fixture.verifyEmailReq)
+    })
+
+    const rpcClientTest = L.effect(
+      RpcClient,
+      E.sync(() => {
+        const rpcMock = mock<RouterOps>()
+
+        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.verifyEmailRes))
+
+        return rpcMock
+      }),
+    )
+
+    const service = pipe(
+      EmailServiceLive,
+      L.provide(Fixture.locationSearchTest),
+      L.provide(Fixture.storageServiceTest),
+      L.provide(Fixture.authenticationServiceTest),
+      L.provide(rpcClientTest),
+    )
+
+    const layers = L.merge(service, rpcClientTest)
+    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
   })
 })

@@ -1,112 +1,72 @@
-import type { AuthenticationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill'
-import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer } from 'effect'
-import type { Input } from 'valibot'
-import { mock } from 'vitest-mock-extended'
+import { BadRequest } from '@passlock/shared/dist/error/error'
+import {
+  OptionsRes,
+  VerificationReq,
+  VerificationRes,
+} from '@passlock/shared/dist/rpc/authentication'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import type { AuthenticationCredential } from '@passlock/shared/dist/schema/schema'
+import { Effect as E, Layer as L } from 'effect'
+import { type AuthenticationRequest, GetCredential } from './authenticate'
+import * as Fixtures from '../test/fixtures'
 
-import { type AuthenticationRequest, Get } from './authenticate'
-import { authenticationOptions } from './authenticate.fixture.json'
-import { Abort, Endpoint, Tenancy } from '../config'
-import { NetworkService } from '../network/network'
-import { Storage, StorageService } from '../storage/storage'
-import { noopLogger } from '../test/testUtils'
-import { Capabilities } from '../utils'
 
-export { authenticationOptions } from './authenticate.fixture.json'
+export const session = 'session'
+export const token = 'token'
+export const code = 'code'
+export const authType = 'passkey'
+export const expireAt = Date.now() + 10000
 
-const encoder = new TextEncoder()
-const rawId = encoder.encode('1')
+export const request: AuthenticationRequest = {
+  userVerification: 'preferred',
+}
 
-export const tenancyId = 'testTenancy'
-export const clientId = 'clientId'
-export const endpoint = 'https://example.com'
-
-export const request: AuthenticationRequest = { userVerification: 'preferred' }
-
-export const credential: AuthenticationPublicKeyCredential = {
-  toJSON: () => {
-    throw new Error('Function not implemented.')
+export const optionsRes = new OptionsRes({
+  session,
+  publicKey: {
+    rpId: 'passlock.dev',
+    challenge: 'FKZSl_saKu5OXjLLwoq8eK3wlD8XgpGiS10SszW5RiE',
+    timeout: 60000,
+    userVerification: 'preferred',
   },
-  authenticatorAttachment: null,
-  rawId: rawId,
-  response: {
-    clientDataJSON: rawId,
-  },
-  getClientExtensionResults: () => {
-    throw new Error('Function not implemented.')
-  },
+})
+
+export const credential: AuthenticationCredential = {
   id: '1',
   type: 'public-key',
-}
-
-// Frontend receives dates as objects
-export const expectedPrincipal: Principal = {
-  token: 'token',
-  subject: {
-    id: '1',
-    email: 'john.doe@gmail.com',
-    firstName: 'john',
-    lastName: 'doe',
-    emailVerified: false,
+  rawId: 'id',
+  response: {
+    clientDataJSON: '',
+    authenticatorData: '',
+    signature: '',
+    userHandle: null,
   },
-  authStatement: {
-    authType: 'email',
-    userVerified: false,
-    authTimestamp: new Date(0),
-  },
-  expiresAt: new Date(0),
+  clientExtensionResults: {},
+  authenticatorAttachment: null,
 }
 
-// Backend sends dates as strings
-const principal: Input<typeof Principal> = {
-  ...expectedPrincipal,
-  authStatement: {
-    ...expectedPrincipal.authStatement,
-    authTimestamp: expectedPrincipal.authStatement.authTimestamp.toISOString(),
-  },
-  expiresAt: expectedPrincipal.expiresAt.toISOString(),
-}
+export const verificationReq = new VerificationReq({ session, credential })
 
-const buildNetworkMock = () => {
-  const networkMock = mock<NetworkService>()
-  networkMock.postData.mockReturnValueOnce(E.succeed(authenticationOptions))
-  networkMock.postData.mockReturnValueOnce(E.succeed(principal))
-  return networkMock
-}
+export const verificationRes = new VerificationRes({ principal: Fixtures.principal })
 
-const buildStorageMock = () => {
-  const storageMock = mock<StorageService>()
-  storageMock.storeToken.mockReturnValueOnce(E.unit)
-  storageMock.clearExpiredToken.mockReturnValueOnce(E.unit)
-  return storageMock
-}
+export const getCredentialTest = L.succeed(
+  GetCredential,
+  GetCredential.of(() => E.succeed(credential)),
+)
 
-export const buildTestLayers = () => {
-  const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
-  const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
-  const abortTest = Layer.succeed(Abort, Abort.of({}))
-  const capabilitiesTest = Layer.succeed(
-    Capabilities,
-    Capabilities.of({ passkeysSupported: E.unit }),
-  )
+export const rpcClientTest = L.succeed(
+  RpcClient,
+  RpcClient.of({
+    preConnect: () => E.succeed({ warmed: true }),
+    isExistingUser: () => E.succeed({ existingUser: true }),
+    verifyEmail: () => E.succeed({ verified: true }),
+    getRegistrationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    verifyRegistrationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    getAuthenticationOptions: () => E.succeed(optionsRes),
+    verifyAuthenticationCredential: () => E.succeed(verificationRes),
+  }),
+)
 
-  const get: Get = () => Promise.resolve(credential)
-  const getTest = Layer.succeed(Get, Get.of(get))
-  const networkServiceLayer = Layer.effect(NetworkService, E.sync(buildNetworkMock))
-  const storageServiceTest = Layer.effect(StorageService, E.sync(buildStorageMock))
-  const storageTest = Layer.succeed(Storage, mock<Storage>())
-
-  const layers = Layer.mergeAll(
-    tenancyTest,
-    endpointTest,
-    abortTest,
-    capabilitiesTest,
-    networkServiceLayer,
-    getTest,
-    storageServiceTest,
-    storageTest,
-    noopLogger,
-  )
-
-  return layers
-}
+export const principal = Fixtures.principal
+export const capabilitiesTest = Fixtures.capabilitiesTest
+export const storageServiceTest = Fixtures.storageServiceTest

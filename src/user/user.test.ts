@@ -1,106 +1,53 @@
-import type { PasslockError } from '@passlock/shared/error'
-import { ErrorCode, error } from '@passlock/shared/error'
-import type { PasslockLogger } from '@passlock/shared/logging'
-import { Effect as E, Layer, Runtime } from 'effect'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
+import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
+import { UserService, UserServiceLive } from './user'
+import * as Fixture from './user.fixture'
 
-import { type Email, isExistingUser, isNewUser } from './user'
-import { Abort, Endpoint, Tenancy } from '../config'
-import { runUnion } from '../exit'
-import { NetworkService } from '../network/network'
-import { Storage } from '../storage/storage'
-import { type GetData, NetworkServiceTest, noopLogger } from '../test/testUtils'
 
-const tenancyId = 'testTenancy'
-const clientId = 'clientId'
-const endpoint = 'https://example.com'
-const email = 'john.doe@gmail.com'
-const request: Email = { email: email }
+describe('isExistingUser should', () => {
+  test('return true when the user already has a passkey', async () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(UserService)
+      const result = yield* _(service.isExistingUser({ email: Fixture.email }))
 
-type In<O> = E.Effect<
-  O,
-  PasslockError,
-  NetworkService | PasslockLogger | Tenancy | Endpoint | Abort | Storage
->
-type Out<O> = Promise<PasslockError | O>
+      expect(result).toBe(true)
+    })
 
-function runEffect<O>(effect: In<O>, opts: boolean | GetData): Out<O> {
-  const tenancyTest = Layer.succeed(Tenancy, Tenancy.of({ tenancyId, clientId }))
-  const endpointTest = Layer.succeed(Endpoint, Endpoint.of({ endpoint }))
-  const abortTest = Layer.succeed(Abort, Abort.of({}))
+    const service = pipe(UserServiceLive, L.provide(Fixture.rpcClientTest))
 
-  const networkService =
-    typeof opts === 'function'
-      ? NetworkServiceTest.withGetData(opts)
-      : NetworkServiceTest.withData({ registered: opts })
+    const effect = pipe(E.provide(assertions, service), Logger.withMinimumLogLevel(LogLevel.None))
 
-  const networkServiceLayer = Layer.succeed(NetworkService, NetworkService.of(networkService))
-
-  const storageTest = Layer.succeed(Storage, mock<Storage>())
-
-  const layers = Layer.mergeAll(
-    tenancyTest,
-    endpointTest,
-    abortTest,
-    networkServiceLayer,
-    noopLogger,
-    storageTest,
-  )
-
-  const noRequirements = E.provide(effect, layers)
-  return runUnion(noRequirements, Runtime.defaultRuntime)
-}
-
-describe('isRegistered should', () => {
-  test('return true when the backend returns registered:true', async () => {
-    const effect = isExistingUser(request)
-    const alreadyRegistered = await runEffect(effect, true)
-    expect(alreadyRegistered).toBe(true)
-  })
-
-  test('return false when the backend returns registered:false', async () => {
-    const effect = isExistingUser(request)
-    const alreadyRegistered = await runEffect(effect, false)
-    expect(alreadyRegistered).toBe(false)
+    return E.runPromise(effect)
   })
 
   test('send the email to the backend', async () => {
-    const getData = vi.fn(() => E.succeed({ registered: true }))
-    const effect = isExistingUser(request)
-    await runEffect(effect, getData)
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(UserService)
+      const result = yield* _(service.isExistingUser({ email: Fixture.email }))
 
-    const encodedEmail = encodeURIComponent(email)
-    const url = `${endpoint}/${tenancyId}/user/status/${encodedEmail}`
-    expect(getData).toBeCalledWith({ url, clientId })
-  })
+      expect(result).toBe(false)
+      const rpcClient = yield* _(RpcClient)
+      expect(rpcClient.isExistingUser).toBeCalledWith(Fixture.isRegisteredReq)
+    })
 
-  test("fail if the backend doesn't return a {registered:boolean} object", async () => {
-    const getData = vi.fn(() => E.succeed({ junk: true }))
-    const effect = isExistingUser(request)
-    const res = await runEffect(effect, getData)
+    const rpcClientTest = Layer.effect(
+      RpcClient,
+      E.sync(() => {
+        const rpcMock = mock<RouterOps>()
 
-    expect(res).toEqual(
-      error("Invalid server response, expected 'registered' field", ErrorCode.InternalServerError),
+        rpcMock.isExistingUser.mockReturnValue(E.succeed(Fixture.isRegisteredRes))
+
+        return rpcMock
+      }),
     )
-  })
-})
 
-describe('isUnRegistered should', () => {
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
+    const service = pipe(UserServiceLive, L.provide(rpcClientTest))
 
-  test('return void when the user is not registered', async () => {
-    const effect = isNewUser(request)
-    const alreadyRegistered = await runEffect(effect, false)
-    expect(alreadyRegistered).toBe(undefined)
-  })
+    const layers = L.merge(service, rpcClientTest)
+    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
 
-  test('return an error when the user is registered', async () => {
-    const effect = isNewUser(request)
-    const alreadyRegistered = await runEffect(effect, true)
-
-    expect(alreadyRegistered).toEqual(error('Email already registered', ErrorCode.DuplicateEmail))
+    return E.runPromise(effect)
   })
 })

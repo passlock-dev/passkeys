@@ -107,15 +107,16 @@ You just need to call `registerPasskey()`, passing in a few options. This will d
 ### Create a passkey (frontend)
 
 ```typescript
-import { registerPasskey } from '@passlock/passkeys'
+import { Passlock } from '@passlock/passkeys'
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
+const passlock = new Passlock({ tenancyId, clientId })
 
 // pseudocode - get these details from your registration form
 const { email, firstName, lastName } = getUserDetails()
 
-const result = await registerPasskey({ tenancyId, clientId, email, firstName, lastName })
+const result = await passlock.registerPasskey({ email, firstName, lastName })
 
 // send result.token to your backend, maybe add a hidden field to your registration form?
 console.log(result.token)
@@ -151,12 +152,13 @@ Similar to registration, call `authenticatePasskey()` to obtain a token, which y
 ### Authenticate (frontend)
 
 ```typescript
-import { authenticatePasskey } from '@passlock/passkeys';
+import { Passlock } from '@passlock/passkeys';
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
+const passlock = new Passlock({ tenancyId, clientId })
 
-const result = await authenticatePasskey({ tenancyId, clientId })
+const result = await passlock.authenticatePasskey({ tenancyId, clientId })
 
 // send result.token to your backend
 console.log(result.token)

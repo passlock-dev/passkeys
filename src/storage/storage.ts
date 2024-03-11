@@ -2,8 +2,7 @@
  * Wrapper around local storage that allows us to store
  * authentication tokens in local storage for a short period.
  */
-import type { PasslockLogger } from '@passlock/shared/logging'
-import type { Principal } from '@passlock/shared/schema'
+import type { Principal } from '@passlock/shared/dist/schema/schema'
 import { Context, Effect as E, Layer, Option as O, flow, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
@@ -14,17 +13,17 @@ export type AuthType = 'email' | 'passkey'
 export type StoredToken = {
   token: string
   authType: AuthType
-  expiresAt: number
+  expireAt: number
 }
 
 /* Service */
 
 export type StorageService = {
-  storeToken: (principal: Principal) => E.Effect<void, never, Storage>
-  getToken: (authType: AuthType) => E.Effect<StoredToken, NoSuchElementException, Storage>
-  clearToken: (authType: AuthType) => E.Effect<void, never, Storage>
-  clearExpiredToken: (authType: AuthType) => E.Effect<void, never, Storage>
-  clearExpiredTokens: E.Effect<void, never, Storage>
+  storeToken: (principal: Principal) => E.Effect<void>
+  getToken: (authType: AuthType) => E.Effect<StoredToken, NoSuchElementException>
+  clearToken: (authType: AuthType) => E.Effect<void>
+  clearExpiredToken: (authType: AuthType) => E.Effect<void>
+  clearExpiredTokens: E.Effect<void>
 }
 
 /* Utilities */
@@ -34,31 +33,27 @@ export const StorageService = Context.GenericTag<StorageService>('@services/Stor
 // inject window.localStorage to make testing easier
 export const Storage = Context.GenericTag<Storage>('@services/Storage')
 
-// => passlock:t:e || passlock:t:p
-export const buildKey = (authType: AuthType) => {
-  const a = authType[0]
-  return `passlock:${a}:t`
-}
+export const buildKey = (authType: AuthType) => `passlock:${authType}:token`
 
-// => token:expiresAt
+// principal => token:expireAt
 export const compressToken = (principal: Principal): string => {
-  const expiresAt = principal.expiresAt.getTime()
+  const expireAt = principal.expireAt.getTime()
   const token = principal.token
-  return `${token}:${expiresAt}`
+  return `${token}:${expireAt}`
 }
 
-// token:expiresAt => { authType, token, expiresAt }
+// token:expireAt => { authType, token, expireAt }
 export const expandToken =
   (authType: AuthType) =>
   (s: string): O.Option<StoredToken> => {
     const tokens = s.split(':')
     if (tokens.length !== 2) return O.none()
 
-    const [token, expiresAtString] = tokens
+    const [token, expireAtString] = tokens
     const parse = O.liftThrowable(Number.parseInt)
-    const expiresAt = parse(expiresAtString)
+    const expireAt = parse(expireAtString)
 
-    return O.map(expiresAt, expiresAt => ({ authType, token, expiresAt }))
+    return O.map(expireAt, expireAt => ({ authType, token, expireAt }))
   }
 
 /* Effects */
@@ -97,7 +92,7 @@ export const getToken = (
       O.some(buildKey(authType)),
       O.flatMap(key => pipe(localStorage.getItem(key), O.fromNullable)),
       O.flatMap(expandToken(authType)),
-      O.filter(({ expiresAt }) => expiresAt > Date.now()),
+      O.filter(({ expireAt: expireAt }) => expireAt > Date.now()),
     )
 
     return yield* _(getEffect)
@@ -117,7 +112,7 @@ export const clearToken = (authType: AuthType): E.Effect<void, never, Storage> =
 }
 
 /**
- * Only clear if now > token.expiresAt
+ * Only clear if now > token.expireAt
  * @param authType
  * @param defer
  * @returns
@@ -130,7 +125,7 @@ export const clearExpiredToken = (authType: AuthType): E.Effect<void, never, Sto
     const item = yield* _(O.fromNullable(storage.getItem(key)))
     const token = yield* _(expandToken(authType)(item))
 
-    if (token.expiresAt < Date.now()) {
+    if (token.expireAt < Date.now()) {
       storage.removeItem(key)
     }
   })
@@ -156,14 +151,15 @@ export const clearExpiredTokens: E.Effect<void, never, Storage> = E.all([
 export const StorageServiceLive = Layer.effect(
   StorageService,
   E.gen(function* (_) {
-    const context = yield* _(E.context<PasslockLogger>())
-    return StorageService.of({
+    const context = yield* _(E.context<Storage>())
+
+    return {
       storeToken: flow(storeToken, E.provide(context)),
       getToken: flow(getToken, E.provide(context)),
       clearToken: flow(clearToken, E.provide(context)),
       clearExpiredToken: flow(clearExpiredToken, E.provide(context)),
       clearExpiredTokens: pipe(clearExpiredTokens, E.provide(context)),
-    })
+    }
   }),
 )
 /* v8 ignore stop */

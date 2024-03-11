@@ -1,246 +1,275 @@
-import { create, get } from '@github/webauthn-json/browser-ponyfill'
-import { ErrorCode, isPasslockError } from '@passlock/shared/error'
-import { Effect as E, Layer as L, Layer, Schedule, Scope, identity, pipe } from 'effect'
+import type {
+  BadRequest,
+  Disabled,
+  Duplicate,
+  Forbidden,
+  NotFound,
+  NotSupported,
+  Unauthorized,
+} from '@passlock/shared/dist/error/error'
+import { RpcConfig } from '@passlock/shared/dist/rpc/rpc'
+import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
+import { type AuthenticationRequest, AuthenticationService } from './authentication/authenticate'
+import { Capabilities } from './capabilities/capabilities'
+import { ConnectionService } from './connection/connection'
+import { allRequirements } from './effect'
+import { EmailService, type VerifyRequest } from './email/email'
+import { type RegistrationRequest, RegistrationService } from './registration/register'
+import { type AuthType, Storage, StorageService } from './storage/storage'
+import { type Email, UserService } from './user/user'
+import { ErrorCode } from '@passlock/shared/dist/error/error'
+export { ErrorCode } from '@passlock/shared/dist/error/error'
 
-import {
-  AuthenticateServiceLive,
-  type AuthenticationRequest,
-  AuthenticationService,
-  Get,
-} from './authentication/authenticate'
-import type { Config } from './config'
-import { buildConfigLayers } from './config'
-import { EmailService, EmailServiceLive, type VerifyRequest } from './email/email'
-import { makeUnionFn, makeUnsafeFn } from './exit'
-import { eventLoggerLive } from './logging/eventLogger'
-import { Fetch, NetworkServiceLive, RetrySchedule } from './network/network'
-import {
-  Create,
-  type RegistrationRequest,
-  RegistrationService,
-  RegistrationServiceLive,
-} from './registration/register'
-import type { AuthType } from './storage/storage'
-import { Storage, StorageService, StorageServiceLive } from './storage/storage'
-import { type Email, UserService, UserServiceLive } from './user/user'
-import * as Utils from './utils'
-import { capabilitiesLive } from './utils'
-import { type PreConnectRequest, WarmerService, WarmerServiceLive } from './warmer/warmer'
+export class PasslockError extends Error {
+  readonly _tag = 'PasslockError'
+  readonly code: ErrorCode
 
-const arePasskeysSupported = () => E.runPromise(Utils.arePasskeysSupported)
-const isAutofillSupported = () => E.runPromise(Utils.isAutofillSupported)
+  constructor(message: string, code: ErrorCode) {
+    super(message)
+    this.code = code
+  }
 
-/* Layers */
+  static readonly isError = (error: unknown): error is PasslockError => {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      '_tag' in error &&
+      error['_tag'] === 'PasslockError'
+    )
+  }
+}
 
-const loggerLive = eventLoggerLive
+type PasslockErrors =
+  | BadRequest
+  | NotSupported
+  | Duplicate
+  | Unauthorized
+  | Forbidden
+  | Disabled
+  | NotFound
 
-const fetchLive = L.succeed(Fetch, Fetch.of(fetch))
-
-const createLive = L.succeed(Create, Create.of(create))
-
-const getLive = L.succeed(Get, Get.of(get))
-
-const schedule = Schedule.intersect(Schedule.recurs(3), Schedule.exponential('100 millis'))
-
-const retryScheduleLive = L.succeed(RetrySchedule, RetrySchedule.of({ schedule }))
-
-const networkServiceLive = pipe(
-  NetworkServiceLive,
-  L.provide(fetchLive),
-  L.provide(loggerLive),
-  L.provide(retryScheduleLive),
-)
-
-const userServiceLive = pipe(UserServiceLive, L.provide(networkServiceLive), L.provide(loggerLive))
-
-const storageServiceLive = pipe(StorageServiceLive, L.provide(loggerLive))
-
-const registrationServiceLive = pipe(
-  RegistrationServiceLive,
-  L.provide(networkServiceLive),
-  L.provide(loggerLive),
-  L.provide(capabilitiesLive),
-  L.provide(createLive),
-  L.provide(storageServiceLive),
-)
-
-const authenticationServiceLive = pipe(
-  AuthenticateServiceLive,
-  L.provide(networkServiceLive),
-  L.provide(loggerLive),
-  L.provide(capabilitiesLive),
-  L.provide(getLive),
-  L.provide(storageServiceLive),
-)
-
-const warmerServiceLive = pipe(
-  WarmerServiceLive,
-  L.provide(userServiceLive),
-  L.provide(registrationServiceLive),
-  L.provide(authenticationServiceLive),
-  L.provide(networkServiceLive),
-  L.provide(loggerLive),
-  L.provide(capabilitiesLive),
-  L.provide(getLive),
-  L.provide(storageServiceLive),
-)
-
-const emailServiceLive = pipe(
-  EmailServiceLive,
-  L.provide(networkServiceLive),
-  L.provide(loggerLive),
-  L.provide(capabilitiesLive),
-  L.provide(authenticationServiceLive),
-  L.provide(storageServiceLive),
-)
-
-const all = Layer.mergeAll(
-  userServiceLive,
-  registrationServiceLive,
-  authenticationServiceLive,
-  warmerServiceLive,
-  emailServiceLive,
-)
-
-// Create a scope for resources used in the layers
-const scope = E.runSync(Scope.make())
-
-// Transform the layer into a runtime
-const runtime = E.runSync(Layer.toRuntime(all).pipe(Scope.extend(scope)))
-
-/* Effects */
-
-// We don't want to eagerly build this layer as this file could be included
-// during SSR (where there is not localStorage). The effects are never run
-// during SSR, only during a browser render, so it's fine to provide them
-// when the effects are created and run
-const storageLive = Layer.effect(
-  Storage,
-  E.sync(() => localStorage),
-)
-
-const isRegisteredLive = (request: Email & Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(UserService, s => s.isExistingUser(request)),
-    E.provide(storageLive),
-    E.provide(configLive),
+const hasMessage = (defect: unknown): defect is { message: string } => {
+  return (
+    typeof defect === 'object' &&
+    defect !== null &&
+    'message' in defect &&
+    typeof defect['message'] === 'string'
   )
 }
 
-const registerPasskeylive = (request: RegistrationRequest & Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(RegistrationService, s => s.registerPasskey(request)),
-    E.provide(storageLive),
-    E.provide(configLive),
-  )
+const transformErrors = <A, R>(
+  effect: E.Effect<A, PasslockErrors, R>,
+): E.Effect<A | PasslockError, never, R> => {
+  const withErrorHandling = E.catchTags(effect, {
+    NotSupported: e => E.succeed(new PasslockError(e.message, ErrorCode.NotSupported)),
+    BadRequest: e => E.succeed(new PasslockError(e.message, ErrorCode.BadRequest)),
+    Duplicate: e => E.succeed(new PasslockError(e.message, ErrorCode.Duplicate)),
+    Unauthorized: e => E.succeed(new PasslockError(e.message, ErrorCode.Unauthorized)),
+    Forbidden: e => E.succeed(new PasslockError(e.message, ErrorCode.Forbidden)),
+    Disabled: e => E.succeed(new PasslockError(e.message, ErrorCode.Disabled)),
+    NotFound: e => E.succeed(new PasslockError(e.message, ErrorCode.NotFound)),
+  })
+
+  const sandboxed = E.sandbox(withErrorHandling)
+
+  const withSandboxing = E.catchTags(sandboxed, {
+    Die: ({ defect }) => {
+      return hasMessage(defect)
+        ? E.succeed(new PasslockError(defect.message, ErrorCode.InternalServerError))
+        : E.succeed(new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError))
+    },
+
+    Interrupt: () => {
+      return E.succeed(new PasslockError('Operation aborted', ErrorCode.InternalBrowserError))
+    },
+
+    Sequential: errors => {
+      console.error(errors)
+      return E.succeed(new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError))
+    },
+
+    Parallel: errors => {
+      console.error(errors)
+      return E.succeed(new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError))
+    },
+  })
+
+  return E.unsandbox(withSandboxing)
 }
 
-const preConnectLive = (request: PreConnectRequest & Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(WarmerService, s => s.preConnect(request)),
-    E.provide(storageLive),
-    E.provide(configLive),
-  )
+type Requirements =
+  | UserService
+  | RegistrationService
+  | AuthenticationService
+  | ConnectionService
+  | EmailService
+  | StorageService
+  | Capabilities
+
+export class Passlock {
+  private readonly runtime: Runtime.Runtime<Requirements>
+
+  constructor(config: { tenancyId: string; clientId: string; endpoint: string }) {
+    const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
+    const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
+    const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
+    const scope = E.runSync(Scope.make())
+    this.runtime = E.runSync(Layer.toRuntime(allLayers).pipe(Scope.extend(scope)))
+  }
+
+  private readonly runPromise = <A, R extends Requirements>(
+    effect: E.Effect<A, PasslockErrors, R>,
+  ) => {
+    return pipe(
+      transformErrors(effect),
+      E.flatMap(result => (PasslockError.isError(result) ? E.fail(result) : E.succeed(result))),
+      effect => Runtime.runPromise(this.runtime)(effect),
+    )
+  }
+
+  preConnect = () =>
+    pipe(
+      ConnectionService,
+      E.flatMap(service => service.preConnect()),
+      effect => Runtime.runPromise(this.runtime)(effect),
+    )
+
+  isPasskeySupport = () =>
+    pipe(
+      Capabilities,
+      E.flatMap(service => service.isPasskeySupport),
+      effect => Runtime.runPromise(this.runtime)(effect),
+    )
+
+  isExistingPasskey = (email: Email) =>
+    pipe(
+      UserService,
+      E.flatMap(service => service.isExistingUser(email)),
+      effect => this.runPromise(effect),
+    )
+
+  registerPasskey = (request: RegistrationRequest) =>
+    pipe(
+      RegistrationService,
+      E.flatMap(service => service.registerPasskey(request)),
+      effect => this.runPromise(effect),
+    )
+
+  authenticatePasskey = (request: AuthenticationRequest) =>
+    pipe(
+      AuthenticationService,
+      E.flatMap(service => service.authenticatePasskey(request)),
+      effect => this.runPromise(effect),
+    )
+
+  verifyEmailCode = (request: VerifyRequest) =>
+    pipe(
+      EmailService,
+      E.flatMap(service => service.verifyEmailCode(request)),
+      effect => this.runPromise(effect),
+    )
+
+  verifyEmailLink = () =>
+    pipe(
+      EmailService,
+      E.flatMap(service => service.verifyEmailLink()),
+      effect => this.runPromise(effect),
+    )
+
+  getSessionToken = (authType: AuthType) =>
+    pipe(
+      StorageService,
+      E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
+      E.map(Option.getOrUndefined),
+      effect => Runtime.runSync(this.runtime)(effect)
+    )
+
+  clearExpiredTokens = () =>
+    pipe(
+      StorageService,
+      E.flatMap(service => service.clearExpiredTokens),
+      effect => Runtime.runPromise(this.runtime)(effect)
+    )
 }
 
-const authenticatePasskeyLive = (request: AuthenticationRequest & Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(AuthenticationService, s => s.authenticatePasskey(request)),
-    E.provide(storageLive),
-    E.provide(configLive),
-  )
-}
+export class PasslockSafe {
+  private readonly runtime: Runtime.Runtime<Requirements>
 
-const verifyEmailCodeLive = (request: VerifyRequest & Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(EmailService, s => s.verifyEmailCode(request)),
-    E.provide(storageLive),
-    E.provide(configLive),
-  )
-}
+  constructor(config: { tenancyId: string; clientId: string; endpoint: string }) {
+    const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
+    const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
+    const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
+    const scope = E.runSync(Scope.make())
+    this.runtime = E.runSync(Layer.toRuntime(allLayers).pipe(Scope.extend(scope)))
+  }
 
-const verifyEmailLinkLive = (request: Config) => {
-  const configLive = buildConfigLayers(request)
-  return pipe(
-    E.flatMap(EmailService, s => s.verifyEmailLink()),
-    E.provide(storageLive),
-    E.provide(configLive),
-  )
-}
+  private readonly runPromise = <A, R extends Requirements>(
+    effect: E.Effect<A, PasslockErrors, R>,
+  ) => {
+    return pipe(transformErrors(effect), effect => Runtime.runPromise(this.runtime)(effect))
+  }
 
-const getSessionToken = (authType: AuthType): string | undefined => {
-  return pipe(
-    E.flatMap(StorageService, s => s.getToken(authType)),
-    E.map(t => t.token),
-    E.provide(storageServiceLive),
-    E.provide(storageLive),
-    E.match({
-      onSuccess: identity,
-      onFailure: () => undefined,
-    }),
-    E.runSync,
-  )
-}
+  isPasskeySupport = () =>
+    pipe(
+      Capabilities,
+      E.flatMap(service => service.isPasskeySupport),
+      effect => Runtime.runPromise(this.runtime)(effect),
+    )
 
-const clearExpiredToken = (authType: AuthType) =>
-  pipe(
-    E.flatMap(StorageService, s => s.clearExpiredToken(authType)),
-    E.provide(storageServiceLive),
-    E.provide(storageLive),
-    E.runPromise,
-  )
+  preConnect = () =>
+    pipe(
+      ConnectionService,
+      E.flatMap(service => service.preConnect()),
+      effect => this.runPromise(effect),
+    )
 
-const clearExpiredTokens = () =>
-  pipe(
-    E.flatMap(StorageService, s => s.clearExpiredTokens),
-    E.provide(storageServiceLive),
-    E.provide(storageLive),
-    E.runPromise,
-  )
+  isExistingPasskey = (email: Email) =>
+    pipe(
+      UserService,
+      E.flatMap(service => service.isExistingUser(email)),
+      effect => this.runPromise(effect),
+    )
 
-/* Exports */
+  registerPasskey = (request: RegistrationRequest) =>
+    pipe(
+      RegistrationService,
+      E.flatMap(service => service.registerPasskey(request)),
+      effect => this.runPromise(effect),
+    )
 
-const isRegistered = makeUnionFn(isRegisteredLive, runtime)
-const isRegisteredUnsafe = makeUnsafeFn(isRegisteredLive, runtime)
+  authenticatePasskey = (request: AuthenticationRequest = {}) =>
+    pipe(
+      AuthenticationService,
+      E.flatMap(service => service.authenticatePasskey(request)),
+      effect => this.runPromise(effect),
+    )
 
-const registerPasskey = makeUnionFn(registerPasskeylive, runtime)
-const registerUnsafe = makeUnsafeFn(registerPasskeylive, runtime)
+  verifyEmailCode = (request: VerifyRequest) =>
+    pipe(
+      EmailService,
+      E.flatMap(service => service.verifyEmailCode(request)),
+      effect => this.runPromise(effect),
+    )
 
-const preConnect = makeUnionFn(preConnectLive, runtime)
-const preConnectUnsafe = makeUnsafeFn(preConnectLive, runtime)
+  verifyEmailLink = () =>
+    pipe(
+      EmailService,
+      E.flatMap(service => service.verifyEmailLink()),
+      effect => this.runPromise(effect),
+    )
 
-const authenticatePasskey = makeUnionFn(authenticatePasskeyLive, runtime)
-const authenticateUnsafe = makeUnsafeFn(authenticatePasskeyLive, runtime)
+  getSessionToken = (authType: AuthType) =>
+    pipe(
+      StorageService,
+      E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
+      E.map(maybeToken => Option.getOrUndefined(maybeToken)),
+      effect => Runtime.runSync(this.runtime)(effect)
+    )
 
-const verifyEmailCode = makeUnionFn(verifyEmailCodeLive, runtime)
-const verifyEmailCodeUnsafe = makeUnsafeFn(verifyEmailCodeLive, runtime)
-
-const verifyEmailLink = makeUnionFn(verifyEmailLinkLive, runtime)
-const verifyEmailLinkUnsafe = makeUnsafeFn(verifyEmailLinkLive, runtime)
-
-export {
-  ErrorCode,
-  arePasskeysSupported,
-  authenticatePasskey,
-  authenticateUnsafe,
-  clearExpiredToken,
-  clearExpiredTokens,
-  getSessionToken,
-  isAutofillSupported,
-  isPasslockError,
-  isRegistered,
-  isRegisteredUnsafe,
-  preConnect,
-  preConnectUnsafe,
-  registerPasskey,
-  registerUnsafe,
-  verifyEmailCode,
-  verifyEmailCodeUnsafe,
-  verifyEmailLink,
-  verifyEmailLinkUnsafe,
+  clearExpiredTokens = () =>
+    pipe(
+      StorageService,
+      E.flatMap(service => service.clearExpiredTokens),
+      effect => Runtime.runPromise(this.runtime)(effect)
+    )
 }

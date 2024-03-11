@@ -1,8 +1,6 @@
-import { LogLevel } from '@passlock/shared/logging'
-import { Effect as E, LogLevel as EffectLogLevel, Logger } from 'effect'
+import { Effect as E, LogLevel, Logger } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
-
-import { debug, error, info, log, logRaw, warn } from './eventLogger'
+import { eventLoggerLive, logRaw } from './eventLogger'
 
 /**
  * Although the core log functionality is tested alongside the logger in the @passlock/shared
@@ -14,23 +12,25 @@ import { debug, error, info, log, logRaw, warn } from './eventLogger'
 
 describe('log', () => {
   test('log DEBUG to the console', () => {
-    const effect = debug('hello world')
-
-    const withDebugLevel = effect.pipe(Logger.withMinimumLogLevel(EffectLogLevel.Debug))
+    const logStatement = E.logDebug('hello world')
 
     const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
+    const withLogLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Debug))
 
-    E.runSync(withDebugLevel)
+    const effect = E.provide(withLogLevel, eventLoggerLive)
+    E.runSync(effect)
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('DEBUG'))
   })
 
   test('log INFO to the console', () => {
-    const effect = info('hello world')
+    const logStatement = E.logInfo('hello world')
 
     const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
+    const withLogLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Info))
 
+    const effect = E.provide(withLogLevel, eventLoggerLive)
     E.runSync(effect)
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
@@ -38,10 +38,12 @@ describe('log', () => {
   })
 
   test('log WARN to the console', () => {
-    const effect = warn('hello world')
+    const logStatement = E.logWarning('hello world')
 
     const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
+    const withLogLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Warning))
 
+    const effect = E.provide(withLogLevel, eventLoggerLive)
     E.runSync(effect)
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
@@ -49,10 +51,12 @@ describe('log', () => {
   })
 
   test('log ERROR to the console', () => {
-    const effect = error('hello world')
+    const logStatement = E.logError('hello world')
 
     const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
+    const withLogLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Error))
 
+    const effect = E.provide(withLogLevel, eventLoggerLive)
     E.runSync(effect)
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
@@ -60,35 +64,39 @@ describe('log', () => {
   })
 
   test('log raw data to the console', () => {
-    const effect = logRaw('raw data')
-
+    const logStatement = logRaw('hello world')
     const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
 
-    E.runSync(effect)
+    E.runSync(logStatement)
 
-    expect(logSpy).toHaveBeenCalledWith('raw data')
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
   })
 
   test('fire a custom log event', () => {
-    const effect = log('hello world', LogLevel.INFO)
+    const logStatement = E.logWarning('hello world')
 
-    const logSpy = vi.spyOn(globalThis.console, 'log').mockImplementation(() => undefined)
     const eventSpy = vi.spyOn(globalThis, 'dispatchEvent').mockImplementation(() => false)
+    const withLogLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Warning))
+
+    const effect = E.provide(withLogLevel, eventLoggerLive)
     E.runSync(effect)
 
     const expectedEvent = new CustomEvent('PasslogDebugMessage', {
       detail: 'hello world',
     })
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('hello world'))
+
     expect(eventSpy).toHaveBeenCalledWith(expectedEvent)
   })
 
   test('not fire a log event for a debug message', () => {
-    const effect = log('hello world', LogLevel.DEBUG)
+    const logStatement = E.logDebug('hello world')
 
-    const eventSpy = vi.spyOn(globalThis, 'dispatchEvent')
+    const eventSpy = vi.spyOn(globalThis, 'dispatchEvent').mockImplementation(() => false)
+    const withDebugLevel = logStatement.pipe(Logger.withMinimumLogLevel(LogLevel.Debug))
+
+    const effect = E.provide(withDebugLevel, eventLoggerLive)
     E.runSync(effect)
 
-    expect(eventSpy).not.toBeCalled()
+    expect(eventSpy).not.toHaveBeenCalled()
   })
 })

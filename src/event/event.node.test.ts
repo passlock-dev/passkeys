@@ -1,17 +1,20 @@
-import { ErrorCode } from '@passlock/shared/error'
-import { Runtime } from 'effect'
-import { describe, test } from 'vitest'
-
+import { Effect, pipe } from 'effect'
+import { describe, expect, test } from 'vitest'
 import { fireEvent } from './event'
-import { runUnion } from '../exit'
-import { expectPasslockError } from '../test/testUtils'
 
 // @vitest-environment node
 
 describe('isPasslockEvent', () => {
   test("return a Passlock error if custom events aren't supported", async () => {
-    const effect = fireEvent('hello world')
-    const res = await runUnion(effect, Runtime.defaultRuntime)
-    expectPasslockError(res).toMatch('Unable to fire custom event', ErrorCode.InternalBrowserError)
+    const program = pipe(
+      fireEvent('hello world'),
+      Effect.flip,
+      Effect.tap(e => {
+        expect(e._tag).toBe('InternalBrowserError')
+        expect(e.message).toBe('Unable to fire custom event')
+      }),
+    )
+
+    await Effect.runPromise(program)
   })
 })

@@ -1,8 +1,7 @@
-import type { Principal } from '@passlock/shared/schema'
-import { Effect as E, Layer } from 'effect'
+import type { Principal } from '@passlock/shared/dist/schema/schema'
+import { Effect as E, Layer, pipe } from 'effect'
 import { mock } from 'vitest-mock-extended'
-
-import { Storage } from './storage'
+import { Storage, StorageServiceLive } from './storage'
 
 // Frontend receives dates as objects
 export const principal: Principal = {
@@ -19,12 +18,16 @@ export const principal: Principal = {
     userVerified: false,
     authTimestamp: new Date(0),
   },
-  expiresAt: new Date(100),
+  expireAt: new Date(100),
 }
 
-export const testLayers = Layer.effect(
+const storageTest = Layer.effect(
   Storage,
-  E.sync(() => {
-    return mock<Storage>()
-  }),
+  E.sync(() => mock<Storage>()),
 )
+
+export const testLayers = (storage: Layer.Layer<Storage> = storageTest) => {
+  const storageService = pipe(StorageServiceLive, Layer.provide(storage))
+
+  return Layer.merge(storage, storageService)
+}
