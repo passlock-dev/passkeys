@@ -1,6 +1,6 @@
 {
   "name": "@passlock/client",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Framework agnostic Passkey library for React/Next.js, Vue/Nuxt.js, SvelteKit and others. Passlock works with pretty much any frontend/backend stack - check out the tutorial",
   "keywords": [
     "passkey",
@@ -55,11 +55,8 @@
     "ncu:save": "ncu -u -x @passlock/shared"
   },
   "dependencies": {
-    "@effect/platform": "^0.47.1",
     "@passlock/shared": "workspace:*",
-    "effect": "2.4.3",
-    "nanoid": "^5.0.6",
-    "valibot": "^0.30.0"
+    "effect": "2.4.3"
   },
   "devDependencies": {
     "@github/webauthn-json": "^2.1.1",
