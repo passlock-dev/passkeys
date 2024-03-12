@@ -1,4 +1,3 @@
-
 import { BadRequest } from '@passlock/shared/dist/error/error'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import { VerifyEmailReq, VerifyEmailRes } from '@passlock/shared/dist/rpc/user'
@@ -6,7 +5,6 @@ import { Effect as E, Layer as L } from 'effect'
 import { LocationSearch } from './email'
 import { AuthenticationService } from '../authentication/authenticate'
 import * as Fixtures from '../test/fixtures'
-
 
 export const token = 'token'
 export const code = 'code'

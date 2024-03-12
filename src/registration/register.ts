@@ -5,15 +5,10 @@ import {
   type CredentialCreationOptionsJSON,
   parseCreationOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import type { NotSupported } from '@passlock/shared/dist/error/error';
+import type { NotSupported } from '@passlock/shared/dist/error/error'
 import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error'
-import type {
-  OptionsErrors,
-  VerificationErrors} from '@passlock/shared/dist/rpc/registration';
-import {
-  OptionsReq,
-  VerificationReq,
-} from '@passlock/shared/dist/rpc/registration'
+import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rpc/registration'
+import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/registration'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import type {
   Principal,

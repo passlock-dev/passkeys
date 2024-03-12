@@ -10,21 +10,17 @@ import {
   InternalBrowserError,
   type NotSupported,
 } from '@passlock/shared/dist/error/error'
-import type {
-  VerificationErrors} from '@passlock/shared/dist/rpc/authentication';
-import {
-  OptionsReq,
-  VerificationReq,
-} from '@passlock/shared/dist/rpc/authentication'
+import type { VerificationErrors } from '@passlock/shared/dist/rpc/authentication'
+import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/authentication'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import type {
   AuthenticationCredential,
   Principal,
- UserVerification } from '@passlock/shared/dist/schema/schema'
+  UserVerification,
+} from '@passlock/shared/dist/schema/schema'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 import { Capabilities } from '../capabilities/capabilities'
 import { StorageService } from '../storage/storage'
-
 
 /* Requests */
 

@@ -6,7 +6,6 @@ import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import { IsExistingUserReq } from '@passlock/shared/dist/rpc/user'
 import { Context, Effect as E, Layer, flow } from 'effect'
 
-
 /* Requests */
 
 export type Email = { email: string }

@@ -8,7 +8,6 @@ import * as Fixture from './email.fixture'
 import { AuthenticationService } from '../authentication/authenticate'
 import { StorageService } from '../storage/storage'
 
-
 describe('verifyEmailCode should', () => {
   test('return true when the verification is successful', async () => {
     const assertions = E.gen(function* (_) {

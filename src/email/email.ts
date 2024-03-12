@@ -3,12 +3,11 @@
  */
 import { BadRequest } from '@passlock/shared/dist/error/error'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
-import type { VerifyEmailErrors as RpcErrors} from '@passlock/shared/dist/rpc/user';
+import type { VerifyEmailErrors as RpcErrors } from '@passlock/shared/dist/rpc/user'
 import { VerifyEmailReq } from '@passlock/shared/dist/rpc/user'
 import { Context, Effect as E, Layer, Option as O, flow, identity, pipe } from 'effect'
 import { type AuthenticationErrors, AuthenticationService } from '../authentication/authenticate'
 import { StorageService } from '../storage/storage'
-
 
 /* Requests */
 

@@ -3,7 +3,6 @@ import { Effect as E, Layer as L } from 'effect'
 import { Capabilities } from '../capabilities/capabilities'
 import { StorageService, type StoredToken } from '../storage/storage'
 
-
 export const session = 'session'
 export const token = 'token'
 export const code = 'code'

@@ -3,7 +3,6 @@ import { PreConnectReq, PreConnectRes } from '@passlock/shared/dist/rpc/connecti
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import { Effect as E, Layer as L } from 'effect'
 
-
 export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
@@ -20,8 +19,8 @@ export const rpcClientTest = L.succeed(
 export const preConnectReq = new PreConnectReq({})
 export const preConnectRes = new PreConnectRes({ warmed: true })
 
-export const rpcConfig = { 
-  endpoint: 'https://example.com', 
-  tenancyId: 'tenancyId', clientId: 
-  'clientId' 
+export const rpcConfig = {
+  endpoint: 'https://example.com',
+  tenancyId: 'tenancyId',
+  clientId: 'clientId',
 }

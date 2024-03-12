@@ -4,7 +4,6 @@
 import { InternalBrowserError } from '@passlock/shared/dist/error/error'
 import { Effect } from 'effect'
 
-
 export const DebugMessage = 'PasslogDebugMessage'
 
 export const fireEvent = (message: string) => {

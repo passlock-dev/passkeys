@@ -7,7 +7,6 @@ import { CreateCredential, RegistrationService, RegistrationServiceLive } from '
 import * as Fixture from './register.fixture'
 import { UserService } from '../user/user'
 
-
 describe('register should', () => {
   test('return a valid credential', async () => {
     const assertions = E.gen(function* (_) {

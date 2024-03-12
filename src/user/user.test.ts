@@ -5,7 +5,6 @@ import { mock } from 'vitest-mock-extended'
 import { UserService, UserServiceLive } from './user'
 import * as Fixture from './user.fixture'
 
-
 describe('isExistingUser should', () => {
   test('return true when the user already has a passkey', async () => {
     const assertions = E.gen(function* (_) {

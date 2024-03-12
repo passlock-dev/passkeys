@@ -10,7 +10,6 @@ import { Effect as E, Layer as L } from 'effect'
 import { type AuthenticationRequest, GetCredential } from './authenticate'
 import * as Fixtures from '../test/fixtures'
 
-
 export const session = 'session'
 export const token = 'token'
 export const code = 'code'

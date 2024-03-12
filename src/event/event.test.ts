@@ -2,7 +2,6 @@ import { Effect } from 'effect'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { DebugMessage, fireEvent, isPasslockEvent } from './event'
 
-
 describe('fireEvent', () => {
   afterEach(() => {
     vi.restoreAllMocks()

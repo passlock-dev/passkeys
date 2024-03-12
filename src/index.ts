@@ -7,6 +7,7 @@ import type {
   NotSupported,
   Unauthorized,
 } from '@passlock/shared/dist/error/error'
+import { ErrorCode } from '@passlock/shared/dist/error/error'
 import { RpcConfig } from '@passlock/shared/dist/rpc/rpc'
 import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
 import { type AuthenticationRequest, AuthenticationService } from './authentication/authenticate'
@@ -17,7 +18,7 @@ import { EmailService, type VerifyRequest } from './email/email'
 import { type RegistrationRequest, RegistrationService } from './registration/register'
 import { type AuthType, Storage, StorageService } from './storage/storage'
 import { type Email, UserService } from './user/user'
-import { ErrorCode } from '@passlock/shared/dist/error/error'
+
 export { ErrorCode } from '@passlock/shared/dist/error/error'
 
 export class PasslockError extends Error {
@@ -85,12 +86,16 @@ const transformErrors = <A, R>(
 
     Sequential: errors => {
       console.error(errors)
-      return E.succeed(new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError))
+      return E.succeed(
+        new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError),
+      )
     },
 
     Parallel: errors => {
       console.error(errors)
-      return E.succeed(new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError))
+      return E.succeed(
+        new PasslockError('Sorry, something went wrong', ErrorCode.InternalServerError),
+      )
     },
   })
 
@@ -181,14 +186,14 @@ export class Passlock {
       StorageService,
       E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
       E.map(Option.getOrUndefined),
-      effect => Runtime.runSync(this.runtime)(effect)
+      effect => Runtime.runSync(this.runtime)(effect),
     )
 
   clearExpiredTokens = () =>
     pipe(
       StorageService,
       E.flatMap(service => service.clearExpiredTokens),
-      effect => Runtime.runPromise(this.runtime)(effect)
+      effect => Runtime.runPromise(this.runtime)(effect),
     )
 }
 
@@ -263,13 +268,13 @@ export class PasslockSafe {
       StorageService,
       E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
       E.map(maybeToken => Option.getOrUndefined(maybeToken)),
-      effect => Runtime.runSync(this.runtime)(effect)
+      effect => Runtime.runSync(this.runtime)(effect),
     )
 
   clearExpiredTokens = () =>
     pipe(
       StorageService,
       E.flatMap(service => service.clearExpiredTokens),
-      effect => Runtime.runPromise(this.runtime)(effect)
+      effect => Runtime.runPromise(this.runtime)(effect),
     )
 }

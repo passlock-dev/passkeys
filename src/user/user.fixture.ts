@@ -3,7 +3,6 @@ import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import { IsExistingUserReq, IsExistingUserRes } from '@passlock/shared/dist/rpc/user'
 import { Effect as E, Layer as L } from 'effect'
 
-
 export const email = 'jdoe@gmail.com'
 
 export const rpcClientTest = L.succeed(

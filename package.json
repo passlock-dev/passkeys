@@ -1,6 +1,6 @@
 {
-  "name": "@passlock/passkeys",
-  "version": "0.8.3",
+  "name": "@passlock/client",
+  "version": "0.9.0",
   "description": "Framework agnostic Passkey library for React/Next.js, Vue/Nuxt.js, SvelteKit and others. Passlock works with pretty much any frontend/backend stack - check out the tutorial",
   "keywords": [
     "passkey",

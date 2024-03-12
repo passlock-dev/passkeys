@@ -1,7 +1,6 @@
 import { RpcConfig } from '@passlock/shared/dist/rpc/rpc'
 import { Context, Layer } from 'effect'
 
-
 export const DefaultEndpoint = 'https://api.passlock.dev'
 
 export type Tenancy = {

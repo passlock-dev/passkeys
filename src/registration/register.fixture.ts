@@ -12,7 +12,6 @@ import { CreateCredential, type RegistrationRequest } from './register'
 import * as Fixtures from '../test/fixtures'
 import { UserService } from '../user/user'
 
-
 export const session = 'session'
 export const token = 'token'
 export const code = 'code'

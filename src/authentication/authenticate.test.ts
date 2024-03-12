@@ -6,7 +6,6 @@ import { AuthenticateServiceLive, AuthenticationService, GetCredential } from '.
 import * as Fixture from './authenticate.fixture'
 import { StorageService } from '../storage/storage'
 
-
 describe('authenticate should', () => {
   test('return a valid principal', async () => {
     const assertions = E.gen(function* (_) {

@@ -86,7 +86,7 @@ Create a free account on [passlock.dev][passlock-signup] and obtain your `client
 
 This will depend on your package manager:
 
-`npm add @passlock/passkeys`  
+`npm add @passlock/client`  
 
 # Basic usage
 
@@ -107,7 +107,7 @@ You just need to call `registerPasskey()`, passing in a few options. This will d
 ### Create a passkey (frontend)
 
 ```typescript
-import { Passlock } from '@passlock/passkeys'
+import { Passlock } from '@passlock/client'
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
@@ -152,7 +152,7 @@ Similar to registration, call `authenticatePasskey()` to obtain a token, which y
 ### Authenticate (frontend)
 
 ```typescript
-import { Passlock } from '@passlock/passkeys';
+import { Passlock } from '@passlock/client';
 
 const tenancyId = process.env.PASSLOCK_TENANCY_ID
 const clientId = process.env.PASSLOCK_CLIENT_ID
