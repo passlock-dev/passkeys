@@ -12,7 +12,7 @@
     <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
-    <a href="https://passlock.dev/#demo">View Demo</a>
+    <a href="https://passlock.dev/#demo">Demo</a>
     ·
     <a href="https://docs.passlock.dev">Documentation</a>
     ·
@@ -26,17 +26,19 @@
 
 Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
-1. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
+1. **🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
 
-2. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
+2. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
 
-3. **✉️ Mailbox verification** - Passlock also handles mailbox verification emails (which are more complex than you might think!)
+3. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
 
-3. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
+4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
 
-5. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+6. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
 
 # Screenshot
 
 ![Passlock user profile](https://github.com/passlock-dev/passkeys/assets/208345/a4a5c4b8-86cb-4076-bd26-7c29ed2151c6)
 <p align="center">Viewing a user's authentication activity on their profile page</p>
+
+[contact]: https://passlock.dev/contact

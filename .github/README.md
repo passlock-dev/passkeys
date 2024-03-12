@@ -57,15 +57,23 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 
 Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
-1. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
+**🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
 
-2. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
+**☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
 
-3. **✉️ Mailbox verification** - Passlock also handles mailbox verification emails (which are more complex than you might think!)
+**🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
 
-3. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
+**🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
 
-5. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+**🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+
+Along with:
+
+**✉️ Mailbox verification** - Passlock also handles mailbox verification emails (which are more complex than you might think)
+
+**🔑 Credential export** - Decided to roll your own passkey code? No problem - you can export your users' credentials (including public keys) and drop them into your own database.
+
+And more!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
