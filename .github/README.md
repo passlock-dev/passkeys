@@ -57,21 +57,21 @@ Really simple Passkey client library. You don't need to learn the underlying [We
 
 Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
-**🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
+1. **🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
 
-**☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
+2. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
 
-**🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
+3. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
 
-**🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
+4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
 
-**🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+5. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
 
 Along with:
 
-**✉️ Mailbox verification** - Passlock also handles mailbox verification emails (which are more complex than you might think)
+1. **✉️ Mailbox verification** - Passlock also handles mailbox verification emails (which are more complex than you might think)
 
-**🔑 Credential export** - Decided to roll your own passkey code? No problem - you can export your users' credentials (including public keys) and drop them into your own database.
+2. **🔑 Credential export** - Decided to roll your own passkey code? No problem - you can export your users' credentials (including public keys) and drop them into your own database.
 
 And more!
 
@@ -106,9 +106,9 @@ An alternative flow uses JWTs with public keys to avoid the backend REST call. P
 
 ## Passkey registration
 
-You just need to call `registerPasskey()`, passing in a few options. This will do three things:
+You just need to call `registerPasskey()` passing in a few details. This will do three things:
 
-1. Generate a passkey and store it on the device
+1. Generate a passkey and store it on the user's device
 2. Register the passkey in your Passlock vault
 3. Generate a token representing the new credential
 
