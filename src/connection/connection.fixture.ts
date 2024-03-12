@@ -19,3 +19,9 @@ export const rpcClientTest = L.succeed(
 
 export const preConnectReq = new PreConnectReq({})
 export const preConnectRes = new PreConnectRes({ warmed: true })
+
+export const rpcConfig = { 
+  endpoint: 'https://example.com', 
+  tenancyId: 'tenancyId', clientId: 
+  'clientId' 
+}

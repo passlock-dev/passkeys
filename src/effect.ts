@@ -135,7 +135,11 @@ const authenticationServiceLive = pipe(
   L.provide(storageServiceLive),
 )
 
-const connectionServiceLive = pipe(ConnectionServiceLive, L.provide(rpcClientLive))
+const connectionServiceLive = pipe(
+  ConnectionServiceLive, 
+  L.provide(rpcClientLive), 
+  L.provide(networkServiceLive)
+)
 
 const locationSearchLive = Layer.succeed(
   LocationSearch,

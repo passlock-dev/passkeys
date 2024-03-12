@@ -1,4 +1,4 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { type RouterOps, RpcClient, RpcConfig, NetworkService } from '@passlock/shared/dist/rpc/rpc'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
@@ -14,6 +14,10 @@ describe('preConnect should', () => {
 
       const rpcClient = yield* _(RpcClient)
       expect(rpcClient.preConnect).toBeCalledWith(Fixture.preConnectReq)
+
+      const { endpoint } = yield* _(RpcConfig)
+      const networkService = yield* _(NetworkService)
+      expect(networkService.get).toBeCalledWith(`${endpoint}/tenancy/token/token?warm=true`)
     })
 
     const rpcClientTest = Layer.effect(
@@ -27,9 +31,30 @@ describe('preConnect should', () => {
       }),
     )
 
-    const service = pipe(ConnectionServiceLive, L.provide(rpcClientTest))
+    const rpcConfigTest = Layer.succeed(
+      RpcConfig,
+      RpcConfig.of(Fixture.rpcConfig)
+    )
 
-    const layers = L.merge(service, rpcClientTest)
+    const networkServiceTest = Layer.effect(
+      NetworkService,
+      E.sync(() => {
+        const networkMock = mock<NetworkService['Type']>()
+
+        networkMock.get.mockReturnValue(E.succeed({ }))
+
+        return networkMock
+      }),
+    )
+
+    const service = pipe(
+      ConnectionServiceLive, 
+      L.provide(rpcClientTest), 
+      L.provide(networkServiceTest), 
+      L.provide(rpcConfigTest)
+    )
+
+    const layers = L.mergeAll(service, rpcClientTest, rpcConfigTest, networkServiceTest)
     const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
 
     return E.runPromise(effect)
