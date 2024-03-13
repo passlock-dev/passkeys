@@ -25,7 +25,7 @@ import {
 } from '@passlock/shared/dist/error/error'
 
 import {
-  NetworkServiceLive,
+  DispatcherLive,
   RetrySchedule,
   RpcClientLive,
   RpcConfig,
@@ -110,9 +110,9 @@ const schedule = Schedule.intersect(Schedule.recurs(3), Schedule.exponential('10
 
 const retryScheduleLive = L.succeed(RetrySchedule, RetrySchedule.of({ schedule }))
 
-const networkServiceLive = pipe(NetworkServiceLive, L.provide(retryScheduleLive))
+const dispatcherLive = pipe(DispatcherLive, L.provide(retryScheduleLive))
 
-const rpcClientLive = pipe(RpcClientLive, L.provide(networkServiceLive))
+const rpcClientLive = pipe(RpcClientLive, L.provide(dispatcherLive))
 
 const storageServiceLive = StorageServiceLive
 
@@ -138,7 +138,7 @@ const authenticationServiceLive = pipe(
 const connectionServiceLive = pipe(
   ConnectionServiceLive,
   L.provide(rpcClientLive),
-  L.provide(networkServiceLive),
+  L.provide(dispatcherLive),
 )
 
 const locationSearchLive = Layer.succeed(

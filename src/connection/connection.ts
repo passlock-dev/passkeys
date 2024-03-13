@@ -3,7 +3,7 @@
  */
 import { PreConnectReq } from '@passlock/shared/dist/rpc/connection'
 import type { RpcConfig } from '@passlock/shared/dist/rpc/rpc';
-import { NetworkService, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { Dispatcher, RpcClient } from '@passlock/shared/dist/rpc/rpc'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 
 /* Service */
@@ -18,8 +18,8 @@ export const ConnectionService = Context.GenericTag<ConnectionService>('@service
 
 const hitPrincipal = pipe(
   E.logInfo('Pre-connecting to Principal endpoint'),
-  E.zipRight(NetworkService),
-  E.flatMap(networkService => networkService.get('/token/token?warm=true')),
+  E.zipRight(Dispatcher),
+  E.flatMap(dispatcher => dispatcher.get('/token/token?warm=true')),
   E.asUnit,
   E.catchAll(() => E.unit),
 )
@@ -39,7 +39,7 @@ export const preConnect = () => pipe(E.all([hitPrincipal, hitRpc], { concurrency
 export const ConnectionServiceLive = Layer.effect(
   ConnectionService,
   E.gen(function* (_) {
-    const context = yield* _(E.context<RpcClient | NetworkService | RpcConfig>())
+    const context = yield* _(E.context<RpcClient | Dispatcher | RpcConfig>())
 
     return ConnectionService.of({
       preConnect: flow(preConnect, E.provide(context)),
