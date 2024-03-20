@@ -8,7 +8,7 @@
 <h1 align="center">Serverless Passkeys</h1>
 
   <p align="center">
-    Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
+    Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks
     <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
@@ -22,7 +22,7 @@
 
 <br />
 
-# Features
+## Features
 
 Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
@@ -36,9 +36,78 @@ Passkeys and the WebAuthn API are quite complex. We've taken an opinionated appr
 
 6. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
 
-# Screenshot
+## Screenshot
 
 ![Passlock user profile](https://github.com/passlock-dev/passkeys/assets/208345/a4a5c4b8-86cb-4076-bd26-7c29ed2151c6)
 <p align="center">Viewing a user's authentication activity on their profile page</p>
 
+## Usage
+
+Use this library to generate a secure token, representing passkey registration or authentication. Send the token to your backend for verification (see below)
+
+### Register a passkey
+
+```typescript
+import { Passlock, PasslockError } from '@passlock/client'
+
+// you can find these details in the settings area of the Passlock console
+const tenancyId = '...'
+const clientId = '...'
+
+// Passlock doesn't throw but instead returns a union: result | error
+const passlock = new Passlock({ tenancyId, clientId })
+
+// to register a new passkey, call registerPasskey(). We're using placeholders for 
+// the user data. You should grab this from an HTML form, React store, Redux etc.
+const [email, firstName, lastName] = ["jdoe@gmail.com", "John", "Doe"]
+const result = await passlock.registerPasskey({ email, firstName, lastName })
+
+// ensure Passlock didn't return an error
+if (!PasslockError.isError(result)) {
+  // send the token to your backend (json/fetch or hidden form field etc)
+  console.log('Token: %s', result.token)
+}
+```
+
+### Authenticate using a passkey
+
+```typescript
+import { Passlock, PasslockError } from '@passlock/client'
+
+const tenancyId = '...'
+const clientId = '...'
+
+const passlock = new Passlock({ tenancyId, clientId })
+const result = await passlock.authenticatePasskey()
+
+if (!PasslockError.isError(result)) {
+  // send the token to your backend for verification
+  console.log('Token: %s', result.token)
+}
+```
+
+### Backend verification
+
+Verify the token and obtain the passkey registration or authentication details. You can make a simple GET request to `https://api.passlock.dev/{tenancyId}/token/{token}` or use the [@passlock/node][node] library:
+
+```typescript
+import { Passlock } from '@passlock/node'
+
+// API keys can be found in your passlock console
+const passlock = new Passlock({ tenancyId, apiKey })
+
+// token comes from your frontend
+const principal = await passlock.fetchPrincipal({ token })
+
+// get the user id
+console.log(principal.subject.id)
+```
+
+## More information
+
+Please see the [tutorial][tutorial] and [documentation][docs]
+
 [contact]: https://passlock.dev/contact
+[tutorial]: https://docs.passlock.dev/docs/tutorial/intro
+[docs]: https://docs.passlock.dev
+[node]: https://www.npmjs.com/package/@passlock/node

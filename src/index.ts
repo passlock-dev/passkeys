@@ -111,10 +111,12 @@ type Requirements =
   | StorageService
   | Capabilities
 
-export class Passlock {
+export type Options = { signal?: AbortSignal }
+
+export class PasslockUnsafe {
   private readonly runtime: Runtime.Runtime<Requirements>
 
-  constructor(config: { tenancyId: string; clientId: string; endpoint: string }) {
+  constructor(config: { tenancyId: string; clientId: string; endpoint?: string }) {
     const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
     const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
     const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
@@ -124,19 +126,20 @@ export class Passlock {
 
   private readonly runPromise = <A, R extends Requirements>(
     effect: E.Effect<A, PasslockErrors, R>,
+    options: Options | undefined = undefined
   ) => {
     return pipe(
       transformErrors(effect),
       E.flatMap(result => (PasslockError.isError(result) ? E.fail(result) : E.succeed(result))),
-      effect => Runtime.runPromise(this.runtime)(effect),
+      effect => Runtime.runPromise(this.runtime)(effect, options),
     )
   }
 
-  preConnect = () =>
+  preConnect = (options?: Options) =>
     pipe(
       ConnectionService,
       E.flatMap(service => service.preConnect()),
-      effect => Runtime.runPromise(this.runtime)(effect),
+      effect => Runtime.runPromise(this.runtime)(effect, options),
     )
 
   isPasskeySupport = () =>
@@ -146,39 +149,39 @@ export class Passlock {
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  isExistingPasskey = (email: Email) =>
+  isExistingPasskey = (email: Email, options?: Options) =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  registerPasskey = (request: RegistrationRequest) =>
+  registerPasskey = (request: RegistrationRequest, options?: Options) =>
     pipe(
       RegistrationService,
       E.flatMap(service => service.registerPasskey(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  authenticatePasskey = (request: AuthenticationRequest) =>
+  authenticatePasskey = (request: AuthenticationRequest, options?: Options) =>
     pipe(
       AuthenticationService,
       E.flatMap(service => service.authenticatePasskey(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  verifyEmailCode = (request: VerifyRequest) =>
+  verifyEmailCode = (request: VerifyRequest, options?: Options) =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailCode(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  verifyEmailLink = () =>
+  verifyEmailLink = (options?: Options) =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailLink()),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
   getSessionToken = (authType: AuthType) =>
@@ -197,10 +200,10 @@ export class Passlock {
     )
 }
 
-export class PasslockSafe {
+export class Passlock {
   private readonly runtime: Runtime.Runtime<Requirements>
 
-  constructor(config: { tenancyId: string; clientId: string; endpoint: string }) {
+  constructor(config: { tenancyId: string; clientId: string; endpoint?: string }) {
     const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
     const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
     const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
@@ -210,9 +213,20 @@ export class PasslockSafe {
 
   private readonly runPromise = <A, R extends Requirements>(
     effect: E.Effect<A, PasslockErrors, R>,
+    options: Options | undefined = undefined
   ) => {
-    return pipe(transformErrors(effect), effect => Runtime.runPromise(this.runtime)(effect))
+    return pipe(
+      transformErrors(effect), 
+      effect => Runtime.runPromise(this.runtime)(effect, options)
+    )
   }
+
+  preConnect = (options?: Options) =>
+    pipe(
+      ConnectionService,
+      E.flatMap(service => service.preConnect()),
+      effect => this.runPromise(effect, options),
+    )
 
   isPasskeySupport = () =>
     pipe(
@@ -221,46 +235,39 @@ export class PasslockSafe {
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  preConnect = () =>
-    pipe(
-      ConnectionService,
-      E.flatMap(service => service.preConnect()),
-      effect => this.runPromise(effect),
-    )
-
-  isExistingPasskey = (email: Email) =>
+  isExistingPasskey = (email: Email, options?: Options) =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  registerPasskey = (request: RegistrationRequest) =>
+  registerPasskey = (request: RegistrationRequest, options?: Options) =>
     pipe(
       RegistrationService,
       E.flatMap(service => service.registerPasskey(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  authenticatePasskey = (request: AuthenticationRequest = {}) =>
+  authenticatePasskey = (request: AuthenticationRequest = {}, options?: Options) =>
     pipe(
       AuthenticationService,
       E.flatMap(service => service.authenticatePasskey(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  verifyEmailCode = (request: VerifyRequest) =>
+  verifyEmailCode = (request: VerifyRequest, options?: Options) =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailCode(request)),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
-  verifyEmailLink = () =>
+  verifyEmailLink = (options?: Options) =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailLink()),
-      effect => this.runPromise(effect),
+      effect => this.runPromise(effect, options),
     )
 
   getSessionToken = (authType: AuthType) =>

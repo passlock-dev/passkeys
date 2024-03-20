@@ -46,12 +46,13 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
 
 Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you. It's a really simple 3 step process:
 
-1. Use this library to obtain a token on your frontend
-2. Pass the token to your backend
-3. Call the REST API to exchange the token for the authentication result
+1. Use the `@passlock/client` library to register or authenticate a passkey
+2. This will generate a token, send it to your backend
+3. Use the `@passlock/node` library to verify the token and obtain the user & passkey details
 
 > [!NOTE]
-> (Coming soon) - In step 3, you can instead verify and examine a JWT, thereby saving the network trip.
+> You can also make a standard HTTP GET call in your backend if you're not using Express/Node.
+> (Coming soon) - Use standard JWT tokens for steps 2 and 3
 
 # Features
 
@@ -90,7 +91,7 @@ And more!
 
 Create a free account on [passlock.dev][passlock-signup] and obtain your `clientId` (for the frontend), `apiKey` (for the backend), and `tenancyId` (frontend & backend).
 
-## Install the Passlock frontend library
+## Install the Passlock client library
 
 This will depend on your package manager:
 
@@ -132,7 +133,26 @@ console.log(result.token)
 
 ### Link the passkey (backend)
 
-Your backend just needs to exchange the token for a `Principal` representing the successful passkey registration. How you do this is entirely up to you (and your chosen framework). We'll show a CURL example:
+Your backend just needs to exchange the token for a `Principal` representing the successful passkey registration. Here is an example using the `@passlock/node` sdk:
+
+```typescript
+import { Passlock } from '@passlock/node'
+
+// API keys can be found in your passlock console
+const passlock = new Passlock({ tenancyId, apiKey })
+
+// token comes from your frontend
+const principal = await passlock.fetchPrincipal({ token })
+
+// get the user id
+console.log(principal.subject.id)
+```
+
+Link the `subject.id` with a user entity in your own database, similar to the way you might link a user's Facebook or Google id. This could be as simple as an additional (indexed) column on your user table.
+
+### Not using a Node backend
+
+You can also make an HTTP GET request to the `https://api.passlock.dev/{tenancyId}/token/{token}` endpoint, using whatever library you wish e.g. Python requests:
 
 ```bash
 # Substitute API_KEY, TENANCY_ID and TOKEN for the real values
@@ -150,8 +170,6 @@ This will return a JSON object including a `subject`:
   "expiresAt": "2024-01-25T12:06:07.000Z"
 }
 ```
-
-Link the `subject.id` with a user entity in your own database, similar to the way you might link a user's Facebook or Google id. This could be as simple as an additional (indexed) column on your user table.
 
 ## Passkey authentication
 
