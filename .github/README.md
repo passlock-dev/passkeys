@@ -38,8 +38,8 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
   * [Screenshot](#screenshot)
   * [Getting started](#getting-started)
   * [Basic usage](#basic-usage)
-    * [Passkey registration](#passkey-registration)
-    * [Passkey authentication](#passkey-authentication)
+    * [Register a passkey](#register-a-passkey)
+    * [Authenticate](#authentication)
   * [Next steps](#next-steps)    
   * [Contact details](#contact)
 </details>
@@ -104,7 +104,7 @@ An alternative flow uses JWTs with public keys to avoid the backend REST call. P
 
 **Note:** The flow is conceptually similar to OAuth2/OIDC but without the redirects.
 
-## Passkey registration
+## Register a passkey
 
 You just need to call `registerPasskey()` passing in a few details. This will do three things:
 
@@ -177,7 +177,9 @@ This will return a JSON object including a `subject`:
 }
 ```
 
-## Passkey authentication
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Authentication
 
 Similar to registration, call `authenticatePasskey()` to obtain a token, which you then pass to your backend.
 
@@ -201,6 +203,8 @@ if (!PasslockError.isError(result)) {
 ### Verify the passkey (backend)
 
 Exactly the same as for registration. Exchange the token for a `Principal` and use the `subject.id` to lookup your own user entity.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Next steps
 
