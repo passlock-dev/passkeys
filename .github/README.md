@@ -9,7 +9,7 @@
 <h1 align="center">Serverless Passkeys</h1>
 
   <p align="center">
-    Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks.
+    Passkey authentication for your web apps. Supports React, Angular, Vue, SvelteKit & others.
     <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
@@ -44,29 +44,28 @@ https://github.com/passlock-dev/passkeys-frontend/assets/208345/14818e66-83bc-4c
   * [Contact details](#contact)
 </details>
 
-Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you. It's a really simple 3 step process:
+Really simple Passkey client library. You don't need to learn the underlying [WebAuthn API][webauthn] or protocols, and all the backend stuff is handled for you. It's a simple 3 step process:
 
 1. Use the `@passlock/client` library to register or authenticate a passkey
 2. This will generate a token, send it to your backend
 3. Use the `@passlock/node` library to verify the token and obtain the user & passkey details
 
-> [!NOTE]
-> You can also make a standard HTTP GET call in your backend if you're not using Express/Node.
-> (Coming soon) - Use standard JWT tokens for steps 2 and 3
+> [!TIP]
+> **Not using a Node backend?** - No problem! you can make a REST call to the Passlock API to verify a secure token and obtain the user & passkey details.
 
 # Features
 
-Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
+Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
-1. **🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
+1. **🔐 Primary & secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
 
 2. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
 
-3. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
+3. **🔐 Step up authentication** - Require biometric or PIN verification for some operations, whilst allowing one-tap authentication for others.
 
-4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web base console.
+4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
 
-5. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+6. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
 
 Along with:
 
@@ -99,7 +98,7 @@ This will depend on your package manager:
 
 # Basic usage
 
-This quickstart guide illustrates the simplest scenario, using token based verification i.e. the client library returns a token which you send to your backend. Your backend code then calls a REST API to exchange the token for an object representing the authenticated user.
+This quickstart guide illustrates the simplest scenario, using token based verification i.e. the client library returns a token which you send to your backend. Your backend then uses the [@passlock/node][node] library to verify the token.
 
 An alternative flow uses JWTs with public keys to avoid the backend REST call. Please see the [documentation][docs] for more details (coming soon).
 
@@ -116,19 +115,26 @@ You just need to call `registerPasskey()` passing in a few details. This will do
 ### Create a passkey (frontend)
 
 ```typescript
-import { Passlock } from '@passlock/client'
+import { Passlock, PasslockError } from '@passlock/client'
 
-const tenancyId = process.env.PASSLOCK_TENANCY_ID
-const clientId = process.env.PASSLOCK_CLIENT_ID
+// you can find these details in the settings area of the Passlock console
+const tenancyId = '...'
+const clientId = '...'
+
 const passlock = new Passlock({ tenancyId, clientId })
 
-// pseudocode - get these details from your registration form
-const { email, firstName, lastName } = getUserDetails()
+// to register a new passkey, call registerPasskey(). We're using placeholders for 
+// the user data. You should grab this from an HTML form, React store, Redux etc.
+const [email, firstName, lastName] = ["jdoe@gmail.com", "John", "Doe"]
 
+// Passlock doesn't throw but instead returns a union: result | error
 const result = await passlock.registerPasskey({ email, firstName, lastName })
 
-// send result.token to your backend, maybe add a hidden field to your registration form?
-console.log(result.token)
+// ensure Passlock didn't return an error
+if (!PasslockError.isError(result)) {
+  // send the token to your backend (json/fetch or hidden form field etc)
+  console.log('Token: %s', result.token)
+}
 ```
 
 ### Link the passkey (backend)
@@ -178,16 +184,18 @@ Similar to registration, call `authenticatePasskey()` to obtain a token, which y
 ### Authenticate (frontend)
 
 ```typescript
-import { Passlock } from '@passlock/client';
+import { Passlock, PasslockError } from '@passlock/client'
 
-const tenancyId = process.env.PASSLOCK_TENANCY_ID
-const clientId = process.env.PASSLOCK_CLIENT_ID
+const tenancyId = '...'
+const clientId = '...'
+
 const passlock = new Passlock({ tenancyId, clientId })
+const result = await passlock.authenticatePasskey()
 
-const result = await passlock.authenticatePasskey({ tenancyId, clientId })
-
-// send result.token to your backend
-console.log(result.token)
+if (!PasslockError.isError(result)) {
+  // send the token to your backend for verification
+  console.log('Token: %s', result.token)
+}
 ```
 
 ### Verify the passkey (backend)
@@ -212,3 +220,4 @@ Questions? Please use the [GitHub discussions][discussions] or see the [contact]
 [docs]: https://docs.passlock.dev
 [passlock-signup]: https://console.passlock.dev/register
 [discussions]: https://github.com/passlock-dev/passkeys/discussions
+[node]: https://github.com/passlock-dev/node

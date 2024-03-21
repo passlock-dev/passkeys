@@ -8,7 +8,7 @@
 <h1 align="center">Serverless Passkeys</h1>
 
   <p align="center">
-    Simple, yet powerful passkey library for React, Angular, Vue, Svelte and other frameworks
+    Passkey authentication for your web apps. Supports React, Angular, Vue, SvelteKit & others.
     <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
@@ -24,13 +24,13 @@
 
 ## Features
 
-Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to the implementation and feature set to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
+Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
 
-1. **🔐 Primary or secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
+1. **🔐 Primary & secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
 
 2. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
 
-3. **🔐 Step up authentication** - Require biometric or PIN verification for some actions e.g. changing account details, whilst allowing frictionless authentication for others.
+3. **🔐 Step up authentication** - Require biometric or PIN verification for some operations, whilst allowing one-tap authentication for others.
 
 4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
 
@@ -54,12 +54,13 @@ import { Passlock, PasslockError } from '@passlock/client'
 const tenancyId = '...'
 const clientId = '...'
 
-// Passlock doesn't throw but instead returns a union: result | error
 const passlock = new Passlock({ tenancyId, clientId })
 
 // to register a new passkey, call registerPasskey(). We're using placeholders for 
 // the user data. You should grab this from an HTML form, React store, Redux etc.
 const [email, firstName, lastName] = ["jdoe@gmail.com", "John", "Doe"]
+
+// Passlock doesn't throw but instead returns a union: result | error
 const result = await passlock.registerPasskey({ email, firstName, lastName })
 
 // ensure Passlock didn't return an error
