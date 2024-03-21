@@ -156,7 +156,7 @@ console.log(principal.subject.id)
 
 Link the `subject.id` with a user entity in your own database, similar to the way you might link a user's Facebook or Google id. This could be as simple as an additional (indexed) column on your user table.
 
-### Not using a Node backend
+### Using other (non Node) backends
 
 You can also make an HTTP GET request to the `https://api.passlock.dev/{tenancyId}/token/{token}` endpoint, using whatever library you wish e.g. Python requests:
 
