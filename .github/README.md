@@ -112,6 +112,8 @@ You just need to call `registerPasskey()` passing in a few details. This will do
 2. Register the passkey in your Passlock vault
 3. Generate a token representing the new credential
 
+You then send this token to your backend. Your backend verifies it using either the [@passlock/node][node] package or via a simple REST call.
+
 ### Create a passkey (frontend)
 
 ```typescript
