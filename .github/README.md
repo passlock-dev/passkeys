@@ -204,8 +204,6 @@ if (!PasslockError.isError(result)) {
 
 Exactly the same as for registration. Exchange the token for a `Principal` and use the `subject.id` to lookup your own user entity.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 ## Next steps
 
 This was a very quick overview. Please see the [tutorial][tutorial] and [documentation][docs] for more information.
