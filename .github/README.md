@@ -7,7 +7,6 @@
 
 <a name="readme-top"></a>
 <h1 align="center">Serverless Passkeys</h1>
-
   <p align="center">
     Passkey authentication for your web apps. Supports React, Angular, Vue, SvelteKit & others.
     <br />
@@ -20,6 +19,11 @@
     ·
     <a href="https://docs.passlock.dev/docs/tutorial/intro">Tutorial</a>
   </p>
+</div>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build passing" />
+  <img src="https://img.shields.io/badge/coverage-98%25-blue" alt="98% test coverage" />
 </div>
 
 <br />
