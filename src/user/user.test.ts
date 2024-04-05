@@ -1,9 +1,9 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { UserService, UserServiceLive } from './user'
-import * as Fixture from './user.fixture'
+import { UserService, UserServiceLive } from './user.js'
+import * as Fixture from './user.fixture.js'
 
 describe('isExistingUser should', () => {
   test('return true when the user already has a passkey', async () => {

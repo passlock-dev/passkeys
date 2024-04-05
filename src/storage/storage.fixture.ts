@@ -1,7 +1,7 @@
-import type { Principal } from '@passlock/shared/dist/schema/schema'
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer, pipe } from 'effect'
 import { mock } from 'vitest-mock-extended'
-import { Storage, StorageServiceLive } from './storage'
+import { Storage, StorageServiceLive } from './storage.js'
 
 // Frontend receives dates as objects
 export const principal: Principal = {

@@ -1,6 +1,6 @@
 import { Effect as E, LogLevel, Logger } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
-import { eventLoggerLive, logRaw } from './eventLogger'
+import { eventLoggerLive, logRaw } from './eventLogger.js'
 
 /**
  * Although the core log functionality is tested alongside the logger in the @passlock/shared

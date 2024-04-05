@@ -1,6 +1,6 @@
-import { BadRequest } from '@passlock/shared/dist/error/error'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
-import { IsExistingUserReq, IsExistingUserRes } from '@passlock/shared/dist/rpc/user'
+import { BadRequest } from '@passlock/shared/dist/error/error.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { IsExistingUserReq, IsExistingUserRes } from '@passlock/shared/dist/rpc/user.js'
 import { Effect as E, Layer as L } from 'effect'
 
 export const email = 'jdoe@gmail.com'

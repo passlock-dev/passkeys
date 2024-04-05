@@ -1,10 +1,10 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { AuthenticateServiceLive, AuthenticationService, GetCredential } from './authenticate'
-import * as Fixture from './authenticate.fixture'
-import { StorageService } from '../storage/storage'
+import { AuthenticateServiceLive, AuthenticationService, GetCredential } from './authenticate.js'
+import * as Fixture from './authenticate.fixture.js'
+import { StorageService } from '../storage/storage.js'
 
 describe('authenticate should', () => {
   test('return a valid principal', async () => {

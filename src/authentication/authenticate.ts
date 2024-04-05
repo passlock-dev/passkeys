@@ -9,18 +9,18 @@ import {
   type BadRequest,
   InternalBrowserError,
   type NotSupported,
-} from '@passlock/shared/dist/error/error'
-import type { VerificationErrors } from '@passlock/shared/dist/rpc/authentication'
-import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/authentication'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+} from '@passlock/shared/dist/error/error.js'
+import type { VerificationErrors } from '@passlock/shared/dist/rpc/authentication.js'
+import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/authentication.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type {
   AuthenticationCredential,
   Principal,
   UserVerification,
-} from '@passlock/shared/dist/schema/schema'
+} from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
-import { Capabilities } from '../capabilities/capabilities'
-import { StorageService } from '../storage/storage'
+import { Capabilities } from '../capabilities/capabilities.js'
+import { StorageService } from '../storage/storage.js'
 
 /* Requests */
 

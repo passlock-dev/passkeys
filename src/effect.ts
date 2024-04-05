@@ -9,9 +9,9 @@ export type {
   NotFound,
   NotSupported,
   Unauthorized,
-} from '@passlock/shared/dist/error/error'
+} from '@passlock/shared/dist/error/error.js'
 
-export type { Principal } from '@passlock/shared/dist/schema/schema'
+export type { Principal } from '@passlock/shared/dist/schema/schema.js'
 
 import {
   type BadRequest,
@@ -22,16 +22,16 @@ import {
   type NotFound,
   type NotSupported,
   type Unauthorized,
-} from '@passlock/shared/dist/error/error'
+} from '@passlock/shared/dist/error/error.js'
 
 import {
   DispatcherLive,
   RetrySchedule,
   RpcClientLive,
   RpcConfig,
-} from '@passlock/shared/dist/rpc/rpc'
+} from '@passlock/shared/dist/rpc/rpc.js'
 
-import type { Principal } from '@passlock/shared/dist/schema/schema'
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
@@ -40,18 +40,18 @@ import {
   type AuthenticationRequest,
   AuthenticationService,
   GetCredential,
-} from './authentication/authenticate'
+} from './authentication/authenticate.js'
 
-import { capabilitiesLive } from './capabilities/capabilities'
-import { ConnectionService, ConnectionServiceLive } from './connection/connection'
-import { EmailService, EmailServiceLive, LocationSearch, type VerifyRequest } from './email/email'
+import { capabilitiesLive } from './capabilities/capabilities.js'
+import { ConnectionService, ConnectionServiceLive } from './connection/connection.js'
+import { EmailService, EmailServiceLive, LocationSearch, type VerifyRequest } from './email/email.js'
 
 import {
   CreateCredential,
   type RegistrationRequest,
   RegistrationService,
   RegistrationServiceLive,
-} from './registration/register'
+} from './registration/register.js'
 
 import {
   type AuthType,
@@ -59,9 +59,9 @@ import {
   StorageService,
   StorageServiceLive,
   type StoredToken,
-} from './storage/storage'
+} from './storage/storage.js'
 
-import { type Email, UserService, UserServiceLive } from './user/user'
+import { type Email, UserService, UserServiceLive } from './user/user.js'
 
 /* Layers */
 

@@ -1,9 +1,9 @@
-import { Dispatcher, type RouterOps, RpcClient, RpcConfig } from '@passlock/shared/dist/rpc/rpc'
+import { Dispatcher, type RouterOps, RpcClient, RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { ConnectionService, ConnectionServiceLive } from './connection'
-import * as Fixture from './connection.fixture'
+import { ConnectionService, ConnectionServiceLive } from './connection.js'
+import * as Fixture from './connection.fixture.js'
 
 describe('preConnect should', () => {
   test('hit the rpc endpoint', async () => {

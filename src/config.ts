@@ -1,4 +1,4 @@
-import { RpcConfig } from '@passlock/shared/dist/rpc/rpc'
+import { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
 import { Context, Layer } from 'effect'
 
 export const DefaultEndpoint = 'https://api.passlock.dev'

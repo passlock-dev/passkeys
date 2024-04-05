@@ -1,16 +1,16 @@
-import { BadRequest } from '@passlock/shared/dist/error/error'
+import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import {
   OptionsReq,
   OptionsRes,
   VerificationReq,
   VerificationRes,
-} from '@passlock/shared/dist/rpc/registration'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
-import type { RegistrationCredential } from '@passlock/shared/dist/schema/schema'
+} from '@passlock/shared/dist/rpc/registration.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import type { RegistrationCredential } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L } from 'effect'
-import { CreateCredential, type RegistrationRequest } from './register'
-import * as Fixtures from '../test/fixtures'
-import { UserService } from '../user/user'
+import { CreateCredential, type RegistrationRequest } from './register.js'
+import * as Fixtures from '../test/fixtures.js'
+import { UserService } from '../user/user.js'
 
 export const session = 'session'
 export const token = 'token'

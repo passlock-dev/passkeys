@@ -1,7 +1,7 @@
-import type { Principal } from '@passlock/shared/dist/schema/schema'
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L } from 'effect'
-import { Capabilities } from '../capabilities/capabilities'
-import { StorageService, type StoredToken } from '../storage/storage'
+import { Capabilities } from '../capabilities/capabilities.js'
+import { StorageService, type StoredToken } from '../storage/storage.js'
 
 export const session = 'session'
 export const token = 'token'

@@ -1,11 +1,11 @@
-import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error'
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error.js'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { CreateCredential, RegistrationService, RegistrationServiceLive } from './register'
-import * as Fixture from './register.fixture'
-import { UserService } from '../user/user'
+import { CreateCredential, RegistrationService, RegistrationServiceLive } from './register.js'
+import * as Fixture from './register.fixture.js'
+import { UserService } from '../user/user.js'
 
 describe('register should', () => {
   test('return a valid credential', async () => {

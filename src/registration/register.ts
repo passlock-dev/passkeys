@@ -5,21 +5,21 @@ import {
   type CredentialCreationOptionsJSON,
   parseCreationOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
-import type { NotSupported } from '@passlock/shared/dist/error/error'
-import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error'
-import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rpc/registration'
-import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/registration'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import type { NotSupported } from '@passlock/shared/dist/error/error.js'
+import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error.js'
+import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rpc/registration.js'
+import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/registration.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type {
   Principal,
   RegistrationCredential,
   UserVerification,
   VerifyEmail,
-} from '@passlock/shared/dist/schema/schema'
+} from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
-import { Capabilities } from '../capabilities/capabilities'
-import { StorageService } from '../storage/storage'
-import { UserService } from '../user/user'
+import { Capabilities } from '../capabilities/capabilities.js'
+import { StorageService } from '../storage/storage.js'
+import { UserService } from '../user/user.js'
 
 /* Requests */
 

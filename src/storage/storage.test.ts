@@ -1,8 +1,8 @@
 import { Effect as E, Layer, LogLevel, Logger, identity, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { Storage, StorageService, clearExpiredToken, clearToken, getToken } from './storage'
-import { principal, testLayers } from './storage.fixture'
+import { Storage, StorageService, clearExpiredToken, clearToken, getToken } from './storage.js'
+import { principal, testLayers } from './storage.fixture.js'
 
 // eslint chokes on expect(storage.setItem) etc
 /* eslint @typescript-eslint/unbound-method: 0 */

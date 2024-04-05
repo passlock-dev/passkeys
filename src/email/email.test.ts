@@ -1,12 +1,12 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc'
+import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, LogLevel, Logger, pipe } from 'effect'
 import { NoSuchElementException } from 'effect/Cause'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { EmailService, EmailServiceLive } from './email'
-import * as Fixture from './email.fixture'
-import { AuthenticationService } from '../authentication/authenticate'
-import { StorageService } from '../storage/storage'
+import { EmailService, EmailServiceLive } from './email.js'
+import * as Fixture from './email.fixture.js'
+import { AuthenticationService } from '../authentication/authenticate.js'
+import { StorageService } from '../storage/storage.js'
 
 describe('verifyEmailCode should', () => {
   test('return true when the verification is successful', async () => {

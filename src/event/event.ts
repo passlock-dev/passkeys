@@ -1,7 +1,7 @@
 /**
  * Fire DOM events
  */
-import { InternalBrowserError } from '@passlock/shared/dist/error/error'
+import { InternalBrowserError } from '@passlock/shared/dist/error/error.js'
 import { Effect } from 'effect'
 
 export const DebugMessage = 'PasslogDebugMessage'

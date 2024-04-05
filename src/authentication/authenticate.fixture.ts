@@ -1,14 +1,14 @@
-import { BadRequest } from '@passlock/shared/dist/error/error'
+import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import {
   OptionsRes,
   VerificationReq,
   VerificationRes,
-} from '@passlock/shared/dist/rpc/authentication'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
-import type { AuthenticationCredential } from '@passlock/shared/dist/schema/schema'
+} from '@passlock/shared/dist/rpc/authentication.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import type { AuthenticationCredential } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L } from 'effect'
-import { type AuthenticationRequest, GetCredential } from './authenticate'
-import * as Fixtures from '../test/fixtures'
+import { type AuthenticationRequest, GetCredential } from './authenticate.js'
+import * as Fixtures from '../test/fixtures.js'
 
 export const session = 'session'
 export const token = 'token'

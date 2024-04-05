@@ -6,20 +6,20 @@ import type {
   NotFound,
   NotSupported,
   Unauthorized,
-} from '@passlock/shared/dist/error/error'
-import { ErrorCode } from '@passlock/shared/dist/error/error'
-import { RpcConfig } from '@passlock/shared/dist/rpc/rpc'
+} from '@passlock/shared/dist/error/error.js'
+import { ErrorCode } from '@passlock/shared/dist/error/error.js'
+import { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
-import { type AuthenticationRequest, AuthenticationService } from './authentication/authenticate'
-import { Capabilities } from './capabilities/capabilities'
-import { ConnectionService } from './connection/connection'
-import { allRequirements } from './effect'
-import { EmailService, type VerifyRequest } from './email/email'
-import { type RegistrationRequest, RegistrationService } from './registration/register'
-import { type AuthType, Storage, StorageService } from './storage/storage'
-import { type Email, UserService } from './user/user'
+import { type AuthenticationRequest, AuthenticationService } from './authentication/authenticate.js'
+import { Capabilities } from './capabilities/capabilities.js'
+import { ConnectionService } from './connection/connection.js'
+import { allRequirements } from './effect.js'
+import { EmailService, type VerifyRequest } from './email/email.js'
+import { type RegistrationRequest, RegistrationService } from './registration/register.js'
+import { type AuthType, Storage, StorageService } from './storage/storage.js'
+import { type Email, UserService } from './user/user.js'
 
-export { ErrorCode } from '@passlock/shared/dist/error/error'
+export { ErrorCode } from '@passlock/shared/dist/error/error.js'
 
 export class PasslockError extends Error {
   readonly _tag = 'PasslockError'

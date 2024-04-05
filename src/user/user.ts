@@ -1,9 +1,9 @@
 /**
  * Check for an existing user
  */
-import type { BadRequest } from '@passlock/shared/dist/error/error'
-import { RpcClient } from '@passlock/shared/dist/rpc/rpc'
-import { IsExistingUserReq } from '@passlock/shared/dist/rpc/user'
+import type { BadRequest } from '@passlock/shared/dist/error/error.js'
+import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { IsExistingUserReq } from '@passlock/shared/dist/rpc/user.js'
 import { Context, Effect as E, Layer, flow } from 'effect'
 
 /* Requests */
