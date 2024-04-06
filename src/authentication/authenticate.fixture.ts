@@ -9,6 +9,7 @@ import type { AuthenticationCredential } from '@passlock/shared/dist/schema/sche
 import { Effect as E, Layer as L } from 'effect'
 import { type AuthenticationRequest, GetCredential } from './authenticate.js'
 import * as Fixtures from '../test/fixtures.js'
+import { IsExistingUserRes, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'
 
 export const session = 'session'
 export const token = 'token'
@@ -48,6 +49,12 @@ export const verificationReq = new VerificationReq({ session, credential })
 
 export const verificationRes = new VerificationRes({ principal: Fixtures.principal })
 
+export const isExistingUserRes = new IsExistingUserRes({ existingUser: true })
+
+export const verifyEmailRes = new VerifyEmailRes({ principal: Fixtures.principal })
+
+export const notImplemented = new BadRequest({ message: 'Not implemeneted' })
+
 export const getCredentialTest = L.succeed(
   GetCredential,
   GetCredential.of(() => E.succeed(credential)),
@@ -56,11 +63,11 @@ export const getCredentialTest = L.succeed(
 export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
-    preConnect: () => E.succeed({ warmed: true }),
-    isExistingUser: () => E.succeed({ existingUser: true }),
-    verifyEmail: () => E.succeed({ verified: true }),
-    getRegistrationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    verifyRegistrationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    preConnect: () => E.succeed(Fixtures.preConnectRes),
+    isExistingUser: () => E.succeed(isExistingUserRes),
+    verifyEmail: () => E.succeed(verifyEmailRes),
+    getRegistrationOptions: () => E.fail(notImplemented),
+    verifyRegistrationCredential: () => E.fail(notImplemented),
     getAuthenticationOptions: () => E.succeed(optionsRes),
     verifyAuthenticationCredential: () => E.succeed(verificationRes),
   }),

@@ -7,6 +7,8 @@ import type {
   NotSupported,
   Unauthorized,
 } from '@passlock/shared/dist/error/error.js'
+
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { ErrorCode } from '@passlock/shared/dist/error/error.js'
 import { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
@@ -16,8 +18,19 @@ import { ConnectionService } from './connection/connection.js'
 import { allRequirements } from './effect.js'
 import { EmailService, type VerifyRequest } from './email/email.js'
 import { type RegistrationRequest, RegistrationService } from './registration/register.js'
-import { type AuthType, Storage, StorageService } from './storage/storage.js'
+import { type AuthType, Storage, StorageService, type StoredToken } from './storage/storage.js'
 import { type Email, UserService } from './user/user.js'
+
+/* Exports */
+
+export type Options = { signal?: AbortSignal }
+export type { Email } from './user/user.js' 
+export type { UserVerification, VerifyEmail } from '@passlock/shared/dist/schema/schema.js'
+export type { RegistrationRequest } from './registration/register.js'
+export type { AuthenticationRequest } from './authentication/authenticate.js'
+export type { VerifyRequest } from './email/email.js'
+export type { AuthType, StoredToken } from './storage/storage.js'
+export type { Principal } from '@passlock/shared/dist/schema/schema.js'
 
 export { ErrorCode } from '@passlock/shared/dist/error/error.js'
 
@@ -39,6 +52,8 @@ export class PasslockError extends Error {
     )
   }
 }
+
+/* // Exports */
 
 type PasslockErrors =
   | BadRequest
@@ -111,8 +126,6 @@ type Requirements =
   | StorageService
   | Capabilities
 
-export type Options = { signal?: AbortSignal }
-
 export class PasslockUnsafe {
   private readonly runtime: Runtime.Runtime<Requirements>
 
@@ -135,56 +148,56 @@ export class PasslockUnsafe {
     )
   }
 
-  preConnect = (options?: Options) =>
+  preConnect = (options?: Options): Promise<void> =>
     pipe(
       ConnectionService,
       E.flatMap(service => service.preConnect()),
       effect => Runtime.runPromise(this.runtime)(effect, options),
     )
 
-  isPasskeySupport = () =>
+  isPasskeySupport = (): Promise<boolean> =>
     pipe(
       Capabilities,
       E.flatMap(service => service.isPasskeySupport),
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  isExistingPasskey = (email: Email, options?: Options) =>
+  isExistingPasskey = (email: Email, options?: Options): Promise<boolean> =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),
       effect => this.runPromise(effect, options),
     )
 
-  registerPasskey = (request: RegistrationRequest, options?: Options) =>
+  registerPasskey = (request: RegistrationRequest, options?: Options): Promise<Principal> =>
     pipe(
       RegistrationService,
       E.flatMap(service => service.registerPasskey(request)),
       effect => this.runPromise(effect, options),
     )
 
-  authenticatePasskey = (request: AuthenticationRequest, options?: Options) =>
+  authenticatePasskey = (request: AuthenticationRequest, options?: Options): Promise<Principal> =>
     pipe(
       AuthenticationService,
       E.flatMap(service => service.authenticatePasskey(request)),
       effect => this.runPromise(effect, options),
     )
 
-  verifyEmailCode = (request: VerifyRequest, options?: Options) =>
+  verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal> =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailCode(request)),
       effect => this.runPromise(effect, options),
     )
 
-  verifyEmailLink = (options?: Options) =>
+  verifyEmailLink = (options?: Options): Promise<Principal> =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailLink()),
       effect => this.runPromise(effect, options),
     )
 
-  getSessionToken = (authType: AuthType) =>
+  getSessionToken = (authType: AuthType): StoredToken | undefined =>
     pipe(
       StorageService,
       E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
@@ -192,11 +205,11 @@ export class PasslockUnsafe {
       effect => Runtime.runSync(this.runtime)(effect),
     )
 
-  clearExpiredTokens = () =>
+  clearExpiredTokens = (): void =>
     pipe(
       StorageService,
       E.flatMap(service => service.clearExpiredTokens),
-      effect => Runtime.runPromise(this.runtime)(effect),
+      effect => Runtime.runSync(this.runtime)(effect),
     )
 }
 
@@ -221,56 +234,56 @@ export class Passlock {
     )
   }
 
-  preConnect = (options?: Options) =>
+  preConnect = (options?: Options): Promise<void | PasslockError> =>
     pipe(
       ConnectionService,
       E.flatMap(service => service.preConnect()),
       effect => this.runPromise(effect, options),
     )
 
-  isPasskeySupport = () =>
+  isPasskeySupport = (): Promise<boolean> =>
     pipe(
       Capabilities,
       E.flatMap(service => service.isPasskeySupport),
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  isExistingPasskey = (email: Email, options?: Options) =>
+  isExistingPasskey = (email: Email, options?: Options): Promise<boolean | PasslockError> =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),
       effect => this.runPromise(effect, options),
     )
 
-  registerPasskey = (request: RegistrationRequest, options?: Options) =>
+  registerPasskey = (request: RegistrationRequest, options?: Options): Promise<Principal | PasslockError> =>
     pipe(
       RegistrationService,
       E.flatMap(service => service.registerPasskey(request)),
       effect => this.runPromise(effect, options),
     )
 
-  authenticatePasskey = (request: AuthenticationRequest = {}, options?: Options) =>
+  authenticatePasskey = (request: AuthenticationRequest = {}, options?: Options): Promise<Principal | PasslockError> =>
     pipe(
       AuthenticationService,
       E.flatMap(service => service.authenticatePasskey(request)),
       effect => this.runPromise(effect, options),
     )
 
-  verifyEmailCode = (request: VerifyRequest, options?: Options) =>
+  verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal | PasslockError> =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailCode(request)),
       effect => this.runPromise(effect, options),
     )
 
-  verifyEmailLink = (options?: Options) =>
+  verifyEmailLink = (options?: Options): Promise<Principal | PasslockError> =>
     pipe(
       EmailService,
       E.flatMap(service => service.verifyEmailLink()),
       effect => this.runPromise(effect, options),
     )
 
-  getSessionToken = (authType: AuthType) =>
+  getSessionToken = (authType: AuthType): StoredToken | undefined =>
     pipe(
       StorageService,
       E.flatMap(service => service.getToken(authType).pipe(effect => E.option(effect))),
@@ -278,10 +291,10 @@ export class Passlock {
       effect => Runtime.runSync(this.runtime)(effect),
     )
 
-  clearExpiredTokens = () =>
+  clearExpiredTokens = (): void =>
     pipe(
       StorageService,
       E.flatMap(service => service.clearExpiredTokens),
-      effect => Runtime.runPromise(this.runtime)(effect),
+      effect => Runtime.runSync(this.runtime)(effect),
     )
 }

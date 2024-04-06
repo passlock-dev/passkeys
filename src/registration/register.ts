@@ -29,7 +29,6 @@ export type RegistrationRequest = {
   lastName: string
   userVerification?: UserVerification
   verifyEmail?: VerifyEmail
-  redirectUrl?: string
 }
 
 /* Dependencies */

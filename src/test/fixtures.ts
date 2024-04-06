@@ -2,6 +2,8 @@ import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L } from 'effect'
 import { Capabilities } from '../capabilities/capabilities.js'
 import { StorageService, type StoredToken } from '../storage/storage.js'
+import { BadRequest } from '@passlock/shared/dist/error/error.js'
+import { PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
 
 export const session = 'session'
 export const token = 'token'
@@ -48,3 +50,6 @@ export const storageServiceTest = L.succeed(
     clearExpiredTokens: E.unit,
   }),
 )
+
+export const preConnectRes = new PreConnectRes({ warmed: true })
+export const notImplemented = new BadRequest({ message: 'Not implemented' })

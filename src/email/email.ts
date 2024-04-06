@@ -8,6 +8,7 @@ import { VerifyEmailReq } from '@passlock/shared/dist/rpc/user.js'
 import { Context, Effect as E, Layer, Option as O, flow, identity, pipe } from 'effect'
 import { type AuthenticationErrors, AuthenticationService } from '../authentication/authenticate.js'
 import { StorageService } from '../storage/storage.js'
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 
 /* Requests */
 
@@ -29,8 +30,8 @@ export class LocationSearch extends Context.Tag('LocationSearch')<
 /* Service */
 
 export type EmailService = {
-  verifyEmailCode: (request: VerifyRequest) => E.Effect<boolean, VerifyEmailErrors>
-  verifyEmailLink: () => E.Effect<boolean, VerifyEmailErrors>
+  verifyEmailCode: (request: VerifyRequest) => E.Effect<Principal, VerifyEmailErrors>
+  verifyEmailLink: () => E.Effect<Principal, VerifyEmailErrors>
 }
 
 export const EmailService = Context.GenericTag<EmailService>('@services/EmailService')
@@ -94,18 +95,18 @@ export const extractCodeFromHref = () => {
  */
 export const verifyEmail = (
   verificationRequest: VerifyRequest,
-): E.Effect<boolean, VerifyEmailErrors, Dependencies> => {
+): E.Effect<Principal, VerifyEmailErrors, Dependencies> => {
   return E.gen(function* (_) {
     // Re-authenticate the user if required
     const { token } = yield* _(getToken())
 
     yield* _(E.logDebug('Making request'))
     const client = yield* _(RpcClient)
-    const { verified } = yield* _(
+    const { principal } = yield* _(
       client.verifyEmail(new VerifyEmailReq({ token, code: verificationRequest.code })),
     )
 
-    return verified
+    return principal
   })
 }
 

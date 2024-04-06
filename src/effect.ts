@@ -1,18 +1,5 @@
 import { create, get as getCredential } from '@github/webauthn-json/browser-ponyfill'
 
-export type {
-  BadRequest,
-  Disabled,
-  Duplicate,
-  Forbidden,
-  InternalBrowserError,
-  NotFound,
-  NotSupported,
-  Unauthorized,
-} from '@passlock/shared/dist/error/error.js'
-
-export type { Principal } from '@passlock/shared/dist/schema/schema.js'
-
 import {
   type BadRequest,
   type Disabled,
@@ -32,7 +19,9 @@ import {
 } from '@passlock/shared/dist/rpc/rpc.js'
 
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
+
 import { Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
+
 import type { NoSuchElementException } from 'effect/Cause'
 
 import {
@@ -243,7 +232,7 @@ export type VerifyEmailErrors =
 
 export const verifyEmailCode = (
   request: VerifyRequest,
-): E.Effect<boolean, VerifyEmailErrors, Config> =>
+): E.Effect<Principal, VerifyEmailErrors, Config> =>
   pipe(
     EmailService,
     E.flatMap(service => service.verifyEmailCode(request)),
@@ -251,7 +240,7 @@ export const verifyEmailCode = (
     exchangeConfig,
   )
 
-export const verifyEmailLink = (): E.Effect<boolean, VerifyEmailErrors, Config> =>
+export const verifyEmailLink = (): E.Effect<Principal, VerifyEmailErrors, Config> =>
   pipe(
     EmailService,
     E.flatMap(service => service.verifyEmailLink()),

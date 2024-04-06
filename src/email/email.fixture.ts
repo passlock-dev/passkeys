@@ -1,4 +1,3 @@
-import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { VerifyEmailReq, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'
 import { Effect as E, Layer as L } from 'effect'
@@ -23,22 +22,22 @@ export const authenticationServiceTest = L.succeed(
   }),
 )
 
+export const verifyEmailReq = new VerifyEmailReq({ token, code })
+
+export const verifyEmailRes = new VerifyEmailRes({ principal: Fixtures.principal })
+
 export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
     preConnect: () => E.succeed({ warmed: true }),
     isExistingUser: () => E.succeed({ existingUser: true }),
-    verifyEmail: () => E.succeed({ verified: true }),
-    getRegistrationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    verifyRegistrationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    getAuthenticationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    verifyAuthenticationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    verifyEmail: () => E.succeed(verifyEmailRes),
+    getRegistrationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
+    getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
   }),
 )
-
-export const verifyEmailReq = new VerifyEmailReq({ token, code })
-
-export const verifyEmailRes = new VerifyEmailRes({ verified: true })
 
 export const principal = Fixtures.principal
 

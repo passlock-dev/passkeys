@@ -9,12 +9,12 @@ import { AuthenticationService } from '../authentication/authenticate.js'
 import { StorageService } from '../storage/storage.js'
 
 describe('verifyEmailCode should', () => {
-  test('return true when the verification is successful', async () => {
+  test('return a principal when the verification is successful', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(EmailService)
       const result = yield* _(service.verifyEmailCode({ code: '123' }))
 
-      expect(result).toBe(true)
+      expect(result).toEqual(Fixture.principal)
     })
 
     const service = pipe(
