@@ -22,8 +22,8 @@ export type VerifyEmailErrors = RpcErrors | AuthenticationErrors
 
 /* Dependencies */
 
-export class LocationSearch extends Context.Tag('LocationSearch')<
-  LocationSearch,
+export class URLQueryString extends Context.Tag('URLQueryString')<
+  URLQueryString,
   E.Effect<string>
 >() {}
 
@@ -79,7 +79,7 @@ const getToken = () => {
  */
 export const extractCodeFromHref = () => {
   return pipe(
-    LocationSearch,
+    URLQueryString,
     E.flatMap(identity),
     E.map(search => new URLSearchParams(search)),
     E.flatMap(params => O.fromNullable(params.get('code'))),
@@ -128,7 +128,7 @@ export const EmailServiceLive = Layer.effect(
   EmailService,
   E.gen(function* (_) {
     const context = yield* _(
-      E.context<RpcClient | AuthenticationService | StorageService | LocationSearch>(),
+      E.context<RpcClient | AuthenticationService | StorageService | URLQueryString>(),
     )
     return EmailService.of({
       verifyEmailCode: flow(verifyEmail, E.provide(context)),

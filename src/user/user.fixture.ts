@@ -1,4 +1,3 @@
-import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { IsExistingUserReq, IsExistingUserRes, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'
 import { Effect as E, Layer as L } from 'effect'
@@ -15,9 +14,10 @@ export const rpcClientTest = L.succeed(
     preConnect: () => E.succeed({ warmed: true }),
     isExistingUser: () => E.succeed({ existingUser: true }),
     verifyEmail: () => E.succeed(verifyEmailRes),
-    getRegistrationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    verifyRegistrationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    getAuthenticationOptions: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
-    verifyAuthenticationCredential: () => E.fail(new BadRequest({ message: 'Not implemeneted' })),
+    getRegistrationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
+    getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
+    verifyIdToken: () => E.fail(Fixtures.notImplemented),
   }),
 )

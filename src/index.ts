@@ -20,6 +20,7 @@ import { EmailService, type VerifyRequest } from './email/email.js'
 import { type RegistrationRequest, RegistrationService } from './registration/register.js'
 import { type AuthType, Storage, StorageService, type StoredToken } from './storage/storage.js'
 import { type Email, UserService } from './user/user.js'
+import { SocialService, type OIDCRequest } from './social/social.js'
 
 /* Exports */
 
@@ -125,6 +126,7 @@ type Requirements =
   | EmailService
   | StorageService
   | Capabilities
+  | SocialService
 
 export class PasslockUnsafe {
   private readonly runtime: Runtime.Runtime<Requirements>
@@ -182,6 +184,13 @@ export class PasslockUnsafe {
       E.flatMap(service => service.authenticatePasskey(request)),
       effect => this.runPromise(effect, options),
     )
+
+  authenticateOIDC = (request: OIDCRequest, options?: Options) => 
+    pipe(
+      SocialService,
+      E.flatMap(service => service.authenticateOIDC(request)),
+      effect => this.runPromise(effect, options),
+    )        
 
   verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal> =>
     pipe(
@@ -268,6 +277,13 @@ export class Passlock {
       E.flatMap(service => service.authenticatePasskey(request)),
       effect => this.runPromise(effect, options),
     )
+
+  authenticateOIDC = (request: OIDCRequest, options?: Options) => 
+    pipe(
+      SocialService,
+      E.flatMap(service => service.authenticateOIDC(request)),
+      effect => this.runPromise(effect, options),
+    )     
 
   verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal | PasslockError> =>
     pipe(

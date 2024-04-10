@@ -33,7 +33,7 @@ import {
 
 import { capabilitiesLive } from './capabilities/capabilities.js'
 import { ConnectionService, ConnectionServiceLive } from './connection/connection.js'
-import { EmailService, EmailServiceLive, LocationSearch, type VerifyRequest } from './email/email.js'
+import { EmailService, EmailServiceLive, URLQueryString, type VerifyRequest } from './email/email.js'
 
 import {
   CreateCredential,
@@ -51,6 +51,7 @@ import {
 } from './storage/storage.js'
 
 import { type Email, UserService, UserServiceLive } from './user/user.js'
+import { SocialService, SocialServiceLive, type OIDCRequest } from './social/social.js'
 
 /* Layers */
 
@@ -130,18 +131,23 @@ const connectionServiceLive = pipe(
   L.provide(dispatcherLive),
 )
 
-const locationSearchLive = Layer.succeed(
-  LocationSearch,
-  LocationSearch.of(E.sync(() => globalThis.window.location.search)),
+const urlQueryStringLive = Layer.succeed(
+  URLQueryString,
+  URLQueryString.of(E.sync(() => globalThis.window.location.search)),
 )
 
 const emailServiceLive = pipe(
   EmailServiceLive,
-  L.provide(locationSearchLive),
+  L.provide(urlQueryStringLive),
   L.provide(rpcClientLive),
   L.provide(capabilitiesLive),
   L.provide(authenticationServiceLive),
   L.provide(storageServiceLive),
+)
+
+const socialServiceLive = pipe(
+  SocialServiceLive,
+  L.provide(rpcClientLive),
 )
 
 export const allRequirements = Layer.mergeAll(
@@ -152,6 +158,7 @@ export const allRequirements = Layer.mergeAll(
   connectionServiceLive,
   emailServiceLive,
   storageServiceLive,
+  socialServiceLive,
 )
 
 export class Config extends Context.Tag('Config')<
@@ -264,4 +271,11 @@ export const clearExpiredTokens = (): E.Effect<void> =>
     E.flatMap(service => service.clearExpiredTokens),
     E.provide(storageServiceLive),
     E.provide(storageLive),
+  )
+
+export const authenticateOIDC = (request: OIDCRequest) => 
+  pipe(
+    SocialService,
+    E.flatMap(service => service.authenticateOIDC(request)),
+    E.provide(socialServiceLive)
   )

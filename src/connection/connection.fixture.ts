@@ -1,22 +1,22 @@
-import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import { PreConnectReq, PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L } from 'effect'
+import * as Fixtures from '../test/fixtures.js'
 
 export const preConnectReq = new PreConnectReq({})
 export const preConnectRes = new PreConnectRes({ warmed: true })
-export const notImplemented = new BadRequest({ message: 'Not implemeneted' })
 
 export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
     preConnect: () => E.succeed(preConnectRes),
-    isExistingUser: () => E.fail(notImplemented),
-    verifyEmail: () => E.fail(notImplemented),
-    getRegistrationOptions: () => E.fail(notImplemented),
-    verifyRegistrationCredential: () => E.fail(notImplemented),
-    getAuthenticationOptions: () => E.fail(notImplemented),
-    verifyAuthenticationCredential: () => E.fail(notImplemented),
+    isExistingUser: () => E.fail(Fixtures.notImplemented),
+    verifyEmail: () => E.fail(Fixtures.notImplemented),
+    getRegistrationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
+    getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
+    verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
+    verifyIdToken: () => E.fail(Fixtures.notImplemented),
   }),
 )
 

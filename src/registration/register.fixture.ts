@@ -20,8 +20,8 @@ export const expireAt = Date.now() + 10000
 
 export const registrationRequest: RegistrationRequest = {
   email: 'jdoe@gmail.com',
-  firstName: 'john',
-  lastName: 'doe',
+  givenName: 'john',
+  familyName: 'doe',
 }
 
 export const optionsReq = new OptionsReq(registrationRequest)
@@ -83,6 +83,7 @@ export const rpcClientTest = L.succeed(
     verifyRegistrationCredential: () => E.succeed(verificationRes),
     getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
     verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
+    verifyIdToken: () => E.fail(Fixtures.notImplemented)
   }),
 )
 

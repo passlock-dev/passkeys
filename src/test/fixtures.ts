@@ -13,12 +13,15 @@ export const expireAt = Date.now() + 10000
 
 export const principal: Principal = {
   token: 'token',
-  subject: {
+  user: {
     id: '1',
     email: 'john.doe@gmail.com',
-    firstName: 'john',
-    lastName: 'doe',
+    givenName: 'john',
+    familyName: 'doe',
     emailVerified: false,
+  },
+  socials: {
+
   },
   authStatement: {
     authType: 'email',

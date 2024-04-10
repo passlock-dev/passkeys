@@ -25,8 +25,8 @@ import { UserService } from '../user/user.js'
 
 export type RegistrationRequest = {
   email: string
-  firstName: string
-  lastName: string
+  givenName: string
+  familyName: string
   userVerification?: UserVerification
   verifyEmail?: VerifyEmail
 }

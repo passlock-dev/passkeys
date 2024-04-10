@@ -101,7 +101,7 @@ const passlock = new Passlock({ tenancyId, apiKey })
 const principal = await passlock.fetchPrincipal({ token })
 
 // get the user id
-console.log(principal.subject.id)
+console.log(principal.user.id)
 ```
 
 ## More information

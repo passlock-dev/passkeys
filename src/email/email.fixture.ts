@@ -1,7 +1,7 @@
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { VerifyEmailReq, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'
 import { Effect as E, Layer as L } from 'effect'
-import { LocationSearch } from './email.js'
+import { URLQueryString } from './email.js'
 import { AuthenticationService } from '../authentication/authenticate.js'
 import * as Fixtures from '../test/fixtures.js'
 
@@ -11,8 +11,8 @@ export const authType = 'passkey'
 export const expireAt = Date.now() + 10000
 
 export const locationSearchTest = L.succeed(
-  LocationSearch,
-  LocationSearch.of(E.succeed(`?code=${code}`)),
+  URLQueryString,
+  URLQueryString.of(E.succeed(`?code=${code}`)),
 )
 
 export const authenticationServiceTest = L.succeed(
@@ -36,6 +36,7 @@ export const rpcClientTest = L.succeed(
     verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
     getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
     verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
+    verifyIdToken: () => E.fail(Fixtures.notImplemented),
   }),
 )
 

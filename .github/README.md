@@ -157,10 +157,10 @@ const passlock = new Passlock({ tenancyId, apiKey })
 const principal = await passlock.fetchPrincipal({ token })
 
 // get the user id
-console.log(principal.subject.id)
+console.log(principal.user.id)
 ```
 
-Link the `subject.id` with a user entity in your own database, similar to the way you might link a user's Facebook or Google id. This could be as simple as an additional (indexed) column on your user table.
+Link the `user.id` with a user entity in your own database, similar to the way you might link a user's Facebook or Google id. This could be as simple as an additional (indexed) column on your user table.
 
 ### Using other (non Node) backends
 
@@ -171,12 +171,12 @@ You can also make an HTTP GET request to the `https://api.passlock.dev/{tenancyI
 curl -s -H "X-API-KEY: $API_KEY" https://api.passlock.dev/$TENANCY_ID/token/$TOKEN
 ```
 
-This will return a JSON object including a `subject`:
+This will return a JSON object including a `user`:
 
 ```json
 {
   "token": "2arafoq-8coasjl-qx4jz3x",
-  "subject": {
+  "user": {
     "id": "khXCYCxcGwJTLoaG6kVxB",
   },
   "expiresAt": "2024-01-25T12:06:07.000Z"
@@ -208,7 +208,7 @@ if (!PasslockError.isError(result)) {
 
 ### Verify the passkey (backend)
 
-Exactly the same as for registration. Exchange the token for a `Principal` and use the `subject.id` to lookup your own user entity.
+Exactly the same as for registration. Exchange the token for a `Principal` and use the `user.id` to lookup your own user entity.
 
 ## Next steps
 
