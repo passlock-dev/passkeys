@@ -99,7 +99,7 @@ const isNewUser = (email: string) => {
     E.catchTag('BadRequest', () => E.unit),
     E.flatMap(isExistingUser => {
       return isExistingUser
-        ? new Duplicate({ message: 'User already has a passkey registered' })
+        ? new Duplicate({ message: 'Email already registered' })
         : E.unit
     }),
   )
