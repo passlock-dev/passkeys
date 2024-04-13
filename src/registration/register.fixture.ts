@@ -83,7 +83,8 @@ export const rpcClientTest = L.succeed(
     verifyRegistrationCredential: () => E.succeed(verificationRes),
     getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
     verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
-    verifyIdToken: () => E.fail(Fixtures.notImplemented)
+    registerOidc: () => E.fail(Fixtures.notImplemented),
+    authenticateOidc: () => E.fail(Fixtures.notImplemented),
   }),
 )
 

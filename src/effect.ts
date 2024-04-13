@@ -51,7 +51,7 @@ import {
 } from './storage/storage.js'
 
 import { type Email, UserService, UserServiceLive } from './user/user.js'
-import { SocialService, SocialServiceLive, type OIDCRequest } from './social/social.js'
+import { SocialService, SocialServiceLive, type OidcRequest } from './social/social.js'
 
 /* Layers */
 
@@ -64,7 +64,7 @@ const createLive = L.succeed(
         catch: e => {
           if (e instanceof Error && e.message.includes('excludeCredentials')) {
             return new Duplicate({
-              message: 'Passkey already registered on this device or cloud account',
+              message: 'Passkey already registered to this device or cloud account',
             })
           } else {
             return new InternalBrowserError({
@@ -273,9 +273,9 @@ export const clearExpiredTokens = (): E.Effect<void> =>
     E.provide(storageLive),
   )
 
-export const authenticateOIDC = (request: OIDCRequest) => 
+export const authenticateOIDC = (request: OidcRequest) => 
   pipe(
     SocialService,
-    E.flatMap(service => service.authenticateOIDC(request)),
+    E.flatMap(service => service.registerOidc(request)),
     E.provide(socialServiceLive)
   )

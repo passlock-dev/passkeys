@@ -92,18 +92,18 @@ const verifyCredential = (req: VerificationReq) => {
   })
 }
 
-const isNewUser = (email: string) => {
-  return pipe(
-    UserService,
-    E.flatMap(service => service.isExistingUser({ email })),
-    E.catchTag('BadRequest', () => E.unit),
-    E.flatMap(isExistingUser => {
-      return isExistingUser
-        ? new Duplicate({ message: 'Email already registered' })
-        : E.unit
-    }),
-  )
-}
+// const isNewUser = (email: string) => {
+//   return pipe(
+//     UserService,
+//     E.flatMap(service => service.isExistingUser({ email })),
+//     E.catchTag('BadRequest', () => E.unit),
+//     E.flatMap(isExistingUser => {
+//       return isExistingUser
+//         ? new Duplicate({ message: 'Email already registered', detail: email })
+//         : E.unit
+//     }),
+//   )
+// }
 
 /* Effects */
 
@@ -117,8 +117,8 @@ export const registerPasskey = (
     const capabilities = yield* _(Capabilities)
     yield* _(capabilities.passkeySupport)
 
-    yield* _(E.logInfo('Checking if already registered'))
-    yield* _(isNewUser(request.email))
+    // yield* _(E.logInfo('Checking if already registered'))
+    // yield* _(isNewUser(request.email))
 
     yield* _(E.logInfo('Fetching registration options from Passlock'))
     const { options, session } = yield* _(fetchOptions(new OptionsReq(request)))

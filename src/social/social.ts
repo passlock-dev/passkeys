@@ -6,8 +6,7 @@ import {
   type NotSupported
 } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
-import type { VerificationErrors } from '@passlock/shared/dist/rpc/social.js'
-import { OIDCReq } from '@passlock/shared/dist/rpc/social.js'
+import { AuthenticateOidcErrors, AuthenticateOidcReq, RegisterOidcErrors, RegisterOidcReq } from '@passlock/shared/dist/rpc/social.js'
 import type {
   Principal
 } from '@passlock/shared/dist/schema/schema.js'
@@ -15,16 +14,19 @@ import { Context, Effect as E, Layer, flow } from 'effect'
 
 /* Requests */
 
-export type OIDCRequest = { provider: 'google', idToken: string }
+export type OidcRequest = { provider: 'google', idToken: string }
 
 /* Errors */
 
-export type AuthenticationErrors = NotSupported | BadRequest | VerificationErrors
+export type RegistrationErrors = NotSupported | BadRequest | RegisterOidcErrors
+
+export type AuthenticationErrors = NotSupported | BadRequest | AuthenticateOidcErrors
 
 /* Service */
 
 export type SocialService = {
-  authenticateOIDC: (data: OIDCRequest) => E.Effect<Principal, AuthenticationErrors>
+  registerOidc: (data: OidcRequest) => E.Effect<Principal, RegistrationErrors>
+  authenticateOidc: (data: OidcRequest) => E.Effect<Principal, AuthenticationErrors>
 }
 
 export const SocialService = Context.GenericTag<SocialService>(
@@ -35,22 +37,36 @@ export const SocialService = Context.GenericTag<SocialService>(
 
 type Dependencies = RpcClient
 
-export const authenticateOIDC = (
-  request: OIDCRequest,
-): E.Effect<Principal, AuthenticationErrors, Dependencies> => {
-  const effect = E.gen(function* (_) {
-    yield* _(E.logInfo('Verifying social token'))
+export const registerOidc = (
+  request: OidcRequest,
+): E.Effect<Principal, RegistrationErrors, Dependencies> => {
+  return E.gen(function* (_) {
+    yield* _(E.logInfo('Registering social account'))
 
     const rpcClient = yield* _(RpcClient)
 
     const { principal } = yield* _(
-      rpcClient.verifyIdToken(new OIDCReq(request))
+      rpcClient.registerOidc(new RegisterOidcReq(request))
     )
 
     return principal
   })
+}
 
-  return effect
+export const authenticateOidc = (
+  request: OidcRequest,
+): E.Effect<Principal, AuthenticationErrors, Dependencies> => {
+  return E.gen(function* (_) {
+    yield* _(E.logInfo('Authenticating with social account'))
+
+    const rpcClient = yield* _(RpcClient)
+
+    const { principal } = yield* _(
+      rpcClient.authenticateOidc(new AuthenticateOidcReq(request))
+    )
+
+    return principal
+  })
 }
 
 /* Live */
@@ -62,7 +78,8 @@ export const SocialServiceLive = Layer.effect(
     const context = yield* _(E.context<RpcClient>())
 
     return SocialService.of({
-      authenticateOIDC: flow(authenticateOIDC, E.provide(context)),
+      registerOidc: flow(registerOidc, E.provide(context)),
+      authenticateOidc: flow(authenticateOidc, E.provide(context))
     })
   }),
 )

@@ -20,7 +20,7 @@ import { EmailService, type VerifyRequest } from './email/email.js'
 import { type RegistrationRequest, RegistrationService } from './registration/register.js'
 import { type AuthType, Storage, StorageService, type StoredToken } from './storage/storage.js'
 import { type Email, UserService } from './user/user.js'
-import { SocialService, type OIDCRequest } from './social/social.js'
+import { SocialService, type OidcRequest } from './social/social.js'
 
 /* Exports */
 
@@ -36,20 +36,20 @@ export type { Principal } from '@passlock/shared/dist/schema/schema.js'
 export { ErrorCode } from '@passlock/shared/dist/error/error.js'
 
 export class PasslockError extends Error {
-  readonly _tag = 'PasslockError'
   readonly code: ErrorCode
+  readonly detail: string | undefined
 
-  constructor(message: string, code: ErrorCode) {
+  constructor(message: string, code: ErrorCode, detail?: string) {
     super(message)
     this.code = code
+    this.detail = detail
   }
 
   static readonly isError = (error: unknown): error is PasslockError => {
     return (
       typeof error === 'object' &&
       error !== null &&
-      '_tag' in error &&
-      error['_tag'] === 'PasslockError'
+      error instanceof PasslockError
     )
   }
 }
@@ -79,12 +79,12 @@ const transformErrors = <A, R>(
 ): E.Effect<A | PasslockError, never, R> => {
   const withErrorHandling = E.catchTags(effect, {
     NotSupported: e => E.succeed(new PasslockError(e.message, ErrorCode.NotSupported)),
-    BadRequest: e => E.succeed(new PasslockError(e.message, ErrorCode.BadRequest)),
-    Duplicate: e => E.succeed(new PasslockError(e.message, ErrorCode.Duplicate)),
-    Unauthorized: e => E.succeed(new PasslockError(e.message, ErrorCode.Unauthorized)),
-    Forbidden: e => E.succeed(new PasslockError(e.message, ErrorCode.Forbidden)),
-    Disabled: e => E.succeed(new PasslockError(e.message, ErrorCode.Disabled)),
-    NotFound: e => E.succeed(new PasslockError(e.message, ErrorCode.NotFound)),
+    BadRequest: e => E.succeed(new PasslockError(e.message, ErrorCode.BadRequest, e.detail)),
+    Duplicate: e => E.succeed(new PasslockError(e.message, ErrorCode.Duplicate, e.detail)),
+    Unauthorized: e => E.succeed(new PasslockError(e.message, ErrorCode.Unauthorized, e.detail)),
+    Forbidden: e => E.succeed(new PasslockError(e.message, ErrorCode.Forbidden, e.detail)),
+    Disabled: e => E.succeed(new PasslockError(e.message, ErrorCode.Disabled, e.detail)),
+    NotFound: e => E.succeed(new PasslockError(e.message, ErrorCode.NotFound, e.detail)),
   })
 
   const sandboxed = E.sandbox(withErrorHandling)
@@ -185,12 +185,19 @@ export class PasslockUnsafe {
       effect => this.runPromise(effect, options),
     )
 
-  authenticateOIDC = (request: OIDCRequest, options?: Options) => 
+  registerOidc = (request: OidcRequest, options?: Options) => 
     pipe(
       SocialService,
-      E.flatMap(service => service.authenticateOIDC(request)),
+      E.flatMap(service => service.registerOidc(request)),
       effect => this.runPromise(effect, options),
-    )        
+    )   
+    
+  authenticateOidc = (request: OidcRequest, options?: Options) => 
+    pipe(
+      SocialService,
+      E.flatMap(service => service.authenticateOidc(request)),
+      effect => this.runPromise(effect, options),
+    )      
 
   verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal> =>
     pipe(
@@ -278,12 +285,19 @@ export class Passlock {
       effect => this.runPromise(effect, options),
     )
 
-  authenticateOIDC = (request: OIDCRequest, options?: Options) => 
+  registerOidc = (request: OidcRequest, options?: Options) => 
     pipe(
       SocialService,
-      E.flatMap(service => service.authenticateOIDC(request)),
+      E.flatMap(service => service.registerOidc(request)),
       effect => this.runPromise(effect, options),
     )     
+
+  authenticateOidc = (request: OidcRequest, options?: Options) => 
+    pipe(
+      SocialService,
+      E.flatMap(service => service.authenticateOidc(request)),
+      effect => this.runPromise(effect, options),
+    )      
 
   verifyEmailCode = (request: VerifyRequest, options?: Options): Promise<Principal | PasslockError> =>
     pipe(

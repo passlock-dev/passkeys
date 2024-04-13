@@ -8,7 +8,7 @@ import type { NoSuchElementException } from 'effect/Cause'
 
 /* Requests */
 
-export type AuthType = 'email' | 'passkey'
+export type AuthType = 'email' | 'passkey' | 'google'
 
 export type StoredToken = {
   token: string
@@ -143,6 +143,7 @@ export const clearExpiredToken = (authType: AuthType): E.Effect<void, never, Sto
 export const clearExpiredTokens: E.Effect<void, never, Storage> = E.all([
   clearExpiredToken('passkey'),
   clearExpiredToken('email'),
+  clearExpiredToken('google'),
 ])
 
 /* Live */
