@@ -20,7 +20,7 @@ import {
 
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 
-import { Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
+import { Console, Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
 
 import type { NoSuchElementException } from 'effect/Cause'
 
@@ -55,7 +55,7 @@ import { SocialService, SocialServiceLive, type OidcRequest } from './social/soc
 
 /* Layers */
 
-const createLive = L.succeed(
+const createCredentialLive = L.succeed(
   CreateCredential,
   CreateCredential.of((options: CredentialCreationOptions) =>
     pipe(
@@ -74,12 +74,12 @@ const createLive = L.succeed(
           }
         },
       }),
-      E.map(credential => credential.toJSON()),
+      E.map(credential => credential.toJSON())
     ),
   ),
 )
 
-const getLive = L.succeed(
+const getCredentialLive = L.succeed(
   GetCredential,
   GetCredential.of((options: CredentialRequestOptions) =>
     pipe(
@@ -113,7 +113,7 @@ const registrationServiceLive = pipe(
   L.provide(rpcClientLive),
   L.provide(userServiceLive),
   L.provide(capabilitiesLive),
-  L.provide(createLive),
+  L.provide(createCredentialLive),
   L.provide(storageServiceLive),
 )
 
@@ -121,7 +121,7 @@ const authenticationServiceLive = pipe(
   AuthenticateServiceLive,
   L.provide(rpcClientLive),
   L.provide(capabilitiesLive),
-  L.provide(getLive),
+  L.provide(getCredentialLive),
   L.provide(storageServiceLive),
 )
 

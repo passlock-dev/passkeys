@@ -117,9 +117,6 @@ export const registerPasskey = (
     const capabilities = yield* _(Capabilities)
     yield* _(capabilities.passkeySupport)
 
-    // yield* _(E.logInfo('Checking if already registered'))
-    // yield* _(isNewUser(request.email))
-
     yield* _(E.logInfo('Fetching registration options from Passlock'))
     const { options, session } = yield* _(fetchOptions(new OptionsReq(request)))
 

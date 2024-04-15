@@ -6,11 +6,10 @@ import {
   parseRequestOptionsFromJSON,
 } from '@github/webauthn-json/browser-ponyfill'
 import {
-  type BadRequest,
   InternalBrowserError,
   type NotSupported,
 } from '@passlock/shared/dist/error/error.js'
-import type { VerificationErrors } from '@passlock/shared/dist/rpc/authentication.js'
+import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rpc/authentication.js'
 import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/authentication.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type {
@@ -24,11 +23,14 @@ import { StorageService } from '../storage/storage.js'
 
 /* Requests */
 
-export type AuthenticationRequest = { userVerification?: UserVerification }
+export type AuthenticationRequest = { 
+  email?: string, 
+  userVerification?: UserVerification 
+}
 
 /* Errors */
 
-export type AuthenticationErrors = NotSupported | BadRequest | VerificationErrors
+export type AuthenticationErrors = NotSupported | OptionsErrors | VerificationErrors
 
 /* Dependencies */
 
