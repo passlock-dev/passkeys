@@ -70,6 +70,7 @@ export const userServiceTest = L.succeed(
   UserService,
   UserService.of({
     isExistingUser: () => E.succeed(false),
+    resendVerificationEmail: () => E.succeed(true)
   }),
 )
 
@@ -85,6 +86,7 @@ export const rpcClientTest = L.succeed(
     verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
     registerOidc: () => E.fail(Fixtures.notImplemented),
     authenticateOidc: () => E.fail(Fixtures.notImplemented),
+    resendVerificationEmail: () => E.fail(Fixtures.notImplemented),
   }),
 )
 

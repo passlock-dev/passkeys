@@ -1,19 +1,26 @@
 /**
  * Check for an existing user
  */
-import type { BadRequest } from '@passlock/shared/dist/error/error.js'
+import type { BadRequest, Disabled, NotFound } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
-import { IsExistingUserReq } from '@passlock/shared/dist/rpc/user.js'
+import { IsExistingUserReq, ResendEmailReq } from '@passlock/shared/dist/rpc/user.js'
+import type { VerifyEmail } from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow } from 'effect'
 
 /* Requests */
 
 export type Email = { email: string }
+export type ResendEmail = VerifyEmail & { userId: string }
+
+/* Errors */
+
+export type ResendEmailErrors = BadRequest | NotFound | Disabled
 
 /* Service */
 
 export type UserService = {
-  isExistingUser: (email: Email) => E.Effect<boolean, BadRequest>
+  isExistingUser: (request: Email) => E.Effect<boolean, BadRequest>
+  resendVerificationEmail: (request: ResendEmail) => E.Effect<void, ResendEmailErrors>
 }
 
 export const UserService = Context.GenericTag<UserService>('@services/UserService')
@@ -34,6 +41,17 @@ export const isExistingUser = (request: Email): E.Effect<boolean, BadRequest, De
   })
 }
 
+export const resendVerificationEmail = (request: ResendEmail): E.Effect<void, ResendEmailErrors, Dependencies> => {
+  return E.gen(function* (_) {
+    yield* _(E.logInfo('Resending verification email'))
+    const rpcClient = yield* _(RpcClient)
+
+    yield* _(E.logDebug('Making RPC request'))
+    const { userId, ...verifyEmail } = request
+    yield* _(rpcClient.resendVerificationEmail(new ResendEmailReq({ userId, verifyEmail })))
+  })
+}
+
 /* Live */
 
 /* v8 ignore start */
@@ -43,6 +61,7 @@ export const UserServiceLive = Layer.effect(
     const context = yield* _(E.context<RpcClient>())
     return UserService.of({
       isExistingUser: flow(isExistingUser, E.provide(context)),
+      resendVerificationEmail: flow(resendVerificationEmail, E.provide(context))
     })
   }),
 )

@@ -19,7 +19,7 @@ import { allRequirements } from './effect.js'
 import { EmailService, type VerifyRequest } from './email/email.js'
 import { type RegistrationRequest, RegistrationService } from './registration/register.js'
 import { type AuthType, Storage, StorageService, type StoredToken } from './storage/storage.js'
-import { type Email, UserService } from './user/user.js'
+import { type Email, UserService, type ResendEmail } from './user/user.js'
 import { SocialService, type OidcRequest } from './social/social.js'
 
 /* Exports */
@@ -206,6 +206,13 @@ export class PasslockUnsafe {
       effect => this.runPromise(effect, options),
     )
 
+  resendVerificationEmail = (request: ResendEmail, options?: Options): Promise<void> =>
+    pipe(
+      UserService,
+      E.flatMap(service => service.resendVerificationEmail(request)),
+      effect => this.runPromise(effect, options),
+    )    
+
   verifyEmailLink = (options?: Options): Promise<Principal> =>
     pipe(
       EmailService,
@@ -312,6 +319,13 @@ export class Passlock {
       E.flatMap(service => service.verifyEmailLink()),
       effect => this.runPromise(effect, options),
     )
+
+  resendVerificationEmail = (request: ResendEmail, options?: Options): Promise<void | PasslockError> =>
+    pipe(
+      UserService,
+      E.flatMap(service => service.resendVerificationEmail(request)),
+      effect => this.runPromise(effect, options),
+    )      
 
   getSessionToken = (authType: AuthType): StoredToken | undefined =>
     pipe(

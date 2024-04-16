@@ -34,8 +34,9 @@ export type RegistrationRequest = {
 /* Dependencies */
 
 export type CreateCredential = (
-  options: CredentialCreationOptions,
+  request: CredentialCreationOptions,
 ) => E.Effect<RegistrationCredential, InternalBrowserError | Duplicate>
+
 export const CreateCredential = Context.GenericTag<CreateCredential>('@services/Create')
 
 /* Errors */
@@ -54,12 +55,12 @@ export const RegistrationService = Context.GenericTag<RegistrationService>(
 
 /* Utilities */
 
-const fetchOptions = (req: OptionsReq) => {
+const fetchOptions = (request: OptionsReq) => {
   return E.gen(function* (_) {
     yield* _(E.logDebug('Making request'))
 
     const rpcClient = yield* _(RpcClient)
-    const { publicKey, session } = yield* _(rpcClient.getRegistrationOptions(req))
+    const { publicKey, session } = yield* _(rpcClient.getRegistrationOptions(request))
 
     yield* _(E.logDebug('Converting Passlock options to CredentialCreationOptions'))
     const options = yield* _(toCreationOptions({ publicKey }))
@@ -81,29 +82,16 @@ const toCreationOptions = (jsonOptions: CredentialCreationOptionsJSON) => {
   )
 }
 
-const verifyCredential = (req: VerificationReq) => {
+const verifyCredential = (request: VerificationReq) => {
   return E.gen(function* (_) {
     yield* _(E.logDebug('Making request'))
 
     const rpcClient = yield* _(RpcClient)
-    const { principal } = yield* _(rpcClient.verifyRegistrationCredential(req))
+    const { principal } = yield* _(rpcClient.verifyRegistrationCredential(request))
 
     return principal
   })
 }
-
-// const isNewUser = (email: string) => {
-//   return pipe(
-//     UserService,
-//     E.flatMap(service => service.isExistingUser({ email })),
-//     E.catchTag('BadRequest', () => E.unit),
-//     E.flatMap(isExistingUser => {
-//       return isExistingUser
-//         ? new Duplicate({ message: 'Email already registered', detail: email })
-//         : E.unit
-//     }),
-//   )
-// }
 
 /* Effects */
 

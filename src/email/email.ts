@@ -90,11 +90,11 @@ export const extractCodeFromHref = () => {
 
 /**
  * Verify the mailbox using the given code
- * @param verificationRequest
+ * @param request
  * @returns
  */
 export const verifyEmail = (
-  verificationRequest: VerifyRequest,
+  request: VerifyRequest,
 ): E.Effect<Principal, VerifyEmailErrors, Dependencies> => {
   return E.gen(function* (_) {
     // Re-authenticate the user if required
@@ -103,7 +103,7 @@ export const verifyEmail = (
     yield* _(E.logDebug('Making request'))
     const client = yield* _(RpcClient)
     const { principal } = yield* _(
-      client.verifyEmail(new VerifyEmailReq({ token, code: verificationRequest.code })),
+      client.verifyEmail(new VerifyEmailReq({ token, code: request.code })),
     )
 
     return principal

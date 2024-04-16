@@ -35,14 +35,15 @@ export type AuthenticationErrors = NotSupported | OptionsErrors | VerificationEr
 /* Dependencies */
 
 export type GetCredential = (
-  options: CredentialRequestOptions,
+  request: CredentialRequestOptions,
 ) => E.Effect<AuthenticationCredential, InternalBrowserError>
+
 export const GetCredential = Context.GenericTag<GetCredential>('@services/Get')
 
 /* Service */
 
 export type AuthenticationService = {
-  authenticatePasskey: (data: AuthenticationRequest) => E.Effect<Principal, AuthenticationErrors>
+  authenticatePasskey: (request: AuthenticationRequest) => E.Effect<Principal, AuthenticationErrors>
 }
 
 export const AuthenticationService = Context.GenericTag<AuthenticationService>(
@@ -51,12 +52,12 @@ export const AuthenticationService = Context.GenericTag<AuthenticationService>(
 
 /* Utilities */
 
-const fetchOptions = (req: OptionsReq) => {
+const fetchOptions = (request: OptionsReq) => {
   return E.gen(function* (_) {
     yield* _(E.logDebug('Making request'))
 
     const rpcClient = yield* _(RpcClient)
-    const { publicKey, session } = yield* _(rpcClient.getAuthenticationOptions(req))
+    const { publicKey, session } = yield* _(rpcClient.getAuthenticationOptions(request))
 
     yield* _(E.logDebug('Converting Passlock options to CredentialRequestOptions'))
     const options = yield* _(toRequestOptions({ publicKey }))
@@ -65,9 +66,9 @@ const fetchOptions = (req: OptionsReq) => {
   })
 }
 
-const toRequestOptions = (options: CredentialRequestOptionsJSON) => {
+const toRequestOptions = (request: CredentialRequestOptionsJSON) => {
   return pipe(
-    E.try(() => parseRequestOptionsFromJSON(options)),
+    E.try(() => parseRequestOptionsFromJSON(request)),
     E.mapError(
       error =>
         new InternalBrowserError({
@@ -78,12 +79,12 @@ const toRequestOptions = (options: CredentialRequestOptionsJSON) => {
   )
 }
 
-const verifyCredential = (req: VerificationReq) => {
+const verifyCredential = (request: VerificationReq) => {
   return E.gen(function* (_) {
     yield* _(E.logDebug('Making request'))
 
     const rpcClient = yield* _(RpcClient)
-    const { principal } = yield* _(rpcClient.verifyAuthenticationCredential(req))
+    const { principal } = yield* _(rpcClient.verifyAuthenticationCredential(request))
 
     return principal
   })

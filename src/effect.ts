@@ -20,8 +20,7 @@ import {
 
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 
-import { Console, Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
-
+import { Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
 import {
