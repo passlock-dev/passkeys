@@ -46,18 +46,19 @@
     "test:ui": "vitest --coverage.enabled=true --ui",
     "test:coverage": "vitest run --coverage",
     "build": "tsc --build",
+    "build:clean": "pnpm run clean && pnpm run build",
     "watch": "tsc --build --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts src",
     "lint:fix": "pnpm run lint --fix",
     "format": "prettier --write \"src/**/*.+(js|ts|json)\"",
     "ncu": "ncu -x @passlock/shared",
-    "ncu:save": "ncu -u -x @passlock/shared"
+    "ncu:save": "ncu -u -x @passlock/shared -x eslint"
   },
   "dependencies": {
     "@passlock/shared": "workspace:*",
     "@github/webauthn-json": "^2.1.1",
-    "effect": "2.4.19"
+    "effect": "3.0.0"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",

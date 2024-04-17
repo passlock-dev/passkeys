@@ -19,7 +19,7 @@ export const Capabilities = Context.GenericTag<Capabilities>('@services/Capabili
 
 const hasWebAuthn = E.suspend(() =>
   typeof window.PublicKeyCredential === 'function'
-    ? E.unit
+    ? E.void
     : new NotSupported({ message: 'WebAuthn API is not supported on this device' }),
 )
 
@@ -29,7 +29,7 @@ const hasPlatformAuth = pipe(
     identity,
     () => new NotSupported({ message: 'No platform authenticator available on this device' }),
   ),
-  E.asUnit,
+  E.asVoid,
 )
 
 const hasConditionalUi = pipe(
@@ -42,7 +42,7 @@ const hasConditionalUi = pipe(
     identity,
     () => new NotSupported({ message: 'Conditional mediation not available on this device' }),
   ),
-  E.asUnit,
+  E.asVoid,
 )
 
 export const passkeySupport = pipe(

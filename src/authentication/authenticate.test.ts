@@ -114,8 +114,8 @@ describe('authenticate should', () => {
       E.sync(() => {
         const storageMock = mock<StorageService>()
 
-        storageMock.storeToken.mockReturnValue(E.unit)
-        storageMock.clearExpiredToken.mockReturnValue(E.unit)
+        storageMock.storeToken.mockReturnValue(E.void)
+        storageMock.clearExpiredToken.mockReturnValue(E.void)
 
         return storageMock
       }),
@@ -149,8 +149,8 @@ describe('authenticate should', () => {
       E.sync(() => {
         const storageMock = mock<StorageService>()
 
-        storageMock.storeToken.mockReturnValue(E.unit)
-        storageMock.clearExpiredToken.mockReturnValue(E.unit)
+        storageMock.storeToken.mockReturnValue(E.void)
+        storageMock.clearExpiredToken.mockReturnValue(E.void)
 
         return storageMock
       }),

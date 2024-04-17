@@ -71,7 +71,7 @@ export const storeToken = (principal: Principal): E.Effect<void, never, Storage>
       const compressed = compressToken(principal)
       const key = buildKey(principal.authStatement.authType)
       localStorage.setItem(key, compressed)
-    }).pipe(E.orElse(() => E.unit)) // We dont care if it fails
+    }).pipe(E.orElse(() => E.void)) // We dont care if it fails
 
     return yield* _(storeEffect)
   })
@@ -134,8 +134,8 @@ export const clearExpiredToken = (authType: AuthType): E.Effect<void, never, Sto
   return pipe(
     effect,
     E.match({
-      onSuccess: () => E.unit,
-      onFailure: () => E.unit,
+      onSuccess: () => E.void,
+      onFailure: () => E.void,
     }),
   )
 }

@@ -20,18 +20,18 @@ const hitPrincipal = pipe(
   E.logInfo('Pre-connecting to Principal endpoint'),
   E.zipRight(Dispatcher),
   E.flatMap(dispatcher => dispatcher.get('/token/token?warm=true')),
-  E.asUnit,
-  E.catchAll(() => E.unit),
+  E.asVoid,
+  E.catchAll(() => E.void),
 )
 
 const hitRpc = pipe(
   E.logInfo('Pre-connecting to RPC endpoint'),
   E.zipRight(RpcClient),
   E.flatMap(rpcClient => rpcClient.preConnect(new PreConnectReq({}))),
-  E.asUnit,
+  E.asVoid,
 )
 
-export const preConnect = () => pipe(E.all([hitPrincipal, hitRpc], { concurrency: 2 }), E.asUnit)
+export const preConnect = () => pipe(E.all([hitPrincipal, hitRpc], { concurrency: 2 }), E.asVoid)
 
 /* Live */
 

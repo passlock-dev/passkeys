@@ -45,7 +45,7 @@ describe('verifyEmailCode should', () => {
         const storageServiceMock = mock<StorageService>()
 
         storageServiceMock.getToken.mockReturnValue(E.succeed(Fixture.storedToken))
-        storageServiceMock.clearToken.mockReturnValue(E.unit)
+        storageServiceMock.clearToken.mockReturnValue(E.void)
 
         return storageServiceMock
       }),
@@ -80,7 +80,7 @@ describe('verifyEmailCode should', () => {
         const storageServiceMock = mock<StorageService>()
 
         storageServiceMock.getToken.mockReturnValue(E.fail(new NoSuchElementException()))
-        storageServiceMock.clearToken.mockReturnValue(E.unit)
+        storageServiceMock.clearToken.mockReturnValue(E.void)
 
         return storageServiceMock
       }),

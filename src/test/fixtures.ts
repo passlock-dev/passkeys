@@ -34,9 +34,9 @@ export const principal: Principal = {
 export const capabilitiesTest = L.succeed(
   Capabilities,
   Capabilities.of({
-    passkeySupport: E.unit,
+    passkeySupport: E.void,
     isPasskeySupport: E.succeed(true),
-    autofillSupport: E.unit,
+    autofillSupport: E.void,
     isAutofillSupport: E.succeed(true),
   }),
 )
@@ -46,11 +46,11 @@ export const storedToken: StoredToken = { token, authType, expireAt }
 export const storageServiceTest = L.succeed(
   StorageService,
   StorageService.of({
-    storeToken: () => E.unit,
+    storeToken: () => E.void,
     getToken: () => E.succeed(storedToken),
-    clearToken: () => E.unit,
-    clearExpiredToken: () => E.unit,
-    clearExpiredTokens: E.unit,
+    clearToken: () => E.void,
+    clearExpiredToken: () => E.void,
+    clearExpiredTokens: E.void,
   }),
 )
 
