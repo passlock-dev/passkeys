@@ -58,10 +58,10 @@ const passlock = new Passlock({ tenancyId, clientId })
 
 // to register a new passkey, call registerPasskey(). We're using placeholders for 
 // the user data. You should grab this from an HTML form, React store, Redux etc.
-const [email, firstName, lastName] = ["jdoe@gmail.com", "John", "Doe"]
+const [email, givenName, familyName] = ["jdoe@gmail.com", "John", "Doe"]
 
 // Passlock doesn't throw but instead returns a union: result | error
-const result = await passlock.registerPasskey({ email, firstName, lastName })
+const result = await passlock.registerPasskey({ email, givenName, familyName })
 
 // ensure Passlock didn't return an error
 if (!PasslockError.isError(result)) {
