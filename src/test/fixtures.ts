@@ -21,7 +21,7 @@ export const principal: Principal = {
     emailVerified: false,
   },
   authStatement: {
-    authType: 'email',
+    authType: 'passkey',
     userVerified: false,
     authTimestamp: new Date(0),
   },

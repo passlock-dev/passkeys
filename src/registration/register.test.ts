@@ -29,41 +29,6 @@ describe('register should', () => {
     return E.runPromise(effect)
   })
 
-  test('check if the user is already registered', async () => {
-    const assertions = E.gen(function* (_) {
-      const service = yield* _(RegistrationService)
-      yield* _(service.registerPasskey(Fixture.registrationRequest))
-
-      const userService = yield* _(UserService)
-      expect(userService.isExistingUser).toHaveBeenCalled()
-    })
-
-    const userServiceTest = L.effect(
-      UserService,
-      E.sync(() => {
-        const userMock = mock<UserService>()
-
-        userMock.isExistingUser.mockReturnValue(E.succeed(false))
-
-        return userMock
-      }),
-    )
-
-    const service = pipe(
-      RegistrationServiceLive,
-      L.provide(Fixture.createCredentialTest),
-      L.provide(Fixture.capabilitiesTest),
-      L.provide(Fixture.storageServiceTest),
-      L.provide(Fixture.rpcClientTest),
-      L.provide(userServiceTest),
-    )
-
-    const layers = Layer.merge(service, userServiceTest)
-    const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
-
-    return E.runPromise(effect)
-  })
-
   test('pass the registration data to the backend', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(RegistrationService)
@@ -145,14 +110,14 @@ describe('register should', () => {
       expect(error).toBeInstanceOf(Duplicate)
     })
 
-    const userServiceTest = L.effect(
-      UserService,
+    const rpcClientTest = L.effect(
+      RpcClient,
       E.sync(() => {
-        const userMock = mock<UserService>()
+        const rpcMock = mock<RpcClient['Type']>()
 
-        userMock.isExistingUser.mockReturnValue(E.succeed(true))
+        rpcMock.getRegistrationOptions.mockReturnValue(E.fail(new Duplicate({ message: 'User already exists' })))
 
-        return userMock
+        return rpcMock
       }),
     )
 
@@ -161,11 +126,11 @@ describe('register should', () => {
       L.provide(Fixture.createCredentialTest),
       L.provide(Fixture.capabilitiesTest),
       L.provide(Fixture.storageServiceTest),
-      L.provide(Fixture.rpcClientTest),
-      L.provide(userServiceTest),
+      L.provide(Fixture.userServiceTest),
+      L.provide(rpcClientTest),
     )
 
-    const layers = Layer.merge(service, userServiceTest)
+    const layers = Layer.merge(service, rpcClientTest)
     const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
 
     return E.runPromise(effect)
