@@ -164,7 +164,7 @@ export class PasslockUnsafe {
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  isExistingPasskey = (email: Email, options?: Options): Promise<boolean> =>
+  isExistingUser = (email: Email, options?: Options): Promise<boolean> =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),
@@ -271,7 +271,7 @@ export class Passlock {
       effect => Runtime.runPromise(this.runtime)(effect),
     )
 
-  isExistingPasskey = (email: Email, options?: Options): Promise<boolean | PasslockError> =>
+  isExistingUser = (email: Email, options?: Options): Promise<boolean | PasslockError> =>
     pipe(
       UserService,
       E.flatMap(service => service.isExistingUser(email)),

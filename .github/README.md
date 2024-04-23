@@ -168,7 +168,7 @@ You can also make an HTTP GET request to the `https://api.passlock.dev/{tenancyI
 
 ```bash
 # Substitute API_KEY, TENANCY_ID and TOKEN for the real values
-curl -s -H "X-API-KEY: $API_KEY" https://api.passlock.dev/$TENANCY_ID/token/$TOKEN
+curl -s -H "Authorization: Bearer $API_KEY" https://api.passlock.dev/$TENANCY_ID/token/$TOKEN
 ```
 
 This will return a JSON object including a `user`:

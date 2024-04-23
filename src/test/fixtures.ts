@@ -20,9 +20,6 @@ export const principal: Principal = {
     familyName: 'doe',
     emailVerified: false,
   },
-  socials: {
-
-  },
   authStatement: {
     authType: 'email',
     userVerified: false,
