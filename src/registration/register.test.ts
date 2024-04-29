@@ -5,7 +5,6 @@ import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
 import { CreateCredential, RegistrationService, RegistrationServiceLive } from './register.js'
 import * as Fixture from './register.fixture.js'
-import { UserService } from '../user/user.js'
 
 describe('register should', () => {
   test('return a valid credential', async () => {
