@@ -1,6 +1,6 @@
 {
   "name": "@passlock/client",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "description": "Easy WebAuthn/FIDO Passkey authentication for your web apps. This library works with pretty much any frontend/backend stack including React/Next.js, Vue, SvelteKit etc - check out the tutorial",
   "keywords": [
     "passkey",
@@ -58,7 +58,7 @@
   "dependencies": {
     "@passlock/shared": "workspace:*",
     "@github/webauthn-json": "^2.1.1",
-    "effect": "3.1.0"
+    "effect": "~3.1.1"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
