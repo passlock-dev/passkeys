@@ -1,37 +1,35 @@
+import { PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
-import { VerifyEmailReq, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'
+import { AuthenticateOidcReq, OidcRes, RegisterOidcReq } from '@passlock/shared/dist/rpc/social.js'
 import { Effect as E, Layer as L } from 'effect'
-import { AuthenticationService } from '../authentication/authenticate.js'
 import * as Fixtures from '../test/fixtures.js'
-import { URLQueryString } from './email.js'
+import { type OidcRequest } from './social.js'
 
+export const session = 'session'
 export const token = 'token'
 export const code = 'code'
 export const authType = 'passkey'
 export const expireAt = Date.now() + 10000
 
-export const locationSearchTest = L.succeed(
-  URLQueryString,
-  URLQueryString.of(E.succeed(`?code=${code}`)),
-)
+export const oidcReq: OidcRequest = {
+  provider: 'google',
+  idToken: 'google-token'
+}
 
-export const authenticationServiceTest = L.succeed(
-  AuthenticationService,
-  AuthenticationService.of({
-    authenticatePasskey: () => E.succeed(Fixtures.principal),
-  }),
-)
+export const rpcRegisterReq = new RegisterOidcReq({ ...oidcReq })
 
-export const rpcVerifyEmailReq = new VerifyEmailReq({ token, code })
+export const rpcRegisterRes = new OidcRes({ principal: Fixtures.principal })
 
-export const rpcVerifyEmailRes = new VerifyEmailRes({ principal: Fixtures.principal })
+export const rpcAuthenticateReq = new AuthenticateOidcReq({ ...oidcReq })
+
+export const rpcAuthenticateRes = new OidcRes({ principal: Fixtures.principal })
 
 export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
-    preConnect: () => E.succeed({ warmed: true }),
-    isExistingUser: () => E.succeed({ existingUser: true }),
-    verifyEmail: () => E.succeed(rpcVerifyEmailRes),
+    preConnect: () => E.succeed(new PreConnectRes({ warmed: true })),
+    isExistingUser: () => E.fail(Fixtures.notImplemented),
+    verifyEmail: () => E.fail(Fixtures.notImplemented),
     getRegistrationOptions: () => E.fail(Fixtures.notImplemented),
     verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
     getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
@@ -44,6 +42,6 @@ export const rpcClientTest = L.succeed(
 
 export const principal = Fixtures.principal
 
-export const storedToken = Fixtures.storedToken
+export const capabilitiesTest = Fixtures.capabilitiesTest
 
 export const storageServiceTest = Fixtures.storageServiceTest

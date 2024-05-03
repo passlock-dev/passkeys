@@ -1,12 +1,12 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcClient, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, LogLevel, Logger, pipe } from 'effect'
 import { NoSuchElementException } from 'effect/Cause'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { EmailService, EmailServiceLive } from './email.js'
-import * as Fixture from './email.fixture.js'
 import { AuthenticationService } from '../authentication/authenticate.js'
 import { StorageService } from '../storage/storage.js'
+import * as Fixture from './email.fixture.js'
+import { EmailService, EmailServiceLive } from './email.js'
 
 describe('verifyEmailCode should', () => {
   test('return a principal when the verification is successful', async () => {
@@ -117,7 +117,7 @@ describe('verifyEmailCode should', () => {
       yield* _(service.verifyEmailCode({ code: Fixture.code }))
 
       const rpcClient = yield* _(RpcClient)
-      expect(rpcClient.verifyEmail).toHaveBeenCalledWith(Fixture.verifyEmailReq)
+      expect(rpcClient.verifyEmail).toHaveBeenCalledWith(Fixture.rpcVerifyEmailReq)
     })
 
     const rpcClientTest = L.effect(
@@ -125,7 +125,7 @@ describe('verifyEmailCode should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.verifyEmailRes))
+        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.rpcVerifyEmailRes))
 
         return rpcMock
       }),
@@ -155,7 +155,7 @@ describe('verifyEmailLink should', () => {
       // LocationSearch return ?code=code
       // and we expect rpcClient to be called with code
       const rpcClient = yield* _(RpcClient)
-      expect(rpcClient.verifyEmail).toBeCalledWith(Fixture.verifyEmailReq)
+      expect(rpcClient.verifyEmail).toBeCalledWith(Fixture.rpcVerifyEmailReq)
     })
 
     const rpcClientTest = L.effect(
@@ -163,7 +163,7 @@ describe('verifyEmailLink should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.verifyEmailRes))
+        rpcMock.verifyEmail.mockReturnValue(E.succeed(Fixture.rpcVerifyEmailRes))
 
         return rpcMock
       }),

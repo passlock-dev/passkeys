@@ -1,10 +1,10 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcClient, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { AuthenticateServiceLive, AuthenticationService, GetCredential } from './authenticate.js'
-import * as Fixture from './authenticate.fixture.js'
 import { StorageService } from '../storage/storage.js'
+import * as Fixture from './authenticate.fixture.js'
+import { AuthenticateServiceLive, AuthenticationService, GetCredential } from './authenticate.js'
 
 describe('authenticate should', () => {
   test('return a valid principal', async () => {
@@ -43,8 +43,8 @@ describe('authenticate should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.getAuthenticationOptions.mockReturnValue(E.succeed(Fixture.optionsRes))
-        rpcMock.verifyAuthenticationCredential.mockReturnValue(E.succeed(Fixture.verificationRes))
+        rpcMock.getAuthenticationOptions.mockReturnValue(E.succeed(Fixture.rpcOptionsRes))
+        rpcMock.verifyAuthenticationCredential.mockReturnValue(E.succeed(Fixture.rpcVerificationRes))
 
         return rpcMock
       }),
@@ -71,7 +71,7 @@ describe('authenticate should', () => {
 
       const rpcClient = yield* _(RpcClient)
       expect(rpcClient.getAuthenticationOptions).toHaveBeenCalledOnce()
-      expect(rpcClient.verifyAuthenticationCredential).toHaveBeenCalledWith(Fixture.verificationReq)
+      expect(rpcClient.verifyAuthenticationCredential).toHaveBeenCalledWith(Fixture.rpcVerificationReq)
     })
 
     const rpcClientTest = L.effect(
@@ -79,8 +79,8 @@ describe('authenticate should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.getAuthenticationOptions.mockReturnValue(E.succeed(Fixture.optionsRes))
-        rpcMock.verifyAuthenticationCredential.mockReturnValue(E.succeed(Fixture.verificationRes))
+        rpcMock.getAuthenticationOptions.mockReturnValue(E.succeed(Fixture.rpcOptionsRes))
+        rpcMock.verifyAuthenticationCredential.mockReturnValue(E.succeed(Fixture.rpcVerificationRes))
 
         return rpcMock
       }),

@@ -1,3 +1,4 @@
+import { PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
 import {
   OptionsReq,
   OptionsRes,
@@ -7,10 +8,9 @@ import {
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type { RegistrationCredential } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L } from 'effect'
-import { CreateCredential, type RegistrationRequest } from './register.js'
 import * as Fixtures from '../test/fixtures.js'
 import { UserService } from '../user/user.js'
-import { PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
+import { CreateCredential, type RegistrationRequest } from './register.js'
 
 export const session = 'session'
 export const token = 'token'
@@ -24,7 +24,7 @@ export const registrationRequest: RegistrationRequest = {
   familyName: 'doe',
 }
 
-export const optionsReq = new OptionsReq(registrationRequest)
+export const rpcOptionsReq = new OptionsReq(registrationRequest)
 
 export const registrationOptions: OptionsRes = {
   session,
@@ -43,7 +43,7 @@ export const registrationOptions: OptionsRes = {
   },
 }
 
-export const optionsRes = new OptionsRes(registrationOptions)
+export const rpcOptionsRes = new OptionsRes(registrationOptions)
 
 export const credential: RegistrationCredential = {
   type: 'public-key',
@@ -57,9 +57,9 @@ export const credential: RegistrationCredential = {
   clientExtensionResults: {},
 }
 
-export const verificationReq = new VerificationReq({ session, credential })
+export const rpcVerificationReq = new VerificationReq({ session, credential })
 
-export const verificationRes = new VerificationRes({ principal: Fixtures.principal })
+export const rpcVerificationRes = new VerificationRes({ principal: Fixtures.principal })
 
 export const createCredentialTest = L.succeed(
   CreateCredential,
@@ -80,8 +80,8 @@ export const rpcClientTest = L.succeed(
     preConnect: () => E.succeed(new PreConnectRes({ warmed: true })),
     isExistingUser: () => E.fail(Fixtures.notImplemented),
     verifyEmail: () => E.fail(Fixtures.notImplemented),
-    getRegistrationOptions: () => E.succeed(optionsRes),
-    verifyRegistrationCredential: () => E.succeed(verificationRes),
+    getRegistrationOptions: () => E.succeed(rpcOptionsRes),
+    verifyRegistrationCredential: () => E.succeed(rpcVerificationRes),
     getAuthenticationOptions: () => E.fail(Fixtures.notImplemented),
     verifyAuthenticationCredential: () => E.fail(Fixtures.notImplemented),
     registerOidc: () => E.fail(Fixtures.notImplemented),

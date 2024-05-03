@@ -20,7 +20,7 @@ export const request: AuthenticationRequest = {
   userVerification: 'preferred',
 }
 
-export const optionsRes = new OptionsRes({
+export const rpcOptionsRes = new OptionsRes({
   session,
   publicKey: {
     rpId: 'passlock.dev',
@@ -44,13 +44,13 @@ export const credential: AuthenticationCredential = {
   authenticatorAttachment: null,
 }
 
-export const verificationReq = new VerificationReq({ session, credential })
+export const rpcVerificationReq = new VerificationReq({ session, credential })
 
-export const verificationRes = new VerificationRes({ principal: Fixtures.principal })
+export const rpcVerificationRes = new VerificationRes({ principal: Fixtures.principal })
 
-export const isExistingUserRes = new IsExistingUserRes({ existingUser: true })
+export const rpcIsExistingUserRes = new IsExistingUserRes({ existingUser: true })
 
-export const verifyEmailRes = new VerifyEmailRes({ principal: Fixtures.principal })
+export const rpcVerifyEmailRes = new VerifyEmailRes({ principal: Fixtures.principal })
 
 export const getCredentialTest = L.succeed(
   GetCredential,
@@ -61,12 +61,12 @@ export const rpcClientTest = L.succeed(
   RpcClient,
   RpcClient.of({
     preConnect: () => E.succeed(Fixtures.preConnectRes),
-    isExistingUser: () => E.succeed(isExistingUserRes),
-    verifyEmail: () => E.succeed(verifyEmailRes),
+    isExistingUser: () => E.succeed(rpcIsExistingUserRes),
+    verifyEmail: () => E.succeed(rpcVerifyEmailRes),
     getRegistrationOptions: () => E.fail(Fixtures.notImplemented),
     verifyRegistrationCredential: () => E.fail(Fixtures.notImplemented),
-    getAuthenticationOptions: () => E.succeed(optionsRes),
-    verifyAuthenticationCredential: () => E.succeed(verificationRes),
+    getAuthenticationOptions: () => E.succeed(rpcOptionsRes),
+    verifyAuthenticationCredential: () => E.succeed(rpcVerificationRes),
     registerOidc: () => E.fail(Fixtures.notImplemented),
     authenticateOidc: () => E.fail(Fixtures.notImplemented),
     resendVerificationEmail: () => E.fail(Fixtures.notImplemented),

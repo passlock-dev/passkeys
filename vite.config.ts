@@ -8,9 +8,10 @@ export default defineConfig({
       include: ['src/**'],
       reporter: ['text', ['html', { subdir: 'html' }]],
       exclude: [
-        'src/index.ts', // no real logic here
+        'src/index.ts', // re-exports
+        'src/effect.ts', // re-exports        
         'src/config.ts', // no real logic here
-        'src/effect.ts', // no real logic here
+        'src/capabilities/*.ts', // wrapper around browser api
         'src/**/*.fixture.ts', // test fixtures
         'src/test/fixtures.ts', // test fixtures
       ],

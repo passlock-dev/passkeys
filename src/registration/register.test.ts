@@ -1,10 +1,10 @@
 import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error.js'
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcClient, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { CreateCredential, RegistrationService, RegistrationServiceLive } from './register.js'
 import * as Fixture from './register.fixture.js'
+import { CreateCredential, RegistrationService, RegistrationServiceLive } from './register.js'
 
 describe('register should', () => {
   test('return a valid credential', async () => {
@@ -34,7 +34,7 @@ describe('register should', () => {
       yield* _(service.registerPasskey(Fixture.registrationRequest))
 
       const rpcClient = yield* _(RpcClient)
-      expect(rpcClient.getRegistrationOptions).toHaveBeenCalledWith(Fixture.optionsReq)
+      expect(rpcClient.getRegistrationOptions).toHaveBeenCalledWith(Fixture.rpcOptionsReq)
     })
 
     const rpcClientTest = L.effect(
@@ -42,8 +42,8 @@ describe('register should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.getRegistrationOptions.mockReturnValue(E.succeed(Fixture.optionsRes))
-        rpcMock.verifyRegistrationCredential.mockReturnValue(E.succeed(Fixture.verificationRes))
+        rpcMock.getRegistrationOptions.mockReturnValue(E.succeed(Fixture.rpcOptionsRes))
+        rpcMock.verifyRegistrationCredential.mockReturnValue(E.succeed(Fixture.rpcVerificationRes))
 
         return rpcMock
       }),
@@ -70,7 +70,7 @@ describe('register should', () => {
       yield* _(service.registerPasskey(Fixture.registrationRequest))
 
       const rpcClient = yield* _(RpcClient)
-      expect(rpcClient.verifyRegistrationCredential).toHaveBeenCalledWith(Fixture.verificationReq)
+      expect(rpcClient.verifyRegistrationCredential).toHaveBeenCalledWith(Fixture.rpcVerificationReq)
     })
 
     const rpcClientTest = L.effect(
@@ -78,8 +78,8 @@ describe('register should', () => {
       E.sync(() => {
         const rpcMock = mock<RouterOps>()
 
-        rpcMock.getRegistrationOptions.mockReturnValue(E.succeed(Fixture.optionsRes))
-        rpcMock.verifyRegistrationCredential.mockReturnValue(E.succeed(Fixture.verificationRes))
+        rpcMock.getRegistrationOptions.mockReturnValue(E.succeed(Fixture.rpcOptionsRes))
+        rpcMock.verifyRegistrationCredential.mockReturnValue(E.succeed(Fixture.rpcVerificationRes))
 
         return rpcMock
       }),

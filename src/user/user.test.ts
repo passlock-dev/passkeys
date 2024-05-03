@@ -1,9 +1,9 @@
-import { type RouterOps, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcClient, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { UserService, UserServiceLive } from './user.js'
 import * as Fixture from './user.fixture.js'
+import { UserService, UserServiceLive } from './user.js'
 
 describe('isExistingUser should', () => {
   test('return true when the user already has a passkey', async () => {
@@ -46,6 +46,40 @@ describe('isExistingUser should', () => {
 
     const layers = L.merge(service, rpcClientTest)
     const effect = pipe(E.provide(assertions, layers), Logger.withMinimumLogLevel(LogLevel.None))
+
+    return E.runPromise(effect)
+  })
+})
+
+describe('resendVerificationEmail should', () => {
+  test('forward the request to the backend', async () => {
+    const assertions = E.gen(function* (_) {
+      const service = yield* _(UserService)
+      yield* _(service.resendVerificationEmail(Fixture.resendEmailReq))
+
+      const rpcClient = yield* _(RpcClient)
+      expect(rpcClient.resendVerificationEmail).toBeCalledWith(Fixture.rpcResendEmailReq)
+    })
+
+    const rpcClientTest = Layer.effect(
+      RpcClient,
+      E.sync(() => {
+        const rpcMock = mock<RouterOps>()
+
+        rpcMock.resendVerificationEmail.mockReturnValue(E.succeed(Fixture.rpcResendEmailRes))
+
+        return rpcMock
+      }),
+    )
+
+    const service = pipe(UserServiceLive, L.provide(rpcClientTest))
+
+    const layers = L.merge(service, rpcClientTest)
+
+    const effect = pipe(
+      E.provide(assertions, layers),
+      Logger.withMinimumLogLevel(LogLevel.None)
+    )
 
     return E.runPromise(effect)
   })
