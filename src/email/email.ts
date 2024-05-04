@@ -5,10 +5,10 @@ import { BadRequest } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type { VerifyEmailErrors as RpcErrors } from '@passlock/shared/dist/rpc/user.js'
 import { VerifyEmailReq } from '@passlock/shared/dist/rpc/user.js'
-import { Context, Effect as E, Layer, Option as O, flow, identity, pipe } from 'effect'
-import { type AuthenticationErrors, AuthenticationService } from '../authentication/authenticate.js'
-import { StorageService } from '../storage/storage.js'
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
+import { Context, Effect as E, Layer, Option as O, flow, identity, pipe } from 'effect'
+import { AuthenticationService, type AuthenticationErrors } from '../authentication/authenticate.js'
+import { StorageService } from '../storage/storage.js'
 
 /* Requests */
 

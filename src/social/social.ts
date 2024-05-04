@@ -2,13 +2,13 @@
  * Passkey authentication effects
  */
 import {
-  type BadRequest,
-  type NotSupported
+    type BadRequest,
+    type NotSupported
 } from '@passlock/shared/dist/error/error.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { AuthenticateOidcErrors, AuthenticateOidcReq, RegisterOidcErrors, RegisterOidcReq } from '@passlock/shared/dist/rpc/social.js'
 import type {
-  Principal
+    Principal
 } from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow } from 'effect'
 

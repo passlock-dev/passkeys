@@ -1,7 +1,7 @@
 import {
-  OptionsRes,
-  VerificationReq,
-  VerificationRes,
+    OptionsRes,
+    VerificationReq,
+    VerificationRes,
 } from '@passlock/shared/dist/rpc/authentication.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import { IsExistingUserRes, VerifyEmailRes } from '@passlock/shared/dist/rpc/user.js'

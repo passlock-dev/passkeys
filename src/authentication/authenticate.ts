@@ -2,20 +2,20 @@
  * Passkey authentication effects
  */
 import {
-  type CredentialRequestOptionsJSON,
-  parseRequestOptionsFromJSON,
+    parseRequestOptionsFromJSON,
+    type CredentialRequestOptionsJSON,
 } from '@github/webauthn-json/browser-ponyfill'
 import {
-  InternalBrowserError,
-  type NotSupported,
+    InternalBrowserError,
+    type NotSupported,
 } from '@passlock/shared/dist/error/error.js'
 import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rpc/authentication.js'
 import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/authentication.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type {
-  AuthenticationCredential,
-  Principal,
-  UserVerification,
+    AuthenticationCredential,
+    Principal,
+    UserVerification,
 } from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 import { Capabilities } from '../capabilities/capabilities.js'

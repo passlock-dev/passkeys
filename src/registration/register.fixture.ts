@@ -1,9 +1,9 @@
 import { PreConnectRes } from '@passlock/shared/dist/rpc/connection.js'
 import {
-  OptionsReq,
-  OptionsRes,
-  VerificationReq,
-  VerificationRes,
+    OptionsReq,
+    OptionsRes,
+    VerificationReq,
+    VerificationRes,
 } from '@passlock/shared/dist/rpc/registration.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type { RegistrationCredential } from '@passlock/shared/dist/schema/schema.js'

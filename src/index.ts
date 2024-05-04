@@ -1,37 +1,36 @@
 import type {
-  BadRequest,
-  Disabled,
-  Duplicate,
-  Forbidden,
-  NotFound,
-  NotSupported,
-  Unauthorized,
+    BadRequest,
+    Disabled,
+    Duplicate,
+    Forbidden,
+    NotFound,
+    NotSupported,
+    Unauthorized,
 } from '@passlock/shared/dist/error/error.js'
 
-import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { ErrorCode } from '@passlock/shared/dist/error/error.js'
 import { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
+import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
-import { type AuthenticationRequest, AuthenticationService } from './authentication/authenticate.js'
+import { AuthenticationService, type AuthenticationRequest } from './authentication/authenticate.js'
 import { Capabilities } from './capabilities/capabilities.js'
 import { ConnectionService } from './connection/connection.js'
 import { allRequirements } from './effect.js'
 import { EmailService, type VerifyRequest } from './email/email.js'
-import { type RegistrationRequest, RegistrationService } from './registration/register.js'
-import { type AuthType, Storage, StorageService, type StoredToken } from './storage/storage.js'
-import { type Email, UserService, type ResendEmail } from './user/user.js'
+import { RegistrationService, type RegistrationRequest } from './registration/register.js'
 import { SocialService, type OidcRequest } from './social/social.js'
+import { Storage, StorageService, type AuthType, type StoredToken } from './storage/storage.js'
+import { UserService, type Email, type ResendEmail } from './user/user.js'
 
 /* Exports */
 
 export type Options = { signal?: AbortSignal }
-export type { Email } from './user/user.js' 
-export type { UserVerification, VerifyEmail } from '@passlock/shared/dist/schema/schema.js'
-export type { RegistrationRequest } from './registration/register.js'
+export type { Principal, UserVerification, VerifyEmail } from '@passlock/shared/dist/schema/schema.js'
 export type { AuthenticationRequest } from './authentication/authenticate.js'
 export type { VerifyRequest } from './email/email.js'
+export type { RegistrationRequest } from './registration/register.js'
 export type { AuthType, StoredToken } from './storage/storage.js'
-export type { Principal } from '@passlock/shared/dist/schema/schema.js'
+export type { Email } from './user/user.js'
 
 export { ErrorCode } from '@passlock/shared/dist/error/error.js'
 

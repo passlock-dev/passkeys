@@ -1,21 +1,21 @@
 import { create, get as getCredential } from '@github/webauthn-json/browser-ponyfill'
 
 import {
-  type BadRequest,
-  type Disabled,
-  Duplicate,
-  type Forbidden,
-  InternalBrowserError,
-  type NotFound,
-  type NotSupported,
-  type Unauthorized,
+    Duplicate,
+    InternalBrowserError,
+    type BadRequest,
+    type Disabled,
+    type Forbidden,
+    type NotFound,
+    type NotSupported,
+    type Unauthorized,
 } from '@passlock/shared/dist/error/error.js'
 
 import {
-  DispatcherLive,
-  RetrySchedule,
-  RpcClientLive,
-  RpcConfig,
+    DispatcherLive,
+    RetrySchedule,
+    RpcClientLive,
+    RpcConfig,
 } from '@passlock/shared/dist/rpc/rpc.js'
 
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
@@ -24,10 +24,10 @@ import { Context, Effect as E, Layer as L, Layer, Schedule, pipe } from 'effect'
 import type { NoSuchElementException } from 'effect/Cause'
 
 import {
-  AuthenticateServiceLive,
-  type AuthenticationRequest,
-  AuthenticationService,
-  GetCredential,
+    AuthenticateServiceLive,
+    AuthenticationService,
+    GetCredential,
+    type AuthenticationRequest,
 } from './authentication/authenticate.js'
 
 import { capabilitiesLive } from './capabilities/capabilities.js'
@@ -35,22 +35,22 @@ import { ConnectionService, ConnectionServiceLive } from './connection/connectio
 import { EmailService, EmailServiceLive, URLQueryString, type VerifyRequest } from './email/email.js'
 
 import {
-  CreateCredential,
-  type RegistrationRequest,
-  RegistrationService,
-  RegistrationServiceLive,
+    CreateCredential,
+    RegistrationService,
+    RegistrationServiceLive,
+    type RegistrationRequest,
 } from './registration/register.js'
 
 import {
-  type AuthType,
-  Storage,
-  StorageService,
-  StorageServiceLive,
-  type StoredToken,
+    Storage,
+    StorageService,
+    StorageServiceLive,
+    type AuthType,
+    type StoredToken,
 } from './storage/storage.js'
 
-import { type Email, UserService, UserServiceLive } from './user/user.js'
 import { SocialService, SocialServiceLive, type OidcRequest } from './social/social.js'
+import { UserService, UserServiceLive, type Email } from './user/user.js'
 
 /* Layers */
 

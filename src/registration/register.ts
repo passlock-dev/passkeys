@@ -2,8 +2,8 @@
  * User & passkey registration effects
  */
 import {
-  type CredentialCreationOptionsJSON,
-  parseCreationOptionsFromJSON,
+    parseCreationOptionsFromJSON,
+    type CredentialCreationOptionsJSON,
 } from '@github/webauthn-json/browser-ponyfill'
 import type { NotSupported } from '@passlock/shared/dist/error/error.js'
 import { Duplicate, InternalBrowserError } from '@passlock/shared/dist/error/error.js'
@@ -11,10 +11,10 @@ import type { OptionsErrors, VerificationErrors } from '@passlock/shared/dist/rp
 import { OptionsReq, VerificationReq } from '@passlock/shared/dist/rpc/registration.js'
 import { RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
 import type {
-  Principal,
-  RegistrationCredential,
-  UserVerification,
-  VerifyEmail,
+    Principal,
+    RegistrationCredential,
+    UserVerification,
+    VerifyEmail,
 } from '@passlock/shared/dist/schema/schema.js'
 import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 import { Capabilities } from '../capabilities/capabilities.js'
