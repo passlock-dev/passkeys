@@ -150,7 +150,7 @@ Your backend just needs to exchange the token for a `Principal` representing the
 ```typescript
 import { Passlock } from '@passlock/node'
 
-// API keys can be found in your passlock console
+// API Keys can be found in your passlock console
 const passlock = new Passlock({ tenancyId, apiKey })
 
 // token comes from your frontend
