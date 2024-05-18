@@ -224,7 +224,7 @@ Questions? Please use the [GitHub discussions][discussions] or see the [contact]
 [demo]: https://passlock.dev/#demo
 [webauthn]: https://www.w3.org/TR/webauthn-2/
 [contact]: https://passlock.dev/contact
-[tutorial]: https://docs.passlock.dev/docs/tutorial/intro
+[tutorial]: https://docs.passlock.dev/docs/tutorial/introduction
 [docs]: https://docs.passlock.dev
 [passlock-signup]: https://console.passlock.dev/register
 [discussions]: https://github.com/passlock-dev/passkeys/discussions
