@@ -1,6 +1,6 @@
 {
   "name": "@passlock/client",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "description": "Easy WebAuthn/FIDO Passkey authentication for your web apps. This library works with pretty much any frontend/backend stack including React/Next.js, Vue, SvelteKit etc - check out the tutorial",
   "keywords": [
     "passkey",
@@ -58,20 +58,20 @@
   "dependencies": {
     "@passlock/shared": "workspace:*",
     "@github/webauthn-json": "^2.1.1",
-    "effect": "3.1.4"
+    "effect": "3.2.5"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
-    "@types/node": "^20.12.11",
-    "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "@typescript-eslint/parser": "^7.8.0",
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "@typescript-eslint/parser": "^7.11.0",
     "@vitest/coverage-v8": "^1.6.0",
     "@vitest/ui": "^1.6.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "jsdom": "^24.0.0",
+    "jsdom": "^24.1.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.7",
     "tslib": "^2.6.2",
