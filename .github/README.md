@@ -13,7 +13,7 @@
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
     <br />
-    <a href="https://passlock.dev/#demo">View Demo</a>
+    <a href="https://passlock.dev/#demo">Live Demo</a>
     ·
     <a href="https://docs.passlock.dev">Documentation</a>
     ·
