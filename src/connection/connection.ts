@@ -1,10 +1,10 @@
 /**
  * Hits the rpc endpoint to warm up a lambda
  */
-import { PreConnectReq } from '@passlock/shared/dist/rpc/connection.js';
-import type { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js';
-import { Dispatcher, RpcClient } from '@passlock/shared/dist/rpc/rpc.js';
-import { Context, Effect as E, Layer, flow, pipe } from 'effect';
+import type { RpcConfig } from '@passlock/shared/dist/rpc/config.js'
+import { PreConnectReq } from '@passlock/shared/dist/rpc/connection.js'
+import { Dispatcher, RpcClient } from '@passlock/shared/dist/rpc/rpc.js'
+import { Context, Effect as E, Layer, flow, pipe } from 'effect'
 
 /* Service */
 

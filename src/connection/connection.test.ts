@@ -1,4 +1,5 @@
-import { Dispatcher, RpcClient, RpcConfig, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcConfig } from '@passlock/shared/dist/rpc/config.js'
+import { Dispatcher, RpcClient, type RouterOps } from '@passlock/shared/dist/rpc/rpc.js'
 import { Effect as E, Layer as L, Layer, LogLevel, Logger, pipe } from 'effect'
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'

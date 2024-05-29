@@ -1,15 +1,15 @@
 import type {
-    BadRequest,
-    Disabled,
-    Duplicate,
-    Forbidden,
-    NotFound,
-    NotSupported,
-    Unauthorized,
+  BadRequest,
+  Disabled,
+  Duplicate,
+  Forbidden,
+  NotFound,
+  NotSupported,
+  Unauthorized,
 } from '@passlock/shared/dist/error/error.js'
 
 import { ErrorCode } from '@passlock/shared/dist/error/error.js'
-import { RpcConfig } from '@passlock/shared/dist/rpc/rpc.js'
+import { RpcConfig } from '@passlock/shared/dist/rpc/config.js'
 import type { Principal } from '@passlock/shared/dist/schema/schema.js'
 import { Effect as E, Layer as L, Layer, Option, Runtime, Scope, pipe } from 'effect'
 import { AuthenticationService, type AuthenticationRequest } from './authentication/authenticate.js'
