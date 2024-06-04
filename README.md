@@ -32,7 +32,9 @@ Passkeys and the WebAuthn API are quite complex. We've taken an opinionated appr
 
 3. **🔐 Step up authentication** - Require biometric or PIN verification for some operations, whilst allowing one-tap authentication for others.
 
-4. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
+4. **🚀 Social login** - Quickly add social login to your web application.
+
+5. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
 
 6. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
 
