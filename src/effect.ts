@@ -48,7 +48,7 @@ import {
 } from './storage/storage.js'
 
 import { RetrySchedule, RpcConfig } from '@passlock/shared/dist/rpc/config.js'
-import { SocialService, SocialServiceLive, type OidcRequest } from './social/social.js'
+import { SocialService, SocialServiceLive, type RegisterOidcReq } from './social/social.js'
 import { UserService, UserServiceLive, type Email } from './user/user.js'
 
 /* Layers */
@@ -271,7 +271,7 @@ export const clearExpiredTokens = (): E.Effect<void> =>
     E.provide(storageLive),
   )
 
-export const authenticateOIDC = (request: OidcRequest) => 
+export const authenticateOIDC = (request: RegisterOidcReq) => 
   pipe(
     SocialService,
     E.flatMap(service => service.registerOidc(request)),

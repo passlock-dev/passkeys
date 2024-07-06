@@ -18,7 +18,7 @@ import { ConnectionService } from './connection/connection.js'
 import { allRequirements } from './effect.js'
 import { EmailService, type VerifyRequest } from './email/email.js'
 import { RegistrationService, type RegistrationRequest } from './registration/register.js'
-import { SocialService, type OidcRequest } from './social/social.js'
+import { SocialService, type AuthenticateOidcReq, type RegisterOidcReq } from './social/social.js'
 import { Storage, StorageService, type AuthType, type StoredToken } from './storage/storage.js'
 import { UserService, type Email, type ResendEmail } from './user/user.js'
 
@@ -31,6 +31,12 @@ export type { VerifyRequest } from './email/email.js'
 export type { RegistrationRequest } from './registration/register.js'
 export type { AuthType, StoredToken } from './storage/storage.js'
 export type { Email } from './user/user.js'
+
+export type PasslockProps = {
+  tenancyId: string; 
+  clientId: string; 
+  endpoint?: string
+}
 
 export { ErrorCode } from '@passlock/shared/dist/error/error.js'
 
@@ -130,7 +136,7 @@ type Requirements =
 export class PasslockUnsafe {
   private readonly runtime: Runtime.Runtime<Requirements>
 
-  constructor(config: { tenancyId: string; clientId: string; endpoint?: string }) {
+  constructor(config: PasslockProps) {
     const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
     const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
     const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
@@ -184,14 +190,14 @@ export class PasslockUnsafe {
       effect => this.runPromise(effect, options),
     )
 
-  registerOidc = (request: OidcRequest, options?: Options) => 
+  registerOidc = (request: RegisterOidcReq, options?: Options) => 
     pipe(
       SocialService,
       E.flatMap(service => service.registerOidc(request)),
       effect => this.runPromise(effect, options),
     )   
     
-  authenticateOidc = (request: OidcRequest, options?: Options) => 
+  authenticateOidc = (request: AuthenticateOidcReq, options?: Options) => 
     pipe(
       SocialService,
       E.flatMap(service => service.authenticateOidc(request)),
@@ -238,7 +244,7 @@ export class PasslockUnsafe {
 export class Passlock {
   private readonly runtime: Runtime.Runtime<Requirements>
 
-  constructor(config: { tenancyId: string; clientId: string; endpoint?: string }) {
+  constructor(config: PasslockProps) {
     const rpcConfig = Layer.succeed(RpcConfig, RpcConfig.of(config))
     const storage = Layer.succeed(Storage, Storage.of(globalThis.localStorage))
     const allLayers = pipe(allRequirements, L.provide(rpcConfig), L.provide(storage))
@@ -291,14 +297,14 @@ export class Passlock {
       effect => this.runPromise(effect, options),
     )
 
-  registerOidc = (request: OidcRequest, options?: Options) => 
+  registerOidc = (request: RegisterOidcReq, options?: Options) => 
     pipe(
       SocialService,
       E.flatMap(service => service.registerOidc(request)),
       effect => this.runPromise(effect, options),
     )     
 
-  authenticateOidc = (request: OidcRequest, options?: Options) => 
+  authenticateOidc = (request: AuthenticateOidcReq, options?: Options) => 
     pipe(
       SocialService,
       E.flatMap(service => service.authenticateOidc(request)),

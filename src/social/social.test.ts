@@ -10,7 +10,7 @@ describe('registerOidc should', () => {
   test('return a valid credential', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
-      const result = yield* _(service.registerOidc(Fixture.oidcReq))
+      const result = yield* _(service.registerOidc(Fixture.registerOidcReq))
       expect(result).toEqual(Fixture.principal)
     })
 
@@ -39,7 +39,7 @@ describe('registerOidc should', () => {
   test('pass the request to the backend', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
-      yield* _(service.registerOidc(Fixture.oidcReq))
+      yield* _(service.registerOidc(Fixture.registerOidcReq))
 
       const rpcClient = yield* _(RpcClient)
       expect(rpcClient.registerOidc).toHaveBeenCalledWith(Fixture.rpcRegisterReq)
@@ -71,7 +71,7 @@ describe('registerOidc should', () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
 
-      const defect = yield* _(service.registerOidc(Fixture.oidcReq), E.flip)
+      const defect = yield* _(service.registerOidc(Fixture.registerOidcReq), E.flip)
 
       expect(defect).toBeInstanceOf(Duplicate)
     })
@@ -103,7 +103,7 @@ describe('authenticateIodc should', () => {
   test('return a valid credential', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
-      const result = yield* _(service.authenticateOidc(Fixture.oidcReq))
+      const result = yield* _(service.authenticateOidc(Fixture.authOidcReq))
       expect(result).toEqual(Fixture.principal)
     })
 
@@ -132,7 +132,7 @@ describe('authenticateIodc should', () => {
   test('pass the request to the backend', async () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
-      yield* _(service.authenticateOidc(Fixture.oidcReq))
+      yield* _(service.authenticateOidc(Fixture.authOidcReq))
 
       const rpcClient = yield* _(RpcClient)
       expect(rpcClient.authenticateOidc).toHaveBeenCalledWith(Fixture.rpcAuthenticateReq)
@@ -164,7 +164,7 @@ describe('authenticateIodc should', () => {
     const assertions = E.gen(function* (_) {
       const service = yield* _(SocialService)
 
-      const defect = yield* _(service.authenticateOidc(Fixture.oidcReq), E.flip)
+      const defect = yield* _(service.authenticateOidc(Fixture.authOidcReq), E.flip)
 
       expect(defect).toBeInstanceOf(NotFound)
     })
