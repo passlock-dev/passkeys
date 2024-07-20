@@ -4,15 +4,20 @@
   </a>
 </div>
 
-<a name="readme-top"></a>
-<h1 align="center">Serverless Passkeys</h1>
+<h1 align="center">Passkeys, Social Login & More</h1>
 
+<a name="readme-top"></a>
+<div align="center">
+  <picture align="center">
+    <source srcset="README_assets/repo-banner.dark.svg" media="(prefers-color-scheme: dark)" />
+    <img align="center" width=550 height=50 src="README_assets/repo-banner.svg" />
+  </picture>
   <p align="center">
-    Passkey authentication for your web apps. Supports React, Angular, Vue, SvelteKit & others.
+    Typescript library for next generation authentication. Passkeys, Apple login, Google one-tap and more..
     <br />
     <a href="https://passlock.dev"><strong>Project website »</strong></a>
     <br />
-    <a href="https://passlock.dev/#demo">Demo</a>
+    <a href="https://d1rl0ue18b0151.cloudfront.net">Demo</a>
     ·
     <a href="https://docs.passlock.dev">Documentation</a>
     ·
@@ -22,28 +27,43 @@
 
 <br />
 
+> [!IMPORTANT]  
+> **Looking for the SvelteKit templates** - I've moved the various packages, app templates and examples into a single monorepo. You'll now find the core library in [packages/client](./packages/client/), and the sveltekit app templates in [apps/sveltekit](./apps/sveltekit/README.md)
+
 ## Features
 
-Passkeys and the WebAuthn API are quite complex. We've taken an opinionated approach to simplify things for you. Following the 80/20 principle we've tried to focus on the features most valuable to developers and users. We welcome feature requests so do [get in touch][contact].
+Passkeys and the WebAuthn API are quite complex. I've taken an opinionated approach to simplify things for you. Following the 80/20 principle, I've tried to focus on the features most valuable to developers and users.
 
-1. **🔐 Primary & secondary authentication** - Replace password based logins with passkeys, or use passkeys alongside passwords for secondary authentication.
+1. **🔐 Primary or secondary authentication** - 2FA or a complete replacement for passwords. 
 
-2. **☝🏻 Biometrics** - We've made it really easy to implement facial or fingerprint recognition in your webapps.
+2. **🚀 Social login** - Supporting Apple & Google. GitHub coming soon..
 
-3. **🔐 Step up authentication** - Require biometric or PIN verification for some operations, whilst allowing one-tap authentication for others.
+3. **☝🏻 Biometrics** - Frictionless facial or fingerprint recognition for your webapps.
 
-4. **🚀 Social login** - Quickly add social login to your web application.
+4. **🖥️ Management console** - Suspend users, disable or revoke passkeys and more..
 
-5. **🖥️ Full management console** - Manage all security related aspects of your userbase through a web based console.
+5. **🕵️ Audit trail** - View a full audit trail for each user.
 
-6. **🕵️ Audit trail** - View a full audit trail for each user: when they add a new passkey, when they login, verify their email address and much more.
+6. **🖥️ Dev console** - Something not working? check the web console for details.
 
-## Screenshot
+7. **👌 Headless components** - You have 100% control over the UI.
 
-![Passlock user profile](https://github.com/passlock-dev/passkeys/assets/208345/a4a5c4b8-86cb-4076-bd26-7c29ed2151c6)
+## Screen recording
+
+https://github.com/passlock-dev/svelte-passkeys/assets/208345/9d3fa5cf-cacb-40c3-a388-430b27a4ae76
+
+## Screenshots
+
+![SvelteKit template using this library](./README_assets/preline.png)
+<p align="center">Demo app using this library for passkey and social login</p>
+
+![Passlock user profile](./README_assets/console.png)
 <p align="center">Viewing a user's authentication activity on their profile page</p>
 
 ## Usage
+
+> [!TIP]
+> **SvelteKit users** - Whilst this library is framework agnostic, SvelteKit users may want to check out the [@passlock/sveltekit](./packages/sveltekit/) wrapper This offers several enhancements, including UI components, form action helpers and Superforms support.
 
 Use this library to generate a secure token, representing passkey registration or authentication. Send the token to your backend for verification (see below)
 
@@ -52,7 +72,7 @@ Use this library to generate a secure token, representing passkey registration o
 ```typescript
 import { Passlock, PasslockError } from '@passlock/client'
 
-// you can find these details in the settings area of the Passlock console
+// you can find these details in the settings area of your Passlock console
 const tenancyId = '...'
 const clientId = '...'
 
@@ -65,7 +85,7 @@ const [email, givenName, familyName] = ["jdoe@gmail.com", "John", "Doe"]
 // Passlock doesn't throw but instead returns a union: result | error
 const result = await passlock.registerPasskey({ email, givenName, familyName })
 
-// ensure Passlock didn't return an error
+// ensure we're error free
 if (!PasslockError.isError(result)) {
   // send the token to your backend (json/fetch or hidden form field etc)
   console.log('Token: %s', result.token)
@@ -114,3 +134,5 @@ Please see the [tutorial][tutorial] and [documentation][docs]
 [tutorial]: https://docs.passlock.dev/docs/tutorial/intro
 [docs]: https://docs.passlock.dev
 [node]: https://www.npmjs.com/package/@passlock/node
+[melt]: https://melt-ui.com
+[shadcn]: https://www.shadcn-svelte.com
