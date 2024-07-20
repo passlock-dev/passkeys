@@ -21,7 +21,7 @@
     ·
     <a href="https://docs.passlock.dev">Documentation</a>
     ·
-    <a href="https://docs.passlock.dev/docs/tutorial/intro">Tutorial</a>
+    <a href="https://docs.passlock.dev/docs/tutorial/introduction">Tutorial</a>
   </p>
 </div>
 
@@ -131,7 +131,7 @@ console.log(principal.user.id)
 Please see the [tutorial][tutorial] and [documentation][docs]
 
 [contact]: https://passlock.dev/contact
-[tutorial]: https://docs.passlock.dev/docs/tutorial/intro
+[tutorial]: https://docs.passlock.dev/docs/tutorial/introduction
 [docs]: https://docs.passlock.dev
 [node]: https://www.npmjs.com/package/@passlock/node
 [melt]: https://melt-ui.com

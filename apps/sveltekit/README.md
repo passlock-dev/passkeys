@@ -243,7 +243,7 @@ pnpm install
 
 # Documentation
 
-Please see the [developer docs](./docs/intro.md)
+Please see the [developer docs](./preline/docs/intro.md)
 
 # Questions? Problems
 
