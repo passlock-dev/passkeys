@@ -54,7 +54,7 @@ https://github.com/passlock-dev/svelte-passkeys/assets/208345/9d3fa5cf-cacb-40c3
 
 ## Screenshots
 
-![SvelteKit template using this library](./README_assets/preline.png)
+![SvelteKit template using this library](./README_assets/preline.dark.png)
 <p align="center">Demo app using this library for passkey and social login</p>
 
 ![Passlock user profile](./README_assets/console.png)
