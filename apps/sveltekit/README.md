@@ -16,7 +16,7 @@
   </picture>
   <p align="center">
     <br />
-    SvelteKit authentication template featuring Passkeys, social login (Apple and Google), mailbox verification and much more. Preline and Shadcn variants.
+    SvelteKit authentication template featuring Passkeys, social login (Apple and Google), mailbox verification and much more. <br />Preline and Shadcn variants available.
   </p>
   <p align="center">
     <a href="https://d1rl0ue18b0151.cloudfront.net">Demo (Preline)</a> &nbsp; | &nbsp; <a href="https://dbr4qrmypnl85.cloudfront.net">Demo (Shadcn)</a>
@@ -34,7 +34,7 @@
 
 # Screen recording
 
-https://github.com/passlock-dev/svelte-passkeys/assets/208345/9d3fa5cf-cacb-40c3-a388-430b27a4ae76
+https://github.com/user-attachments/assets/c1da1bea-a1c5-4930-8f57-d12728106630
 
 # Screenshots
 
@@ -87,7 +87,7 @@ This example project uses the cloud based [Passlock][passlock] framework for pas
 
 ## Navigate to the template
 
-`cd templates/sveltekit/preline`
+`cd apps/sveltekit/preline` or `cd apps/sveltekit/shadcn`
 
 ## Install the dependencies
 
@@ -222,7 +222,7 @@ See the emails section of your [Passlock console][passlock-settings]
 
 # Shadcn/ui variant
 
-![Shadcn/ui variant](./docs/shadcn.png)
+![Shadcn/ui variant](./README_assets/shadcn.png)
 
 <p align="center">Shadcn/ui variant</p>
 
