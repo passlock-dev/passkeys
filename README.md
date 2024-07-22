@@ -28,29 +28,29 @@
 <br />
 
 > [!IMPORTANT]  
-> **Looking for the SvelteKit templates** - I've moved the various packages, app templates and examples into a single monorepo. You'll now find the core library in [packages/client](./packages/client/), and the sveltekit app templates in [apps/sveltekit](./apps/sveltekit/README.md)
+> **Looking for the SvelteKit templates?** You'll find the SvelteKit app templates in [apps/sveltekit](./apps/sveltekit/)
 
 ## Features
 
 Passkeys and the WebAuthn API are quite complex. I've taken an opinionated approach to simplify things for you. Following the 80/20 principle, I've tried to focus on the features most valuable to developers and users.
 
-1. **🔐 Primary or secondary authentication** - 2FA or a complete replacement for passwords. 
+1. **🔐 Primary or secondary authentication** - 2FA or a complete replacement for passwords
 
 2. **🚀 Social login** - Supporting Apple & Google. GitHub coming soon..
 
-3. **☝🏻 Biometrics** - Frictionless facial or fingerprint recognition for your webapps.
+3. **☝🏻 Biometrics** - Frictionless facial or fingerprint recognition for your webapps
 
 4. **🖥️ Management console** - Suspend users, disable or revoke passkeys and more..
 
-5. **🕵️ Audit trail** - View a full audit trail for each user.
+5. **🕵️ Audit trail** - View a full audit trail for each user
 
-6. **🖥️ Dev console** - Something not working? check the web console for details.
+6. **🖥️ Dev console** - Something not working? check the web console for details
 
-7. **👌 Headless components** - You have 100% control over the UI.
+7. **👌 Headless components** - You have 100% control over the UI
 
 ## Screen recording
 
-https://github.com/passlock-dev/svelte-passkeys/assets/208345/9d3fa5cf-cacb-40c3-a388-430b27a4ae76
+https://github.com/user-attachments/assets/f1c21242-74cb-4739-8eff-fddb19cb3256
 
 ## Screenshots
 
