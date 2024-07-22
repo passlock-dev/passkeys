@@ -20,6 +20,6 @@
 <br />
 
 > [!IMPORTANT]  
-> **Please see the new [monorepo][monorepo]** - I've moved the JS/TS libraries to a new [monorepo][monorepo]. This repository is now archived.
+> **Please see the new [monorepo][monorepo]** - I've moved the JS/TS libraries to a new [monorepo][monorepo]
 
 [monorepo]: https://github.com/passlock-dev/ts-clients
